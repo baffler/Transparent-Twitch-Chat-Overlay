@@ -105,6 +105,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Win32Utils.cs" />
     <Page Include="Input_Fade.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

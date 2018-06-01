@@ -16,17 +16,20 @@ using CefSharp.Wpf;
 using System.Windows.Controls.Primitives;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows.Interop;
 
 /*
  * TODO:
- * Click-through the application (right now if you happen to click on any text/emote/whatever it won't let you click through to the game)
  * Easier/better size grip, kinda hard to see it, or click on it right now
  * Hotkey and/or menu item to hide the chat and make it visible again
  * More options for kapchat, like setting the themes or other things
  * Show current viewers and other stats from twitch?
  * Allowing you to chat from the app?
+ *
  * 
+ * Done:
  x Chat fading option
+ x Click-through the application
  * 
  */
 
@@ -44,7 +47,8 @@ namespace TransparentTwitchChatWPF
 
         public string BotActivity
         {
-            get {
+            get
+            {
                 if (bot_activity == "true")
                     return "Turn Off Bot Activity";
                 else
@@ -77,6 +81,9 @@ namespace TransparentTwitchChatWPF
 
         private void drawBorders()
         {
+            var hwnd = new WindowInteropHelper(this).Handle;
+            WindowHelper.SetWindowExDefault(hwnd);
+
             btnClose.Visibility = System.Windows.Visibility.Visible;
             btnMin.Visibility = System.Windows.Visibility.Visible;
             btnHide.Visibility = System.Windows.Visibility.Visible;
@@ -86,10 +93,17 @@ namespace TransparentTwitchChatWPF
             this.ResizeMode = System.Windows.ResizeMode.CanResizeWithGrip;
 
             hiddenBorders = false;
+
+            this.Topmost = false;
+            this.Activate();
+            this.Topmost = true;
         }
 
         private void hideBorders()
         {
+            var hwnd = new WindowInteropHelper(this).Handle;
+            WindowHelper.SetWindowExTransparent(hwnd);
+
             btnClose.Visibility = System.Windows.Visibility.Hidden;
             btnMin.Visibility = System.Windows.Visibility.Hidden;
             btnHide.Visibility = System.Windows.Visibility.Hidden;
@@ -99,6 +113,10 @@ namespace TransparentTwitchChatWPF
             this.ResizeMode = System.Windows.ResizeMode.NoResize;
 
             hiddenBorders = true;
+
+            this.Topmost = false;
+            this.Activate();
+            this.Topmost = true;
         }
 
         private void ToggleBorderVisibility()
@@ -261,7 +279,7 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItem_VisitWebsite(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start("http://baffler.tv/Home/TwitchChatOverlay");
+            System.Diagnostics.Process.Start("https://github.com/baffler/Transparent-Twitch-Chat-Overlay/releases");
         }
 
         private void MenuItem_Exit(object sender, RoutedEventArgs e)

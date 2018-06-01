@@ -28,13 +28,13 @@
             <!-- Set a simple context menu  -->
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu Background="White">
-                    <MenuItem Header="Twitch Chat Overlay v0.2" IsEnabled="False" />
+                    <MenuItem Header="Twitch Chat Overlay v0.4" IsEnabled="False" />
                     <MenuItem Header="Hide/Show Border (F9)" Click="MenuItem_ToggleBorderVisible" />
                     <MenuItem Header="Set Channel (F8)" Click="MenuItem_SetChannel" />
                     <MenuItem Header="Set Chat Fade" Click="MenuItem_SetFade" />
                     <MenuItem Header="{Binding Path=BotActivity}" Click="MenuItem_ToggleBotAcitivty" />
                     <Separator />
-                    <MenuItem Header="Visit Website" Click="MenuItem_VisitWebsite" />
+                    <MenuItem Header="GitHub latest release" Click="MenuItem_VisitWebsite" />
                     <MenuItem Header="Exit" Click="MenuItem_Exit" />
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>
