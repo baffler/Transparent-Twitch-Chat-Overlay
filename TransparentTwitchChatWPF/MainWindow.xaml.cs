@@ -41,6 +41,7 @@ namespace TransparentTwitchChatWPF
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
         bool hiddenBorders = false;
+        string custom_url = "";
         string channel = "";
         string fade = "30"; // can also be "false"
         string bot_activity = "true";
@@ -127,14 +128,6 @@ namespace TransparentTwitchChatWPF
                 hideBorders();
         }
 
-        private void Window_KeyDown(object sender, KeyEventArgs e)
-        {
-            //if (e.Key == Key.RightCtrl)
-            //{
-            //    drawBorders();
-            //}
-        }
-
         private void Window_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.F9)
@@ -175,6 +168,11 @@ namespace TransparentTwitchChatWPF
             SystemCommands.MinimizeWindow(this);
         }
 
+        private void SetCustomChatAddress(string url)
+        {
+            Browser1.Load(url);
+        }
+
         private void SetChatAddress(string chatChannel)
         {
             string url = @"https://www.nightdev.com/hosted/obschat/?theme=bttv_blackchat&channel=";
@@ -190,6 +188,10 @@ namespace TransparentTwitchChatWPF
             Input inputDialog = new Input();
             if (inputDialog.ShowDialog() == true)
             {
+                // reset custom url
+                this.custom_url = string.Empty;
+                AppSettings.Default.custom_url = custom_url;
+
                 this.channel = inputDialog.Channel;
                 AppSettings.Default.channel = channel;
                 AppSettings.Default.Save();
@@ -217,6 +219,19 @@ namespace TransparentTwitchChatWPF
             }
         }
 
+        public void ShowInputCustomChatDialogBox()
+        {
+            Input_Custom inputDialog = new Input_Custom();
+            if (inputDialog.ShowDialog() == true)
+            {
+                string customURL = inputDialog.Url;
+
+                AppSettings.Default.custom_url = customURL;
+                AppSettings.Default.Save();
+                AppSettings.Default.Reload();
+            }
+        }
+
         public void ToggleBotActivitySetting()
         {
             if (this.bot_activity == "false")
@@ -237,11 +252,24 @@ namespace TransparentTwitchChatWPF
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             drawBorders();
+
+            this.Width = AppSettings.Default.window_width;
+            this.Height = AppSettings.Default.window_height;
+            this.Top = AppSettings.Default.window_top;
+            this.Left = AppSettings.Default.window_left;
+
+            custom_url = AppSettings.Default.custom_url;
             channel = AppSettings.Default.channel;
             fade = AppSettings.Default.fade;
             this.BotActivity = AppSettings.Default.bot_activity;
 
-            if (!string.IsNullOrEmpty(channel))
+            this.Browser1.ZoomLevelIncrement = 0.25;
+
+            if (!string.IsNullOrWhiteSpace(custom_url))
+            {
+                SetCustomChatAddress(custom_url);
+            }
+            else if (!string.IsNullOrWhiteSpace(channel))
             {
                 SetChatAddress(channel);
             }
@@ -272,6 +300,13 @@ namespace TransparentTwitchChatWPF
             SetChatAddress(channel);
         }
 
+        private void MenuItem_SetCustomChat(object sender, RoutedEventArgs e)
+        {
+            ShowInputCustomChatDialogBox();
+            if (!string.IsNullOrWhiteSpace(AppSettings.Default.custom_url))
+                SetCustomChatAddress(AppSettings.Default.custom_url);
+        }
+
         private void MenuItem_ToggleBotAcitivty(object sender, RoutedEventArgs e)
         {
             this.ToggleBotActivitySetting();
@@ -290,6 +325,65 @@ namespace TransparentTwitchChatWPF
         private void btnHide_Click(object sender, RoutedEventArgs e)
         {
             hideBorders();
+        }
+
+        private void Window_Closing(object sender, CancelEventArgs e)
+        {
+            AppSettings.Default.window_height = this.Height;
+            AppSettings.Default.window_width = this.Width;
+            AppSettings.Default.window_top = this.Top;
+            AppSettings.Default.window_left = this.Left;
+            AppSettings.Default.Save();
+        }
+
+        private void Window_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            //this.contextMenu.IsOpen = false;
+            //this.contextMenu.Placement = PlacementMode.MousePoint;
+            //this.contextMenu.HorizontalOffset = 0;
+            //this.contextMenu.VerticalContentAlignment = 0;
+            //this.contextMenu.IsOpen = true;
+        }
+
+        private void MenuItem_ZoomIn(object sender, RoutedEventArgs e)
+        {
+            if (this.Browser1.ZoomInCommand.CanExecute(null))
+            {
+                this.Browser1.ZoomInCommand.Execute(null);
+                AppSettings.Default.zoom_level = this.Browser1.ZoomLevel;
+                AppSettings.Default.Save();
+            }
+        }
+
+        private void MenuItem_ZoomOut(object sender, RoutedEventArgs e)
+        {
+            if (this.Browser1.ZoomOutCommand.CanExecute(null))
+            {
+                this.Browser1.ZoomOutCommand.Execute(null);
+                AppSettings.Default.zoom_level = this.Browser1.ZoomLevel;
+                AppSettings.Default.Save();
+            }
+        }
+
+        private void MenuItem_ZoomReset(object sender, RoutedEventArgs e)
+        {
+            if (this.Browser1.ZoomResetCommand.CanExecute(null))
+            {
+                this.Browser1.ZoomResetCommand.Execute(null);
+                AppSettings.Default.zoom_level = this.Browser1.ZoomLevel;
+                AppSettings.Default.Save();
+            }
+        }
+
+        private void Browser1_LoadingStateChanged(object sender, CefSharp.LoadingStateChangedEventArgs e)
+        {
+            if (!e.IsLoading)
+            {
+                if (AppSettings.Default.zoom_level > 0)
+                {
+                    this.Browser1.Dispatcher.Invoke(new Action(() => { this.Browser1.ZoomLevel = AppSettings.Default.zoom_level; }));
+                }
+            }
         }
     }
 }

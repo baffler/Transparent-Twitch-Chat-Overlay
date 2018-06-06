@@ -105,7 +105,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Input_Custom.xaml.cs">
+      <DependentUpon>Input_Custom.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Win32Utils.cs" />
+    <Page Include="Input_Custom.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Input_Fade.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

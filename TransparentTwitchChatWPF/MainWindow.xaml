@@ -11,7 +11,7 @@
         ResizeMode="NoResize"
         Topmost="True"
         Icon="/Icons/twitch_chat2.ico"
-        Title="Twitch Chat Overlay" Height="450" Width="300" KeyDown="Window_KeyDown" KeyUp="Window_KeyUp" Loaded="Window_Loaded">
+        Title="Twitch Chat Overlay" Height="450" Width="300" KeyUp="Window_KeyUp" Loaded="Window_Loaded" Closing="Window_Closing" MouseRightButtonUp="Window_MouseRightButtonUp">
     <Window.CommandBindings>
         <CommandBinding Command="{x:Static SystemCommands.CloseWindowCommand}" CanExecute="CommandBinding_CanExecute_1" Executed="CommandBinding_Executed_1" />
         <CommandBinding Command="{x:Static SystemCommands.MinimizeWindowCommand}" CanExecute="CommandBinding_CanExecute_1" Executed="CommandBinding_Executed_3" />
@@ -27,12 +27,20 @@
             ToolTipText="Twitch Chat Overlay">
             <!-- Set a simple context menu  -->
             <tb:TaskbarIcon.ContextMenu>
-                <ContextMenu Background="White">
-                    <MenuItem Header="Twitch Chat Overlay v0.4" IsEnabled="False" />
+                <ContextMenu Background="White" x:Name="contextMenu">
+                    <MenuItem Header="Twitch Chat Overlay v0.5" IsEnabled="False" />
                     <MenuItem Header="Hide/Show Border (F9)" Click="MenuItem_ToggleBorderVisible" />
-                    <MenuItem Header="Set Channel (F8)" Click="MenuItem_SetChannel" />
-                    <MenuItem Header="Set Chat Fade" Click="MenuItem_SetFade" />
-                    <MenuItem Header="{Binding Path=BotActivity}" Click="MenuItem_ToggleBotAcitivty" />
+                    <MenuItem Header="Settings">
+                        <MenuItem Header="Set Channel (F8)" Click="MenuItem_SetChannel" />
+                        <MenuItem Header="Set Chat Fade" Click="MenuItem_SetFade" />
+                        <MenuItem Header="{Binding Path=BotActivity}" Click="MenuItem_ToggleBotAcitivty" />
+                        <MenuItem Header="Set Custom Chat" Click="MenuItem_SetCustomChat" />
+                        <MenuItem Header="Zoom Level">
+                            <MenuItem Header="+ Zoom In" Click="MenuItem_ZoomIn" />
+                            <MenuItem Header="- Zoom Out" Click="MenuItem_ZoomOut" />
+                            <MenuItem Header="Reset" Click="MenuItem_ZoomReset" />
+                        </MenuItem>
+                    </MenuItem>
                     <Separator />
                     <MenuItem Header="GitHub latest release" Click="MenuItem_VisitWebsite" />
                     <MenuItem Header="Exit" Click="MenuItem_Exit" />
@@ -65,6 +73,6 @@
             <wpf:ChromiumWebBrowser IsEnabled="false" Grid.Row="1"
                             Background="Transparent"
                               x:Name="Browser1"
-                            Margin="0,0,0,0" />
+                            Margin="0,0,0,0" LoadingStateChanged="Browser1_LoadingStateChanged" />
         </Grid>
 </Window>
