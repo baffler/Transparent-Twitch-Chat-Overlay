@@ -5,6 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TransparentTwitchChatWPF"
         mc:Ignorable="d"
+        WindowStyle="ToolWindow"
+        Topmost="True"
         Title="Chat Fade Time" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" ContentRendered="Window_ContentRendered">
     <Grid Margin="15">
         <Grid.ColumnDefinitions>

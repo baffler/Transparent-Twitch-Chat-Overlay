@@ -1,17 +1,19 @@
-﻿<Window x:Class="TransparentTwitchChatWPF.MainWindow"
+﻿<Window x:Class="TransparentTwitchChatWPF.CustomWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TransparentTwitchChatWPF"
         xmlns:wpf="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
-        xmlns:tb="http://www.hardcodet.net/taskbar" 
         AllowsTransparency="True"
         WindowStyle="None"
         Background="Transparent"
-        BorderBrush="Transparent"
+        BorderBrush="Black"
         BorderThickness="2"
-        ResizeMode="NoResize"
+        ResizeMode="CanResizeWithGrip"
         Topmost="True"
         Icon="/Icons/twitch_chat2.ico"
-        Title="Twitch Chat Overlay" Height="492" Width="314" KeyUp="Window_KeyUp" Loaded="Window_Loaded" Closing="Window_Closing" MouseRightButtonUp="Window_MouseRightButtonUp" Deactivated="Window_Deactivated" PreviewLostKeyboardFocus="Window_PreviewLostKeyboardFocus" SourceInitialized="Window_SourceInitialized">
+        Title="Twitch Chat Overlay" Height="450" Width="300" Loaded="Window_Loaded" SourceInitialized="Window_SourceInitialized">
     <Window.CommandBindings>
         <CommandBinding Command="{x:Static SystemCommands.CloseWindowCommand}" CanExecute="CommandBinding_CanExecute_1" Executed="CommandBinding_Executed_1" />
         <CommandBinding Command="{x:Static SystemCommands.MinimizeWindowCommand}" CanExecute="CommandBinding_CanExecute_1" Executed="CommandBinding_Executed_3" />
@@ -20,14 +22,11 @@
     <Window.Resources>
         <ContextMenu Background="White" x:Key="contextMenu">
             <MenuItem Header="Twitch Chat Overlay v0.6" IsEnabled="False" />
-            <MenuItem Header="Toggle Borders (F9)" Click="MenuItem_ToggleBorderVisible" />
-            <MenuItem Header="New Window" Click="MenuItem_ClickNewWindow" />
             <MenuItem Header="Zoom Level">
                 <MenuItem Header="+ Zoom In" Click="MenuItem_ZoomIn" StaysOpenOnClick="True" />
                 <MenuItem Header="- Zoom Out" Click="MenuItem_ZoomOut" StaysOpenOnClick="True" />
                 <MenuItem Header="Reset" Click="MenuItem_ZoomReset" />
             </MenuItem>
-            <MenuItem Header="Settings" Click="MenuItem_ShowSettings" />
             <Separator />
             <MenuItem Header="GitHub latest release" Click="MenuItem_VisitWebsite" />
         </ContextMenu>
@@ -47,33 +46,33 @@
             DockPanel.Dock="Top" 
             Background="Black" 
             BorderThickness="0"
-            BorderBrush="Black" 
+            BorderBrush="Transparent" 
             MouseLeftButtonDown="headerBorder_MouseLeftButtonDown"
             ContextMenu="{StaticResource contextMenu}">
 
             <Grid>
                 <StackPanel HorizontalAlignment="Left" Orientation="Horizontal" Margin="2,0,0,0">
-                    <Button Name="btnSettings" Visibility="Visible" Background="White" Click="btnSettings_Click" Width="18" Height="16" Margin="0,0,14,0">
+                    <Button Name="btnSettings" Visibility="Hidden" Background="White" Click="btnSettings_Click" Width="18" Height="16" Margin="0,0,14,0">
                         <TextBlock Margin="-1,-3,0,0">⚙</TextBlock>
                     </Button>
                 </StackPanel>
-
-                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Margin="0,0,2,0">
-                    <Button Name="btnHide" Visibility="Visible" Background="White" Click="btnHide_Click" Width="14" Height="12" Margin="0,1,8,0">
+                
+                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                    <Button Name="btnHide" Visibility="Visible" Background="White" Click="btnHide_Click" Width="14" Height="12" Margin="0,0,8,0">
                         <TextBlock Margin="0,-5,0,0">o</TextBlock>
                     </Button>
-                    <Button Name="btnMin" Visibility="Visible" Background="White" Command="{x:Static SystemCommands.MinimizeWindowCommand}" Width="14" Height="12" Margin="0,1,4,0">
+                    <Button Name="btnMin" Visibility="Visible" Background="White" Command="{x:Static SystemCommands.MinimizeWindowCommand}" Width="14" Height="12" Margin="0,0,4,0">
                         <TextBlock Margin="0,-7,0,0">_</TextBlock>
                     </Button>
-                    <Button Name="btnClose" Visibility="Visible" Background="White" Command="{x:Static SystemCommands.CloseWindowCommand}" Width="14" Height="12" Margin="0,1,0,0">
+                    <Button Name="btnClose" Visibility="Visible" Background="White" Command="{x:Static SystemCommands.CloseWindowCommand}" Width="14" Height="12" Margin="0,0,0,0">
                         <TextBlock Margin="0,-5,0,0">x</TextBlock>
                     </Button>
                 </StackPanel>
             </Grid>
         </Border>
-            <wpf:ChromiumWebBrowser IsEnabled="false" Grid.Row="1"
+        <wpf:ChromiumWebBrowser IsEnabled="false" Grid.Row="1"
                             Background="Transparent"
-                              x:Name="Browser1"
-                            Margin="0,0,0,0" LoadingStateChanged="Browser1_LoadingStateChanged" />
-        </Grid>
+                            x:Name="Browser2"
+                            Margin="0,0,0,0" LoadingStateChanged="Browser2_LoadingStateChanged" />
+    </Grid>
 </Window>
