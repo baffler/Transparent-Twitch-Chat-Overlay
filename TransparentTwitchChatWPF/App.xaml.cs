@@ -60,6 +60,14 @@ namespace TransparentTwitchChatWPF
                 Arguments = "/settings"
             });
 
+            jumplist.JumpItems.Add(new JumpTask
+            {
+                Title = "Reset Window",
+                CustomCategory = "Actions",
+                ApplicationPath = Assembly.GetEntryAssembly().Location,
+                Arguments = "/resetwindow"
+            });
+
             jumplist.ShowFrequentCategory = false;
             jumplist.ShowRecentCategory = false;
 

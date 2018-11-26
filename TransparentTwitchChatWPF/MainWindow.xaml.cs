@@ -129,6 +129,16 @@ namespace TransparentTwitchChatWPF
                 {
                     ShowSettingsWindow();
                 }
+                else if ((args[1].ToLowerInvariant() == "/resetwindow"))
+                {
+                    ResetWindowPosition();
+
+                    if (MessageBox.Show("Show settings folder?", "Settings Folder", MessageBoxButton.YesNo, MessageBoxImage.Question) 
+                        == MessageBoxResult.Yes)
+                    {
+                        System.Diagnostics.Process.Start((Services.Tracker.StoreFactory as Jot.Storage.JsonFileStoreFactory).StoreFolderPath);
+                    }
+                }
             }
 
             return true;
@@ -192,6 +202,16 @@ namespace TransparentTwitchChatWPF
             }
         }
 
+        public void ResetWindowPosition()
+        {
+            this.drawBorders();
+            this.WindowState = WindowState.Normal;
+            this.Left = 10;
+            this.Top = 10;
+            this.Height = 492;
+            this.Width = 314;
+        }
+
         private void Window_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.F9)
@@ -213,8 +233,13 @@ namespace TransparentTwitchChatWPF
         {
             base.OnMouseLeftButtonDown(e);
 
-            // Begin dragging the window
-            this.DragMove();
+            if (e.ClickCount == 1)
+                this.DragMove();
+            else if (e.ClickCount == 2)
+            {
+                if (this.WindowState == WindowState.Maximized)
+                    this.WindowState = WindowState.Normal;
+            }
         }
 
         private void CommandBinding_CanExecute_1(object sender, CanExecuteRoutedEventArgs e)
