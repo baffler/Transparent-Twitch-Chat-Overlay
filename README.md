@@ -1,6 +1,8 @@
 # Transparent Twitch Chat Overlay
 .NET application for Windows that will display Twitch chat on top of a windowed or borderless windowed game. Typically would be used by single monitor streamers who need to see chat while playing. Requires .NET 4.5.2 or higher
 
+**Be sure to check out the wiki** [at this link](https://github.com/baffler/Transparent-Twitch-Chat-Overlay/wiki). There's explanations on there on how to add different types of chat, Twitch and Youtube chat integrated together, show subs/followers/redemptions etc, how to show viewer count, or any widget you might need.
+
 ![Screenshot](https://i.imgur.com/keN4f9F.jpg)
 
 ## Installation and Usage
@@ -12,3 +14,6 @@
 * To hide the borders, just click the [o] button in the top-right, or right-click the icon in your taskbar
 
 ![Screenshot](https://i.imgur.com/B3SDcrk.png)
+
+## Adding widgets (subs/follows/viewer count/etc...)
+Some commonly requested features can usually be added with widgets. Please check out the wiki for an explanation on how to do this: https://github.com/baffler/Transparent-Twitch-Chat-Overlay/wiki
