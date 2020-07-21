@@ -7,19 +7,27 @@
         WindowStyle="None"
         Background="Transparent"
         BorderBrush="Transparent"
-        BorderThickness="2"
+        BorderThickness="4"
         ResizeMode="NoResize"
         Topmost="True"
         Icon="/Icons/twitch_chat2.ico"
-        Title="Twitch Chat Overlay" Height="492" Width="314" KeyUp="Window_KeyUp" Loaded="Window_Loaded" Closing="Window_Closing" MouseRightButtonUp="Window_MouseRightButtonUp" Deactivated="Window_Deactivated" PreviewLostKeyboardFocus="Window_PreviewLostKeyboardFocus" SourceInitialized="Window_SourceInitialized">
+        Title="Twitch Chat Overlay" Height="500" Width="320" KeyUp="Window_KeyUp" Loaded="Window_Loaded" Closing="Window_Closing" MouseRightButtonUp="Window_MouseRightButtonUp" Deactivated="Window_Deactivated" PreviewLostKeyboardFocus="Window_PreviewLostKeyboardFocus" SourceInitialized="Window_SourceInitialized">
     <Window.CommandBindings>
         <CommandBinding Command="{x:Static SystemCommands.CloseWindowCommand}" CanExecute="CommandBinding_CanExecute_1" Executed="CommandBinding_Executed_1" />
         <CommandBinding Command="{x:Static SystemCommands.MinimizeWindowCommand}" CanExecute="CommandBinding_CanExecute_1" Executed="CommandBinding_Executed_3" />
     </Window.CommandBindings>
 
+    <WindowChrome.WindowChrome>
+        <WindowChrome
+            CaptionHeight="0"
+            CornerRadius="0"
+            ResizeBorderThickness="4"
+            GlassFrameThickness="0" />
+    </WindowChrome.WindowChrome>
+
     <Window.Resources>
         <ContextMenu Background="White" x:Key="contextMenu">
-            <MenuItem Header="Twitch Chat Overlay v0.6" IsEnabled="False" />
+            <MenuItem Header="Twitch Chat Overlay v0.7" IsEnabled="False" />
             <MenuItem Header="Toggle Borders (F9)" Click="MenuItem_ToggleBorderVisible" />
             <MenuItem Header="New Window" Click="MenuItem_ClickNewWindow" />
             <MenuItem Header="Zoom Level">
@@ -39,6 +47,24 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
+        <tb:TaskbarIcon
+            Name="taskbarControl"
+            IconSource="/Icons/twitch_chat2.ico"
+            ToolTipText="Twitch Chat Overlay">
+            <!-- Set a simple context menu  -->
+            <tb:TaskbarIcon.ContextMenu>
+                <ContextMenu Background="White" x:Name="contextMenu">
+                    <MenuItem Header="Twitch Chat Overlay v0.7" IsEnabled="False" />
+                    <MenuItem Header="Hide/Show Border (F9)" Click="MenuItem_ToggleBorderVisible" />
+                    <MenuItem Header="Settings" Click="MenuItem_SettingsClick" />
+                    <MenuItem  Header="Reset Window" Click="MenuItem_ResetWindowClick" />
+                    <Separator />
+                    <MenuItem Header="GitHub latest release" Click="MenuItem_VisitWebsite" />
+                    <MenuItem Header="Exit" Click="MenuItem_Exit" />
+                </ContextMenu>
+            </tb:TaskbarIcon.ContextMenu>
+        </tb:TaskbarIcon>
+
         <Border Grid.Row="0"
             Name="headerBorder" 
             Width="Auto" 
@@ -52,21 +78,24 @@
             ContextMenu="{StaticResource contextMenu}">
 
             <Grid>
-                <StackPanel HorizontalAlignment="Left" Orientation="Horizontal" Margin="2,0,0,0">
+                <StackPanel HorizontalAlignment="Left" Orientation="Horizontal" Margin="0,-2,0,0">
                     <Button Name="btnSettings" Visibility="Visible" Background="White" Click="btnSettings_Click" Width="18" Height="16" Margin="0,0,14,0">
                         <TextBlock Margin="-1,-3,0,0">⚙</TextBlock>
                     </Button>
                 </StackPanel>
 
-                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Margin="0,0,2,0">
-                    <Button Name="btnHide" Visibility="Visible" Background="White" Click="btnHide_Click" Width="14" Height="12" Margin="0,1,8,0">
-                        <TextBlock Margin="0,-5,0,0">o</TextBlock>
+                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Margin="0,-2,1,0">
+                    <Button Name="btnHide" Visibility="Visible" Background="White" Click="btnHide_Click" Width="15" Height="14" Margin="0,1,8,0">
+                        <TextBlock Margin="0,-3,0,0">⍉</TextBlock>
                     </Button>
-                    <Button Name="btnMin" Visibility="Visible" Background="White" Command="{x:Static SystemCommands.MinimizeWindowCommand}" Width="14" Height="12" Margin="0,1,4,0">
-                        <TextBlock Margin="0,-7,0,0">_</TextBlock>
+                    <Button Name="btnMin" Visibility="Visible" Background="White" Command="{x:Static SystemCommands.MinimizeWindowCommand}" Width="15" Height="14" Margin="0,1,4,0">
+                        <TextBlock Margin="0,-5,0,0">_</TextBlock>
                     </Button>
-                    <Button Name="btnClose" Visibility="Visible" Background="White" Command="{x:Static SystemCommands.CloseWindowCommand}" Width="14" Height="12" Margin="0,1,0,0">
-                        <TextBlock Margin="0,-5,0,0">x</TextBlock>
+                    <Button Name="btnMax" Visibility="Visible" Background="White" Click="btnMax_Click"  Width="15" Height="14" Margin="0,1,4,0">
+                        <TextBlock Margin="0,-3,0,0">☐</TextBlock>
+                    </Button>
+                    <Button Name="btnClose" Visibility="Visible" Background="White" Command="{x:Static SystemCommands.CloseWindowCommand}" Width="15" Height="14" Margin="0,1,0,0">
+                        <TextBlock Margin="0,-3,0,0">✕</TextBlock>
                     </Button>
                 </StackPanel>
             </Grid>

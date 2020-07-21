@@ -11,6 +11,7 @@ namespace TransparentTwitchChatWPF
         void hideBorders();
         void drawBorders();
         void ToggleBorderVisibility();
+        void ResetWindowState();
 
     }
 }

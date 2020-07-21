@@ -15,7 +15,11 @@ namespace TransparentTwitchChatWPF
         public bool ChatFade { get; set; }
         public string FadeTime { get; set; }
         public bool ShowBotActivity { get; set; }
+        public bool ChatNotificationSound { get; set; }
         public int Theme { get; set; }
         public string CustomCSS { get; set; }
+        public bool AutoHideBorders { get; set; }
+        public bool EnableTrayIcon { get; set; }
+        public bool ConfirmClose { get; set; }
     }
 }

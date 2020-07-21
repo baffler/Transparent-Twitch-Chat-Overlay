@@ -55,8 +55,13 @@ namespace TransparentTwitchChatWPF
         {
             base.OnMouseLeftButtonDown(e);
 
-            // Begin dragging the window
-            this.DragMove();
+            if (e.ClickCount == 1)
+                this.DragMove();
+            else if (e.ClickCount == 2)
+            {
+                if (this.WindowState == WindowState.Maximized)
+                    this.WindowState = WindowState.Normal;
+            }
         }
 
         private void btnHide_Click(object sender, RoutedEventArgs e)
@@ -69,9 +74,10 @@ namespace TransparentTwitchChatWPF
             var hwnd = new WindowInteropHelper(this).Handle;
             WindowHelper.SetWindowExDefault(hwnd);
 
-            btnClose.Visibility = System.Windows.Visibility.Visible;
-            btnMin.Visibility = System.Windows.Visibility.Visible;
-            btnHide.Visibility = System.Windows.Visibility.Visible;
+            btnClose.Visibility = Visibility.Visible;
+            btnMin.Visibility = Visibility.Visible;
+            btnMax.Visibility = Visibility.Visible;
+            btnHide.Visibility = Visibility.Visible;
             //btnSettings.Visibility = System.Windows.Visibility.Visible;
 
             headerBorder.Background = Brushes.Black;
@@ -90,10 +96,11 @@ namespace TransparentTwitchChatWPF
             var hwnd = new WindowInteropHelper(this).Handle;
             WindowHelper.SetWindowExTransparent(hwnd);
 
-            btnClose.Visibility = System.Windows.Visibility.Hidden;
-            btnMin.Visibility = System.Windows.Visibility.Hidden;
-            btnHide.Visibility = System.Windows.Visibility.Hidden;
-            btnSettings.Visibility = System.Windows.Visibility.Hidden;
+            btnClose.Visibility = Visibility.Hidden;
+            btnMin.Visibility = Visibility.Hidden;
+            btnMax.Visibility = Visibility.Hidden;
+            btnHide.Visibility = Visibility.Hidden;
+            btnSettings.Visibility = Visibility.Hidden;
 
             headerBorder.Background = Brushes.Transparent;
             this.BorderBrush = Brushes.Transparent;
@@ -112,6 +119,16 @@ namespace TransparentTwitchChatWPF
                 drawBorders();
             else
                 hideBorders();
+        }
+
+        public void ResetWindowState()
+        {
+            drawBorders();
+            this.WindowState = WindowState.Normal;
+            this.Left = 10;
+            this.Top = 10;
+            this.Height = 450;
+            this.Width = 300;
         }
 
         private void CommandBinding_CanExecute_1(object sender, CanExecuteRoutedEventArgs e)
@@ -156,19 +173,19 @@ namespace TransparentTwitchChatWPF
 
         private void ShowSettingsWindow(WindowSettings config)
         {
-            SettingsWindow settingsWindow = new SettingsWindow(config);
+            /*SettingsWindow settingsWindow = new SettingsWindow(config);
 
             if (settingsWindow.ShowDialog() == true)
             {
                 // update the AppSettings
                 MessageBox.Show(config.URL);
-            }
+            }*/
         }
 
         private void btnSettings_Click(object sender, RoutedEventArgs e)
         {
-            WindowSettings cfg = new WindowSettings { isCustomURL = true, URL = this.customURL };
-            ShowSettingsWindow(cfg);
+            //WindowSettings cfg = new WindowSettings { isCustomURL = true, URL = this.customURL };
+            //ShowSettingsWindow(cfg);
         }
 
         private void MenuItem_VisitWebsite(object sender, RoutedEventArgs e)
@@ -215,6 +232,14 @@ namespace TransparentTwitchChatWPF
             Services.Tracker.Configure(this).IdentifyAs(rgx.Replace(this.customURL, "")).Apply();
 
             SetupBrowser();
+        }
+
+        private void btnMax_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.WindowState == WindowState.Maximized)
+                this.WindowState = WindowState.Normal;
+            else
+                this.WindowState = WindowState.Maximized;
         }
     }
 }

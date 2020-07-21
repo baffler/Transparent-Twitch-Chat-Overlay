@@ -20,10 +20,12 @@ namespace TransparentTwitchChatWPF
     public partial class SettingsWindow : Window
     {
         WindowSettings config;
+        MainWindow _main;
 
-        public SettingsWindow(WindowSettings windowConfig)
+        public SettingsWindow(MainWindow mainWindow, WindowSettings windowConfig)
         {
             this.config = windowConfig;
+            this._main = mainWindow;
 
             InitializeComponent();
         }
@@ -51,6 +53,7 @@ namespace TransparentTwitchChatWPF
                 this.config.ChatFade = this.cbFade.IsChecked ?? false;
                 this.config.FadeTime = this.tbFadeTime.Text;
                 this.config.ShowBotActivity = this.cbBotActivity.IsChecked ?? false;
+                this.config.ChatNotificationSound = this.cbChatSound.IsChecked ?? false;
                 this.config.Theme = this.comboTheme.SelectedIndex;
 
                 if (this.config.Theme == 0)
@@ -58,6 +61,10 @@ namespace TransparentTwitchChatWPF
                     this.config.CustomCSS = this.tbCSS.Text;
                 }
             }
+
+            this.config.AutoHideBorders = this.cbAutoHideBorders.IsChecked ?? false;
+            this.config.EnableTrayIcon  = this.cbEnableTrayIcon.IsChecked ?? false;
+            this.config.ConfirmClose    = this.cbConfirmClose.IsChecked ?? false;
 
             DialogResult = true;
         }
@@ -71,14 +78,19 @@ namespace TransparentTwitchChatWPF
             this.tbFadeTime.IsEnabled = this.config.ChatFade;
 
             this.cbBotActivity.IsChecked = this.config.ShowBotActivity;
+            this.cbChatSound.IsChecked = this.config.ChatNotificationSound;
             this.comboTheme.SelectedIndex = this.config.Theme;
 
+            // General
+            this.cbAutoHideBorders.IsChecked = this.config.AutoHideBorders;
+            this.cbEnableTrayIcon.IsChecked = this.config.EnableTrayIcon;
+            this.cbConfirmClose.IsChecked = this.config.ConfirmClose;
+
+            // Custom URL
             if (this.config.isCustomURL)
             {
-                this.sp1.Visibility = Visibility.Hidden;
-                this.sp2.Visibility = Visibility.Hidden;
-                this.tbURL.Visibility = Visibility.Visible;
-                this.tbCSS2.Visibility = Visibility.Visible;
+                this.kapChatGrid.Visibility = Visibility.Hidden;
+                this.customURLGrid.Visibility = Visibility.Visible;
 
                 this.tbURL.Text = this.config.URL;
                 this.tbCSS2.Text = this.config.CustomCSS;
@@ -87,9 +99,8 @@ namespace TransparentTwitchChatWPF
             }
             else
             {
-                this.sp1.Visibility = Visibility.Visible;
-                this.sp2.Visibility = Visibility.Visible;
-                this.tbURL.Visibility = Visibility.Hidden;
+                this.kapChatGrid.Visibility = Visibility.Visible;
+                this.customURLGrid.Visibility = Visibility.Hidden;
 
                 this.tbURL.Text = string.Empty;
 
@@ -144,43 +155,103 @@ namespace TransparentTwitchChatWPF
             {
                 tbCSS.Visibility = Visibility.Visible;
                 lblCSS.Visibility = Visibility.Visible;
-                this.Height = 458;
+                this.Height = 510;
             }
             else
             {
                 tbCSS.Visibility = Visibility.Hidden;
                 lblCSS.Visibility = Visibility.Hidden;
-                this.Height = 355;
+                this.Height = 405;
             }
         }
 
         private void CheckBox_Checked(object sender, RoutedEventArgs e)
         {
-            this.sp1.Visibility = Visibility.Hidden;
-            this.sp2.Visibility = Visibility.Hidden;
-            this.Height = 300;
+            this.kapChatGrid.Visibility = Visibility.Hidden;
+            //this.sp1.Visibility = Visibility.Hidden;
+            //this.sp2.Visibility = Visibility.Hidden;
+            this.Height = 405;
 
-            this.tbURL.Visibility = Visibility.Visible;
-            this.tbCSS2.Visibility = Visibility.Visible;
+            this.customURLGrid.Visibility = Visibility.Visible;
+            //this.tbURL.Visibility = Visibility.Visible;
+            //this.tbCSS2.Visibility = Visibility.Visible;
         }
 
         private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
-            this.tbURL.Visibility = Visibility.Hidden;
-            this.tbCSS2.Visibility = Visibility.Hidden;
+            this.customURLGrid.Visibility = Visibility.Hidden;
+            //this.tbURL.Visibility = Visibility.Hidden;
+            //this.tbCSS2.Visibility = Visibility.Hidden;
 
-            this.sp1.Visibility = Visibility.Visible;
-            this.sp2.Visibility = Visibility.Visible;
+            //this.sp1.Visibility = Visibility.Visible;
+            //this.sp2.Visibility = Visibility.Visible;
+            this.kapChatGrid.Visibility = Visibility.Visible;
 
             if (comboTheme.SelectedIndex == 0)
-                this.Height = 458;
+                this.Height = 510;
             else
-                this.Height = 355;
+                this.Height = 405;
         }
+
+
 
         private void Window_SourceInitialized(object sender, EventArgs e)
         {
             SetupValues();
+        }
+
+        private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            switch (this.lvSettings.SelectedIndex)
+            {
+                case 0: // Chat
+                    this.chatGrid.Visibility = Visibility.Visible;
+                    this.generalGrid.Visibility = Visibility.Hidden;
+                    this.widgetGrid.Visibility = Visibility.Hidden;
+                    this.cbCustomURL.Visibility = Visibility.Visible;
+                    this.aboutGrid.Visibility = Visibility.Hidden;
+                    break;
+                case 1: // General
+                    this.chatGrid.Visibility = Visibility.Hidden;
+                    this.generalGrid.Visibility = Visibility.Visible;
+                    this.widgetGrid.Visibility = Visibility.Hidden;
+                    this.cbCustomURL.Visibility = Visibility.Hidden;
+                    this.aboutGrid.Visibility = Visibility.Hidden;
+                    break;
+                case 2: // Widgets
+                    this.chatGrid.Visibility = Visibility.Hidden;
+                    this.generalGrid.Visibility = Visibility.Hidden;
+                    this.widgetGrid.Visibility = Visibility.Visible;
+                    this.cbCustomURL.Visibility = Visibility.Hidden;
+                    this.aboutGrid.Visibility = Visibility.Hidden;
+                    break;
+                case 3: // About
+                    this.chatGrid.Visibility = Visibility.Hidden;
+                    this.generalGrid.Visibility = Visibility.Hidden;
+                    this.widgetGrid.Visibility = Visibility.Hidden;
+                    this.cbCustomURL.Visibility = Visibility.Hidden;
+                    this.aboutGrid.Visibility = Visibility.Visible;
+                    break;
+                default:
+                    this.chatGrid.Visibility = Visibility.Hidden;
+                    this.generalGrid.Visibility = Visibility.Hidden;
+                    this.widgetGrid.Visibility = Visibility.Hidden;
+                    this.cbCustomURL.Visibility = Visibility.Hidden;
+                    this.aboutGrid.Visibility = Visibility.Hidden;
+                    break;
+            }
+        }
+
+        private void NewWidgetButton_Click(object sender, RoutedEventArgs e)
+        {
+            this._main.CreateNewWindow(this.tbUrlForWidget.Text);
+            this.tbUrlForWidget.Text = string.Empty;
+        }
+
+        private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(e.Uri.AbsoluteUri));
+            e.Handled = true;
         }
     }
 }

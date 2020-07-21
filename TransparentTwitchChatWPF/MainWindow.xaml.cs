@@ -21,8 +21,21 @@ using System.Windows.Interop;
 using System.Collections.Specialized;
 using Jot;
 using Jot.DefaultInitializer;
+using System.Media;
 
 /*
+ * v0.7
+ * - Added a setting to show/hide the system tray icon control
+ * - Added a setting to auto-hide borders when the application launches
+ * - Added a setting to enable/disable the confirmation box when closing the application
+ * - Added a setting to allow for a notification sound for a new chat message
+ * - Can now resize the window on any part of the border
+ * - Added a maximize button
+ * - Widget windows are a different color from the main window
+ * - Updated Chromium Embedded Framework (CEF)
+ * - (will require you to install Microsoft Visual C++ 2015-2019 Redistributable x86)
+ * - (available at https://aka.ms/vs/16/release/vc_redist.x86.exe)
+ * 
  * v0.6
  * - Removed the system tray icon control
  * - Settings reworked under the hood (you'll lose settings from previous versions, sorry!)
@@ -36,13 +49,15 @@ using Jot.DefaultInitializer;
  * - Added "New Window" under context menu. You can add alerts widgets now (like from streamlabs)
  * 
  * TODO:
+ * Cascade the windows when creating a new one
+ * Cascade the windows when resetting their positions
  * Easier/better size grip, kinda hard to see it, or click on it right now
  * Hotkey and/or menu item to hide the chat and make it visible again
- * Show current viewers and other stats from twitch?
  * Allowing you to chat from the app?
  *
  * 
  * Done:
+ x Notification sound for new chat messages
  x Chat fading option
  x Click-through the application
  x Custom css
@@ -100,10 +115,14 @@ namespace TransparentTwitchChatWPF
                 FadeChat = false,
                 FadeTime = "120",
                 ShowBotActivity = false,
+                ChatNotificationSound = false,
                 ThemeIndex = 1,
                 isCustomURL = false,
                 CustomURL = string.Empty,
-                ZoomLevel = 0
+                ZoomLevel = 0,
+                AutoHideBorders = false,
+                EnableTrayIcon = true,
+                ConfirmClose = true
             };
 
             var browserSettings = new BrowserSettings
@@ -112,6 +131,13 @@ namespace TransparentTwitchChatWPF
                 UniversalAccessFromFileUrls = CefState.Enabled
             };
             Browser1.BrowserSettings = browserSettings;
+            CefSharpSettings.LegacyJavascriptBindingEnabled = true;
+
+            Uri startupPath = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
+            string file = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\alert.wav";
+
+            //this.Browser1.RegisterAsyncJsObject("jsCallback", new JsCallbackFunctions(file));
+            Browser1.JavascriptObjectRepository.Register("jsCallback", new JsCallbackFunctions(file), isAsync: true, options: BindingOptions.DefaultBinder);
         }
 
         public bool ProcessCommandLineArgs(IList<string> args)
@@ -149,10 +175,11 @@ namespace TransparentTwitchChatWPF
             var hwnd = new WindowInteropHelper(this).Handle;
             WindowHelper.SetWindowExDefault(hwnd);
 
-            btnClose.Visibility = System.Windows.Visibility.Visible;
-            btnMin.Visibility = System.Windows.Visibility.Visible;
-            btnHide.Visibility = System.Windows.Visibility.Visible;
-            btnSettings.Visibility = System.Windows.Visibility.Visible;
+            btnClose.Visibility = Visibility.Visible;
+            btnMin.Visibility = Visibility.Visible;
+            btnMax.Visibility = Visibility.Visible;
+            btnHide.Visibility = Visibility.Visible;
+            btnSettings.Visibility = Visibility.Visible;
 
             headerBorder.Background = Brushes.Black;
             this.BorderBrush = Brushes.Black;
@@ -170,10 +197,11 @@ namespace TransparentTwitchChatWPF
             var hwnd = new WindowInteropHelper(this).Handle;
             WindowHelper.SetWindowExTransparent(hwnd);
 
-            btnClose.Visibility = System.Windows.Visibility.Hidden;
-            btnMin.Visibility = System.Windows.Visibility.Hidden;
-            btnHide.Visibility = System.Windows.Visibility.Hidden;
-            btnSettings.Visibility = System.Windows.Visibility.Hidden;
+            btnClose.Visibility = Visibility.Hidden;
+            btnMin.Visibility = Visibility.Hidden;
+            btnMax.Visibility = Visibility.Hidden;
+            btnHide.Visibility = Visibility.Hidden;
+            btnSettings.Visibility = Visibility.Hidden;
 
             headerBorder.Background = Brushes.Transparent;
             this.BorderBrush = Brushes.Transparent;
@@ -189,27 +217,40 @@ namespace TransparentTwitchChatWPF
         public void ToggleBorderVisibility()
         {
             if (hiddenBorders)
-            {
-                drawBorders();
-                foreach (BrowserWindow win in this.windows)
-                    win.drawBorders();
-            }
+                DrawBordersForAllWindows();
             else
-            {
-                hideBorders();
-                foreach (BrowserWindow win in this.windows)
-                    win.hideBorders();
-            }
+                HideBordersForAllWindows();
+        }
+
+        public void DrawBordersForAllWindows()
+        {
+            drawBorders();
+            foreach (BrowserWindow win in this.windows)
+                win.drawBorders();
+        }
+
+        public void HideBordersForAllWindows()
+        {
+            hideBorders();
+            foreach (BrowserWindow win in this.windows)
+                win.hideBorders();
         }
 
         public void ResetWindowPosition()
         {
-            this.drawBorders();
+            this.ResetWindowState();
+            foreach (BrowserWindow win in this.windows)
+                win.ResetWindowState();
+        }
+
+        public void ResetWindowState()
+        {
+            drawBorders();
             this.WindowState = WindowState.Normal;
             this.Left = 10;
             this.Top = 10;
-            this.Height = 492;
-            this.Width = 314;
+            this.Height = 500;
+            this.Width = 320;
         }
 
         private void Window_KeyUp(object sender, KeyEventArgs e)
@@ -249,11 +290,7 @@ namespace TransparentTwitchChatWPF
 
         private void CommandBinding_Executed_1(object sender, ExecutedRoutedEventArgs e)
         {
-            if (MessageBox.Show("Sure you want to exit the application?", "Exit", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-            {
-                System.Windows.Application.Current.Shutdown();
-            }
-            //SystemCommands.CloseWindow(this);
+            ExitApplication();
         }
 
         private void CommandBinding_Executed_3(object sender, ExecutedRoutedEventArgs e)
@@ -331,6 +368,22 @@ namespace TransparentTwitchChatWPF
                 this.genSettings.isCustomURL = true;
                 this.genSettings.CustomURL = inputDialog.Url;
             }
+        }
+
+        public void ExitApplication()
+        {
+            if (this.genSettings.ConfirmClose)
+            {
+                if (MessageBox.Show("Sure you want to exit the application?", "Exit", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    System.Windows.Application.Current.Shutdown();
+                }
+            }
+            else
+            {
+                System.Windows.Application.Current.Shutdown();
+            }
+            //SystemCommands.CloseWindow(this);
         }
 
         public void ToggleBotActivitySetting()
@@ -424,11 +477,25 @@ namespace TransparentTwitchChatWPF
         {
             if (!e.IsLoading)
             {
-                //if ((this.genSettings.ZoomLevel >= -4.0) && (this.genSettings.ZoomLevel <= 4.0))
                 this.Browser1.Dispatcher.Invoke(new Action(() => { this.Browser1.ZoomLevel = this.genSettings.ZoomLevel; }));
 
                 if (!string.IsNullOrEmpty(this.genSettings.CustomCSS))
                     InjectCSS(this.genSettings.CustomCSS);
+
+
+                if ((!this.genSettings.isCustomURL) && (this.genSettings.ChatNotificationSound))
+                {
+                    // Inject JS to play a sound on each chat message
+                    string script = @"var oldChatInsert = Chat.insert;
+Chat.insert = function() {
+    (async function() {
+	    await CefSharp.BindObjectAsync('jsCallback');
+        jsCallback.playSound();
+    })();
+    return oldChatInsert.apply(oldChatInsert, arguments);
+}";
+                    InjectJS(script);
+                }
             }
         }
 
@@ -447,21 +514,43 @@ namespace TransparentTwitchChatWPF
             this.Browser1.ExecuteScriptAsync(script);
         }
 
-        private void MenuItem_ClickNewWindow(object sender, RoutedEventArgs e)
+        private void InjectJS(string JS)
+        {
+            try
+            {
+                this.Browser1.ExecuteScriptAsync(JS);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        public void CreateNewWindow(string URL)
+        {
+            if (this.genSettings.CustomWindows.Contains(URL))
+            {
+                MessageBox.Show("That URL already exists as a window.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            else
+            {
+                this.genSettings.CustomWindows.Add(URL);
+                OpenNewCustomWindow(URL);
+            }
+        }
+
+        private void CreateNewWindowDialog()
         {
             Input_Custom inputDialog = new Input_Custom();
             if (inputDialog.ShowDialog() == true)
             {
-                if (this.genSettings.CustomWindows.Contains(inputDialog.Url))
-                {
-                    MessageBox.Show("That URL already exists as a window.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-                else
-                {
-                    this.genSettings.CustomWindows.Add(inputDialog.Url);
-                    OpenNewCustomWindow(inputDialog.Url);
-                }
+                CreateNewWindow(inputDialog.Url);
             }
+        }
+
+        private void MenuItem_ClickNewWindow(object sender, RoutedEventArgs e)
+        {
+            CreateNewWindowDialog();
         }
 
         private void ShowSettingsWindow()
@@ -474,11 +563,15 @@ namespace TransparentTwitchChatWPF
                 ChatFade = this.genSettings.FadeChat,
                 FadeTime = this.genSettings.FadeTime,
                 ShowBotActivity = this.genSettings.ShowBotActivity,
+                ChatNotificationSound = this.genSettings.ChatNotificationSound,
                 Theme = this.genSettings.ThemeIndex,
-                CustomCSS = this.genSettings.CustomCSS
+                CustomCSS = this.genSettings.CustomCSS,
+                AutoHideBorders = this.genSettings.AutoHideBorders,
+                ConfirmClose = this.genSettings.ConfirmClose,
+                EnableTrayIcon = this.genSettings.EnableTrayIcon
             };
 
-            SettingsWindow settingsWindow = new SettingsWindow(config);
+            SettingsWindow settingsWindow = new SettingsWindow(this, config);
 
             if (settingsWindow.ShowDialog() == true)
             {
@@ -498,6 +591,7 @@ namespace TransparentTwitchChatWPF
                     this.genSettings.FadeChat = config.ChatFade;
                     this.genSettings.FadeTime = config.FadeTime;
                     this.genSettings.ShowBotActivity = config.ShowBotActivity;
+                    this.genSettings.ChatNotificationSound = config.ChatNotificationSound;
                     this.genSettings.ThemeIndex = config.Theme;
 
                     if (this.genSettings.ThemeIndex == 0)
@@ -509,6 +603,12 @@ namespace TransparentTwitchChatWPF
                     if (!string.IsNullOrEmpty(this.genSettings.Username))
                         SetChatAddress(this.genSettings.Username);
                 }
+
+                this.genSettings.AutoHideBorders = config.AutoHideBorders;
+                this.genSettings.ConfirmClose = config.ConfirmClose;
+                this.genSettings.EnableTrayIcon = config.EnableTrayIcon;
+
+                this.taskbarControl.Visibility = config.EnableTrayIcon ? Visibility.Visible : Visibility.Hidden;
             }
         }
 
@@ -549,12 +649,18 @@ namespace TransparentTwitchChatWPF
             Services.Tracker.Configure(this).IdentifyAs("State").Apply();
             Services.Tracker.Configure(this.genSettings).IdentifyAs("MainWindow").Apply();
 
+            if (!this.genSettings.EnableTrayIcon)
+                this.taskbarControl.Visibility = Visibility.Hidden;
+
             SetupBrowser();
         }
 
         private void SetupBrowser()
         {
-            drawBorders();
+            if (this.genSettings.AutoHideBorders)
+                hideBorders();
+            else
+                drawBorders();
 
             if (this.genSettings.CustomWindows != null)
             {
@@ -582,6 +688,54 @@ namespace TransparentTwitchChatWPF
                 //"<html><body style=\"font-size: x-large; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; \">Load a channel to connect to by right-clicking the tray icon.<br /><br />You can move and resize the window, then press the [o] button to hide borders, or use the tray icon menu.</body></html>");
             }
         }
+
+        private void MenuItem_SettingsClick(object sender, RoutedEventArgs e)
+        {
+            ShowSettingsWindow();
+        }
+
+        private void MenuItem_Exit(object sender, RoutedEventArgs e)
+        {
+            ExitApplication();
+        }
+
+        private void MenuItem_ResetWindowClick(object sender, RoutedEventArgs e)
+        {
+            ResetWindowPosition();
+
+            if (MessageBox.Show("Show settings folder?", "Settings Folder", MessageBoxButton.YesNo, MessageBoxImage.Question)
+                == MessageBoxResult.Yes)
+            {
+                System.Diagnostics.Process.Start((Services.Tracker.StoreFactory as Jot.Storage.JsonFileStoreFactory).StoreFolderPath);
+            }
+        }
+
+        private void btnMax_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.WindowState == WindowState.Maximized)
+                this.WindowState = WindowState.Normal;
+            else
+                this.WindowState = WindowState.Maximized;
+        }
+    }
+
+    public class JsCallbackFunctions
+    {
+        private string mediaFile;
+
+        public JsCallbackFunctions(string file)
+        {
+            this.mediaFile = file;
+        }
+
+        public void playSound()
+        {
+            try
+            {
+                SoundPlayer sp = new SoundPlayer(mediaFile);
+                sp.Play();
+            } catch { }
+        }
     }
 
     public class GeneralSettings
@@ -597,6 +751,8 @@ namespace TransparentTwitchChatWPF
         [Trackable]
         public bool ShowBotActivity { get; set; }
         [Trackable]
+        public bool ChatNotificationSound { get; set; }
+        [Trackable]
         public int ThemeIndex { get; set; }
         [Trackable]
         public string CustomCSS { get; set; }
@@ -606,5 +762,11 @@ namespace TransparentTwitchChatWPF
         public string CustomURL { get; set; }
         [Trackable]
         public double ZoomLevel { get; set; }
+        [Trackable]
+        public bool AutoHideBorders { get; set; }
+        [Trackable]
+        public bool EnableTrayIcon { get; set; }
+        [Trackable]
+        public bool ConfirmClose { get; set; }
     }
 }
