@@ -24,6 +24,17 @@ using Jot.DefaultInitializer;
 using System.Media;
 
 /*
+ * v0.8
+ * 
+ * 
+ * - More chat sound alerts. Also a lower volume option for each, volume slider soon.
+ * - New setting to let you add the Twitch Popout chat
+ * - Fixed issue with settings not being saved if app was forcibly closed
+ * - New setting to allow interaction with the main window source
+ * - Can change opacity by right-clicking on the top border
+ * - New setting in General to hide the taskbar icon
+ * - When loading a webcaptioner link as a new widget, it will load default custom css
+ * 
  * v0.7
  * - Added a setting to show/hide the system tray icon control
  * - Added a setting to auto-hide borders when the application launches
@@ -49,19 +60,20 @@ using System.Media;
  * - Added "New Window" under context menu. You can add alerts widgets now (like from streamlabs)
  * 
  * TODO:
+ * > Custom CSS for widgets
+ * Add opacity and zoom levels into the General settings
+ * Save and load different css files
+ * Fade out the chat when there's not been a message for awhile (useful if opacity is set high)
  * Cascade the windows when creating a new one
  * Cascade the windows when resetting their positions
  * Easier/better size grip, kinda hard to see it, or click on it right now
  * Hotkey and/or menu item to hide the chat and make it visible again
- * Allowing you to chat from the app?
+ * Allowing you to chat from the app, quickly (hotkey to enable it?)
+ * Custom javascript
  *
  * 
  * Done:
  x Notification sound for new chat messages
- x Chat fading option
- x Click-through the application
- x Custom css
- x More options for kapchat, like setting the themes or other things
  * 
  */
 
@@ -72,8 +84,12 @@ namespace TransparentTwitchChatWPF
     /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged, BrowserWindow
     {
+        SolidColorBrush bgColor;
+        int cOpacity = 0;
         bool hiddenBorders = false;
         GeneralSettings genSettings;
+        TrackingConfiguration genSettingsTrackingConfig;
+        JsCallbackFunctions jsCallbackFunctions;
 
         //StringCollection custom_windows = new StringCollection();
         List<BrowserWindow> windows = new List<BrowserWindow>();
@@ -115,15 +131,22 @@ namespace TransparentTwitchChatWPF
                 FadeChat = false,
                 FadeTime = "120",
                 ShowBotActivity = false,
-                ChatNotificationSound = false,
+                ChatNotificationSound = "None",
                 ThemeIndex = 1,
-                isCustomURL = false,
+                ChatType = 0,
                 CustomURL = string.Empty,
                 ZoomLevel = 0,
+                OpacityLevel = 0,
                 AutoHideBorders = false,
                 EnableTrayIcon = true,
-                ConfirmClose = true
+                ConfirmClose = true,
+                HideTaskbarIcon = true,
+                AllowInteraction = true
             };
+
+            Services.Tracker.Configure(this).IdentifyAs("State").Apply();
+            this.genSettingsTrackingConfig = Services.Tracker.Configure(this.genSettings);
+            this.genSettingsTrackingConfig.IdentifyAs("MainWindow").Apply();
 
             var browserSettings = new BrowserSettings
             {
@@ -133,11 +156,9 @@ namespace TransparentTwitchChatWPF
             Browser1.BrowserSettings = browserSettings;
             CefSharpSettings.LegacyJavascriptBindingEnabled = true;
 
-            Uri startupPath = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
-            string file = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\alert.wav";
-
-            //this.Browser1.RegisterAsyncJsObject("jsCallback", new JsCallbackFunctions(file));
-            Browser1.JavascriptObjectRepository.Register("jsCallback", new JsCallbackFunctions(file), isAsync: true, options: BindingOptions.DefaultBinder);
+            //this.Browser1.RegisterAsyncJsObject("jsCallback", new JsCallbackFunctions());
+            this.jsCallbackFunctions = new JsCallbackFunctions();
+            Browser1.JavascriptObjectRepository.Register("jsCallback", this.jsCallbackFunctions, isAsync: true, options: BindingOptions.DefaultBinder);
         }
 
         public bool ProcessCommandLineArgs(IList<string> args)
@@ -172,6 +193,8 @@ namespace TransparentTwitchChatWPF
 
         public void drawBorders()
         {
+            this.ShowInTaskbar = true;
+
             var hwnd = new WindowInteropHelper(this).Handle;
             WindowHelper.SetWindowExDefault(hwnd);
 
@@ -190,10 +213,15 @@ namespace TransparentTwitchChatWPF
             this.Topmost = false;
             this.Activate();
             this.Topmost = true;
+
+            this.Browser1.IsEnabled = this.genSettings.AllowInteraction;
         }
 
         public void hideBorders()
         {
+            if (this.genSettings.HideTaskbarIcon)
+                this.ShowInTaskbar = false;
+
             var hwnd = new WindowInteropHelper(this).Handle;
             WindowHelper.SetWindowExTransparent(hwnd);
 
@@ -212,6 +240,8 @@ namespace TransparentTwitchChatWPF
             this.Topmost = false;
             this.Activate();
             this.Topmost = true;
+
+            this.Browser1.IsEnabled = false;
         }
 
         public void ToggleBorderVisibility()
@@ -261,12 +291,7 @@ namespace TransparentTwitchChatWPF
             }
             else if (e.Key == Key.F8)
             {
-                ShowInputDialogBox();
-
-                if (!string.IsNullOrEmpty(this.genSettings.Username))
-                {
-                    SetChatAddress(this.genSettings.Username);
-                }
+                ShowSettingsWindow();
             }
         }
 
@@ -325,26 +350,6 @@ namespace TransparentTwitchChatWPF
             Browser1.Load(url);
         }
 
-        public void ShowInputDialogBox()
-        {
-            Input inputDialog = new Input();
-            if (inputDialog.ShowDialog() == true)
-            {
-                // reset custom url
-                this.genSettings.isCustomURL = false;
-                this.genSettings.CustomURL = string.Empty;
-
-                this.genSettings.Username = inputDialog.Channel;
-                if (this.genSettings.Username.Contains("/"))
-                    this.genSettings.Username = this.genSettings.Username.Split('/').Last();
-
-                if ((string.IsNullOrEmpty(this.genSettings.Username)) || (string.IsNullOrWhiteSpace(this.genSettings.Username)))
-                {
-                    MessageBox.Show("Invalid channel! Please enter your Twitch username only.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            }
-        }
-
         public void ShowInputFadeDialogBox()
         {
             Input_Fade inputDialog = new Input_Fade();
@@ -357,16 +362,6 @@ namespace TransparentTwitchChatWPF
 
                 this.genSettings.FadeChat = (fadeTimeInt > 0);
                 this.genSettings.FadeTime = fadeTime;
-            }
-        }
-
-        public void ShowInputCustomChatDialogBox()
-        {
-            Input_Custom inputDialog = new Input_Custom();
-            if (inputDialog.ShowDialog() == true)
-            {
-                this.genSettings.isCustomURL = true;
-                this.genSettings.CustomURL = inputDialog.Url;
             }
         }
 
@@ -390,11 +385,6 @@ namespace TransparentTwitchChatWPF
         {
             this.genSettings.ShowBotActivity = !this.genSettings.ShowBotActivity;
             SetChatAddress(this.genSettings.Username);
-        }
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            
         }
 
         private void MenuItem_ToggleBorderVisible(object sender, RoutedEventArgs e)
@@ -425,10 +415,6 @@ namespace TransparentTwitchChatWPF
         private void btnHide_Click(object sender, RoutedEventArgs e)
         {
             hideBorders();
-        }
-
-        private void Window_Closing(object sender, CancelEventArgs e)
-        {
         }
 
         private void Window_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
@@ -479,13 +465,19 @@ namespace TransparentTwitchChatWPF
             {
                 this.Browser1.Dispatcher.Invoke(new Action(() => { this.Browser1.ZoomLevel = this.genSettings.ZoomLevel; }));
 
-                if (!string.IsNullOrEmpty(this.genSettings.CustomCSS))
-                    InjectCSS(this.genSettings.CustomCSS);
-
-
-                if ((!this.genSettings.isCustomURL) && (this.genSettings.ChatNotificationSound))
+                if (string.IsNullOrEmpty(this.genSettings.CustomCSS))
                 {
-                    // Inject JS to play a sound on each chat message
+                    // Fix for KapChat so a long chat message doesn't wrap to a new line
+                    if (this.genSettings.ChatType == (int)ChatTypes.KapChat)
+                        InsertCustomCSS(@".message { display: inline !important; }");
+                }
+                else
+                    InsertCustomCSS(this.genSettings.CustomCSS);
+
+
+                if ((this.genSettings.ChatType == (int)ChatTypes.KapChat) && (this.genSettings.ChatNotificationSound.ToLower() != "none"))
+                {
+                    // Insert JS to play a sound on each chat message
                     string script = @"var oldChatInsert = Chat.insert;
 Chat.insert = function() {
     (async function() {
@@ -494,12 +486,12 @@ Chat.insert = function() {
     })();
     return oldChatInsert.apply(oldChatInsert, arguments);
 }";
-                    InjectJS(script);
+                    InsertCustomJavaScript(script);
                 }
             }
         }
 
-        private void InjectCSS(string CSS)
+        private void InsertCustomCSS(string CSS)
         {
             string base64CSS = Utilities.Base64Encode(CSS.Replace("\r\n", "").Replace("\t", ""));
 
@@ -514,7 +506,7 @@ Chat.insert = function() {
             this.Browser1.ExecuteScriptAsync(script);
         }
 
-        private void InjectJS(string JS)
+        private void InsertCustomJavaScript(string JS)
         {
             try
             {
@@ -557,7 +549,7 @@ Chat.insert = function() {
         {
             WindowSettings config = new WindowSettings {
                 Title = "Main Window",
-                isCustomURL = this.genSettings.isCustomURL,
+                ChatType = this.genSettings.ChatType,
                 URL = this.genSettings.CustomURL,
                 Username = this.genSettings.Username,
                 ChatFade = this.genSettings.FadeChat,
@@ -568,25 +560,35 @@ Chat.insert = function() {
                 CustomCSS = this.genSettings.CustomCSS,
                 AutoHideBorders = this.genSettings.AutoHideBorders,
                 ConfirmClose = this.genSettings.ConfirmClose,
-                EnableTrayIcon = this.genSettings.EnableTrayIcon
+                EnableTrayIcon = this.genSettings.EnableTrayIcon,
+                HideTaskbarIcon = this.genSettings.HideTaskbarIcon,
+                AllowInteraction = this.genSettings.AllowInteraction
             };
 
             SettingsWindow settingsWindow = new SettingsWindow(this, config);
 
             if (settingsWindow.ShowDialog() == true)
             {
-                if (config.isCustomURL)
+                this.genSettings.ChatType = config.ChatType;
+
+                if (config.ChatType == (int)ChatTypes.CustomURL)
                 {
-                    this.genSettings.isCustomURL = config.isCustomURL;
                     this.genSettings.CustomURL = config.URL;
                     this.genSettings.CustomCSS = config.CustomCSS;
 
                     if (!string.IsNullOrEmpty(this.genSettings.CustomURL))
                         SetCustomChatAddress(this.genSettings.CustomURL);
                 }
-                else
+                else if (config.ChatType == (int)ChatTypes.TwitchPopout)
                 {
-                    this.genSettings.isCustomURL = false;
+                    this.genSettings.Username = config.Username;
+                    this.genSettings.CustomCSS = config.TwitchPopoutCSS;
+
+                    if (!string.IsNullOrEmpty(this.genSettings.Username))
+                        SetCustomChatAddress("https://www.twitch.tv/popout/" + this.genSettings.Username + "/chat?popout=");
+                }
+                else if (config.ChatType == (int)ChatTypes.KapChat)
+                {
                     this.genSettings.Username = config.Username;
                     this.genSettings.FadeChat = config.ChatFade;
                     this.genSettings.FadeTime = config.FadeTime;
@@ -602,21 +604,45 @@ Chat.insert = function() {
 
                     if (!string.IsNullOrEmpty(this.genSettings.Username))
                         SetChatAddress(this.genSettings.Username);
+
+
+                    if (this.genSettings.ChatNotificationSound.ToLower() == "none")
+                        this.jsCallbackFunctions.MediaFile = string.Empty;
+                    else
+                    {
+                        Uri startupPath = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
+                        string file = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\assets\\" + this.genSettings.ChatNotificationSound + ".wav";
+                        if (System.IO.File.Exists(file))
+                        {
+                            this.jsCallbackFunctions.MediaFile = file;
+                        }
+                    }
                 }
 
                 this.genSettings.AutoHideBorders = config.AutoHideBorders;
                 this.genSettings.ConfirmClose = config.ConfirmClose;
                 this.genSettings.EnableTrayIcon = config.EnableTrayIcon;
+                this.genSettings.HideTaskbarIcon = config.HideTaskbarIcon;
+                this.genSettings.AllowInteraction = config.AllowInteraction;
 
                 this.taskbarControl.Visibility = config.EnableTrayIcon ? Visibility.Visible : Visibility.Hidden;
+                this.ShowInTaskbar = !config.HideTaskbarIcon;
+
+                if (!this.hiddenBorders) this.Browser1.IsEnabled = config.AllowInteraction;
+
+                // Save the new changes for settings
+                this.genSettingsTrackingConfig.Persist();
             }
         }
 
-        private void OpenNewCustomWindow(string url)
+        private void OpenNewCustomWindow(string url, bool hideBorder = false)
         {
             CustomWindow newWindow = new CustomWindow(this, url);
             windows.Add(newWindow);
             newWindow.Show();
+            
+            if (hideBorder)
+                newWindow.hideBorders();
         }
 
         public void RemoveCustomWindow(string url)
@@ -646,33 +672,66 @@ Chat.insert = function() {
 
         private void Window_SourceInitialized(object sender, EventArgs e)
         {
-            Services.Tracker.Configure(this).IdentifyAs("State").Apply();
-            Services.Tracker.Configure(this.genSettings).IdentifyAs("MainWindow").Apply();
+        }
 
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
             if (!this.genSettings.EnableTrayIcon)
                 this.taskbarControl.Visibility = Visibility.Hidden;
 
             SetupBrowser();
         }
 
+        private void Browser1_Initialized(object sender, EventArgs e)
+        {
+            
+        }
+
         private void SetupBrowser()
         {
+            if (!this.Browser1.IsInitialized)
+            {
+                MessageBox.Show(
+                  "Error setting up source. The component was not initialized",
+                  "Error", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK
+                );
+                return;
+            }
+
+            this.bgColor = new SolidColorBrush(Color.FromArgb(this.genSettings.OpacityLevel, 0, 0, 0));
+            this.Background = this.bgColor;
+            this.cOpacity = this.genSettings.OpacityLevel;
+
             if (this.genSettings.AutoHideBorders)
                 hideBorders();
             else
                 drawBorders();
 
+            if (this.genSettings.ChatNotificationSound.ToLower() != "none")
+            {
+                Uri startupPath = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
+                string file = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\assets\\" + this.genSettings.ChatNotificationSound + ".wav";
+                if (System.IO.File.Exists(file))
+                {
+                    this.jsCallbackFunctions.MediaFile = file;
+                }
+            }
+
             if (this.genSettings.CustomWindows != null)
             {
                 foreach (string url in this.genSettings.CustomWindows)
-                    OpenNewCustomWindow(url);
+                    OpenNewCustomWindow(url, this.genSettings.AutoHideBorders);
             }
 
             this.Browser1.ZoomLevelIncrement = 0.25;
 
-            if (this.genSettings.isCustomURL && !string.IsNullOrWhiteSpace(this.genSettings.CustomURL))
+            if ((this.genSettings.ChatType == (int)ChatTypes.CustomURL) && (!string.IsNullOrWhiteSpace(this.genSettings.CustomURL)))
             {
                 SetCustomChatAddress(this.genSettings.CustomURL);
+            }
+            else if ((this.genSettings.ChatType == (int)ChatTypes.TwitchPopout) && (!string.IsNullOrEmpty(this.genSettings.Username)))
+            {
+                SetCustomChatAddress("https://www.twitch.tv/popout/" + this.genSettings.Username + "/chat?popout=");
             }
             else if (!string.IsNullOrWhiteSpace(this.genSettings.Username))
             {
@@ -717,23 +776,52 @@ Chat.insert = function() {
             else
                 this.WindowState = WindowState.Maximized;
         }
+
+        private void MenuItem_IncOpacity(object sender, RoutedEventArgs e)
+        {
+            this.cOpacity += 15;
+            if (this.cOpacity > 255) this.cOpacity = 255;
+            this.genSettings.OpacityLevel = (byte)this.cOpacity;
+            this.bgColor.Color = Color.FromArgb((byte)this.cOpacity, 0, 0, 0);
+        }
+
+        private void MenuItem_DecOpacity(object sender, RoutedEventArgs e)
+        {
+            this.cOpacity -= 15;
+            if (this.cOpacity < 0) this.cOpacity = 0;
+            this.genSettings.OpacityLevel = (byte)this.cOpacity;
+            this.bgColor.Color = Color.FromArgb((byte)this.cOpacity, 0, 0, 0);
+        }
+
+        private void MenuItem_ResetOpacity(object sender, RoutedEventArgs e)
+        {
+            this.cOpacity = 0;
+            this.genSettings.OpacityLevel = 0;
+            this.bgColor.Color = Color.FromArgb(0, 0, 0, 0);
+        }
     }
 
     public class JsCallbackFunctions
     {
-        private string mediaFile;
+        public string MediaFile;
 
-        public JsCallbackFunctions(string file)
+        public JsCallbackFunctions()
         {
-            this.mediaFile = file;
+            this.MediaFile = "";
         }
 
         public void playSound()
         {
             try
             {
-                SoundPlayer sp = new SoundPlayer(mediaFile);
-                sp.Play();
+                if (!string.IsNullOrEmpty(this.MediaFile))
+                {
+                    SoundPlayer sp = new SoundPlayer(this.MediaFile);
+                    //MediaPlayer mp = new MediaPlayer();
+                    //mp.Open(new Uri(mediaFile));
+                    //mp.Volume = 0.5f;
+                    sp.Play();
+                }
             } catch { }
         }
     }
@@ -751,22 +839,28 @@ Chat.insert = function() {
         [Trackable]
         public bool ShowBotActivity { get; set; }
         [Trackable]
-        public bool ChatNotificationSound { get; set; }
+        public string ChatNotificationSound { get; set; }
         [Trackable]
         public int ThemeIndex { get; set; }
         [Trackable]
         public string CustomCSS { get; set; }
         [Trackable]
-        public bool isCustomURL { get; set; }
+        public int ChatType { get; set; }
         [Trackable]
         public string CustomURL { get; set; }
         [Trackable]
         public double ZoomLevel { get; set; }
+        [Trackable]
+        public byte OpacityLevel { get; set; }
         [Trackable]
         public bool AutoHideBorders { get; set; }
         [Trackable]
         public bool EnableTrayIcon { get; set; }
         [Trackable]
         public bool ConfirmClose { get; set; }
+        [Trackable]
+        public bool HideTaskbarIcon { get; set; }
+        [Trackable]
+        public bool AllowInteraction { get; set; }
     }
 }

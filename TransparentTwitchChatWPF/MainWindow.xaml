@@ -11,7 +11,7 @@
         ResizeMode="NoResize"
         Topmost="True"
         Icon="/Icons/twitch_chat2.ico"
-        Title="Twitch Chat Overlay" Height="500" Width="320" KeyUp="Window_KeyUp" Loaded="Window_Loaded" Closing="Window_Closing" MouseRightButtonUp="Window_MouseRightButtonUp" Deactivated="Window_Deactivated" PreviewLostKeyboardFocus="Window_PreviewLostKeyboardFocus" SourceInitialized="Window_SourceInitialized">
+        Title="Twitch Chat Overlay" Height="500" Width="320" KeyUp="Window_KeyUp" MouseRightButtonUp="Window_MouseRightButtonUp" Deactivated="Window_Deactivated" PreviewLostKeyboardFocus="Window_PreviewLostKeyboardFocus" SourceInitialized="Window_SourceInitialized" Loaded="Window_Loaded">
     <Window.CommandBindings>
         <CommandBinding Command="{x:Static SystemCommands.CloseWindowCommand}" CanExecute="CommandBinding_CanExecute_1" Executed="CommandBinding_Executed_1" />
         <CommandBinding Command="{x:Static SystemCommands.MinimizeWindowCommand}" CanExecute="CommandBinding_CanExecute_1" Executed="CommandBinding_Executed_3" />
@@ -27,13 +27,18 @@
 
     <Window.Resources>
         <ContextMenu Background="White" x:Key="contextMenu">
-            <MenuItem Header="Twitch Chat Overlay v0.7" IsEnabled="False" />
+            <MenuItem Header="Twitch Chat Overlay v0.8" IsEnabled="False" />
             <MenuItem Header="Toggle Borders (F9)" Click="MenuItem_ToggleBorderVisible" />
-            <MenuItem Header="New Window" Click="MenuItem_ClickNewWindow" />
+            <MenuItem Header="New Widget" Click="MenuItem_ClickNewWindow" />
             <MenuItem Header="Zoom Level">
                 <MenuItem Header="+ Zoom In" Click="MenuItem_ZoomIn" StaysOpenOnClick="True" />
                 <MenuItem Header="- Zoom Out" Click="MenuItem_ZoomOut" StaysOpenOnClick="True" />
                 <MenuItem Header="Reset" Click="MenuItem_ZoomReset" />
+            </MenuItem>
+            <MenuItem Header="Opacity Level">
+                <MenuItem Header="+ Increase" Click="MenuItem_IncOpacity" StaysOpenOnClick="True" />
+                <MenuItem Header="- Decrease" Click="MenuItem_DecOpacity" StaysOpenOnClick="True" />
+                <MenuItem Header="Reset" Click="MenuItem_ResetOpacity" />
             </MenuItem>
             <MenuItem Header="Settings" Click="MenuItem_ShowSettings" />
             <Separator />
@@ -54,7 +59,7 @@
             <!-- Set a simple context menu  -->
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu Background="White" x:Name="contextMenu">
-                    <MenuItem Header="Twitch Chat Overlay v0.7" IsEnabled="False" />
+                    <MenuItem Header="Twitch Chat Overlay v0.8" IsEnabled="False" />
                     <MenuItem Header="Hide/Show Border (F9)" Click="MenuItem_ToggleBorderVisible" />
                     <MenuItem Header="Settings" Click="MenuItem_SettingsClick" />
                     <MenuItem  Header="Reset Window" Click="MenuItem_ResetWindowClick" />

@@ -12,6 +12,7 @@
         BorderThickness="4"
         ResizeMode="CanResizeWithGrip"
         Topmost="True"
+        ShowInTaskbar="false"
         Icon="/Icons/twitch_chat2.ico"
         Title="Twitch Chat Overlay" Height="450" Width="300" Loaded="Window_Loaded" SourceInitialized="Window_SourceInitialized">
     <Window.CommandBindings>
@@ -81,7 +82,7 @@
                 </StackPanel>
             </Grid>
         </Border>
-        <wpf:ChromiumWebBrowser IsEnabled="false" Grid.Row="1"
+        <wpf:ChromiumWebBrowser IsEnabled="true" Grid.Row="1"
                             Background="Transparent"
                             x:Name="Browser2"
                             Margin="0,0,0,0" LoadingStateChanged="Browser2_LoadingStateChanged" />

@@ -17,6 +17,7 @@ using System.Windows.Interop;
 using System.Text.RegularExpressions;
 using Jot;
 using Jot.DefaultInitializer;
+using CefSharp;
 
 namespace TransparentTwitchChatWPF
 {
@@ -40,6 +41,9 @@ namespace TransparentTwitchChatWPF
             ZoomLevel = 0;
 
             InitializeComponent();
+
+            Regex rgx = new Regex("[^a-zA-Z0-9 -]");
+            Services.Tracker.Configure(this).IdentifyAs(rgx.Replace(this.customURL, "")).Apply();
         }
 
         private void Browser2_LoadingStateChanged(object sender, CefSharp.LoadingStateChangedEventArgs e)
@@ -48,6 +52,22 @@ namespace TransparentTwitchChatWPF
             {
                 //if ((ZoomLevel >= -4.0) && (ZoomLevel <= 4.0))
                 this.Browser2.Dispatcher.Invoke(new Action(() => { this.Browser2.ZoomLevel = ZoomLevel; }));
+
+                // Insert some custom CSS for webcaptioner.com domain
+                if (this.customURL.ToLower().Contains("webcaptioner.com"))
+                {
+                    string base64CSS = Utilities.Base64Encode(CustomCSS_Defaults.WebCaptioner.Replace("\r\n", "").Replace("\t", ""));
+
+                    string href = "data:text/css;charset=utf-8;base64," + base64CSS;
+
+                    string script = "var link = document.createElement('link');";
+                    script += "link.setAttribute('rel', 'stylesheet');";
+                    script += "link.setAttribute('type', 'text/css');";
+                    script += "link.setAttribute('href', '" + href + "');";
+                    script += "document.getElementsByTagName('head')[0].appendChild(link);";
+
+                    this.Browser2.ExecuteScriptAsync(script);
+                }
             }
         }
 
@@ -80,8 +100,8 @@ namespace TransparentTwitchChatWPF
             btnHide.Visibility = Visibility.Visible;
             //btnSettings.Visibility = System.Windows.Visibility.Visible;
 
-            headerBorder.Background = Brushes.Black;
-            this.BorderBrush = Brushes.Black;
+            headerBorder.Background = Brushes.LightSlateGray;
+            this.BorderBrush = Brushes.LightSlateGray;
             this.ResizeMode = System.Windows.ResizeMode.CanResizeWithGrip;
 
             hiddenBorders = false;
@@ -89,6 +109,8 @@ namespace TransparentTwitchChatWPF
             this.Topmost = false;
             this.Activate();
             this.Topmost = true;
+
+            this.Browser2.IsEnabled = true;
         }
 
         public void hideBorders()
@@ -111,6 +133,8 @@ namespace TransparentTwitchChatWPF
             this.Topmost = false;
             this.Activate();
             this.Topmost = true;
+
+            this.Browser2.IsEnabled = false;
         }
 
         public void ToggleBorderVisibility()
@@ -151,13 +175,17 @@ namespace TransparentTwitchChatWPF
             SystemCommands.MinimizeWindow(this);
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            
-        }
-
         private void SetupBrowser()
         {
+            if (!this.Browser2.IsInitialized)
+            {
+                MessageBox.Show(
+                  "Error setting up source for custom window. The component was not initialized",
+                  "Error", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK
+                );
+                return;
+            }
+
             this.Browser2.ZoomLevelIncrement = 0.25;
 
             if (!string.IsNullOrWhiteSpace(this.customURL))
@@ -228,9 +256,11 @@ namespace TransparentTwitchChatWPF
 
         private void Window_SourceInitialized(object sender, EventArgs e)
         {
-            Regex rgx = new Regex("[^a-zA-Z0-9 -]");
-            Services.Tracker.Configure(this).IdentifyAs(rgx.Replace(this.customURL, "")).Apply();
+            
+        }
 
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
             SetupBrowser();
         }
 
