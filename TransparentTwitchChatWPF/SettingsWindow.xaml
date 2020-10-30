@@ -129,33 +129,51 @@
                 Margin="20,30,0,0"
                 />
             <CheckBox 
-                Name="cbEnableTrayIcon"
-                Content="Show Tray Icon"
-                HorizontalAlignment="Left" 
-                VerticalAlignment="Top"
-                Margin="20,60,0,0"
-                />
-            <CheckBox 
                 Name="cbConfirmClose"
                 Content="Confirm When Closing"
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top"
-                Margin="20,90,0,0"
-                />
-            <CheckBox 
-                Name="cbTaskbar"
-                Content="Hide Taskbar Icon"
-                HorizontalAlignment="Left" 
-                VerticalAlignment="Top"
-                Margin="20,120,0,0"
+                Margin="20,60,0,0"
                 />
             <CheckBox 
                 Name="cbInteraction"
                 Content="Allow Interaction (When Borders Shown)"
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top"
-                Margin="20,150,0,0"
+                Margin="20,90,0,0"
                 />
+            
+            <CheckBox 
+                Name="cbEnableTrayIcon"
+                Content="Show Tray Icon"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="20,120,0,0"
+                />
+            <Label 
+                FontStyle="Italic"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="35,135,0,0">
+                <Hyperlink NavigateUri = "https://github.com/baffler/Transparent-Twitch-Chat-Overlay/wiki/Using-the-Tray-Icon"
+                           Hyperlink.RequestNavigate = "Hyperlink_RequestNavigate" >
+                    <TextBlock Text="Click this link to find out how to use the Tray Icon" />
+                </Hyperlink>
+            </Label>
+            
+            <CheckBox 
+                Name="cbTaskbar"
+                Content="Hide Taskbar Icon"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="20,170,0,0"
+                />
+            <TextBlock Text="*Note: Hiding the taskbar icon will require you to use the Tray Icon to interact with the menus for the app. Make sure the Show Tray Icon setting is enabled as well."
+                FontStyle="Italic"
+                TextWrapping="Wrap"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="40,190,0,0"/>
         </Grid>
 
         <Grid Name="widgetGrid" Visibility="Hidden" Grid.Column="1">

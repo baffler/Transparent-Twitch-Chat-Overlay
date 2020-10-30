@@ -140,8 +140,9 @@ namespace TransparentTwitchChatWPF
                 AutoHideBorders = false,
                 EnableTrayIcon = true,
                 ConfirmClose = true,
-                HideTaskbarIcon = true,
-                AllowInteraction = true
+                HideTaskbarIcon = false,
+                AllowInteraction = true,
+                VersionTracker = 0.7
             };
 
             Services.Tracker.Configure(this).IdentifyAs("State").Apply();
@@ -679,6 +680,13 @@ Chat.insert = function() {
             if (!this.genSettings.EnableTrayIcon)
                 this.taskbarControl.Visibility = Visibility.Hidden;
 
+            // fix to reset setting for HideTaskbarIcon
+            if (this.genSettings.VersionTracker <= 0.7)
+            {
+                this.genSettings.HideTaskbarIcon = false;
+                this.genSettings.VersionTracker = 0.8;
+            }
+
             SetupBrowser();
         }
 
@@ -862,5 +870,7 @@ Chat.insert = function() {
         public bool HideTaskbarIcon { get; set; }
         [Trackable]
         public bool AllowInteraction { get; set; }
+        [Trackable]
+        public double VersionTracker { get; set; }
     }
 }
