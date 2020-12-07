@@ -209,7 +209,7 @@
                 Content="Twitch Chat Overlay" />
             <Label 
                 Margin="0,30,0,0"
-                Content="Version 0.8" />
+                Content="Version 0.81" />
             <Label 
                 Margin="0,50,0,0"
                 Content="Created by Baffler" />

@@ -24,8 +24,11 @@ using Jot.DefaultInitializer;
 using System.Media;
 
 /*
- * v0.8
+ * v0.81
+ * - Updated CefSharp to 86.0.241
+ * - Fix for how custom CSS was added
  * 
+ * v0.8
  * 
  * - More chat sound alerts. Also a lower volume option for each, volume slider soon.
  * - New setting to let you add the Twitch Popout chat
@@ -465,24 +468,48 @@ namespace TransparentTwitchChatWPF
             }
         }
 
-        private void Browser1_LoadingStateChanged(object sender, CefSharp.LoadingStateChangedEventArgs e)
+        private void Browser1_FrameLoadEnd(object sender, FrameLoadEndEventArgs e)
         {
-            if (!e.IsLoading)
+            if (e.Frame.IsMain)
             {
                 this.Browser1.Dispatcher.Invoke(new Action(() => { this.Browser1.ZoomLevel = this.genSettings.ZoomLevel; }));
+
+                if ((this.genSettings.ChatType == (int)ChatTypes.KapChat) && (this.genSettings.ChatNotificationSound.ToLower() != "none"))
+                {
+                    // Insert JS to play a sound on each chat message
+                    string js = @"var oldChatInsert = Chat.insert;
+Chat.insert = function() {
+    (async function() {
+	    await CefSharp.BindObjectAsync('jsCallback');
+        jsCallback.playSound();
+    })();
+    return oldChatInsert.apply(oldChatInsert, arguments);
+}";
+
+                    e.Frame.ExecuteJavaScriptAsync(js, "", 0);
+                }
+                
+                // Custom CSS
+                string script = string.Empty;
 
                 if (string.IsNullOrEmpty(this.genSettings.CustomCSS))
                 {
                     // Fix for KapChat so a long chat message doesn't wrap to a new line
                     if (this.genSettings.ChatType == (int)ChatTypes.KapChat)
-                        InsertCustomCSS(@".message { display: inline !important; }");
+                        script = InsertCustomCSS2(@".message { display: inline !important; }");
                 }
                 else
-                    InsertCustomCSS(this.genSettings.CustomCSS);
+                    script = InsertCustomCSS2(this.genSettings.CustomCSS);
 
+                if (!string.IsNullOrEmpty(script))
+                    e.Frame.ExecuteJavaScriptAsync(script, "", 0);
+            }
+        }
 
-                if ((this.genSettings.ChatType == (int)ChatTypes.KapChat) && (this.genSettings.ChatNotificationSound.ToLower() != "none"))
-                {
+        private void Browser1_LoadingStateChanged(object sender, CefSharp.LoadingStateChangedEventArgs e)
+        {
+            if (!e.IsLoading)
+            {
                     //string[] vipList = new string[] { "Chat", "Baffler", "test" };
                     /*string script = @"var oldChatInsert = Chat.insert;
 Chat.insert = function(nick, tags, message) {
@@ -499,23 +526,10 @@ Chat.insert = function(nick, tags, message) {
         return oldChatInsert.apply(oldChatInsert, arguments);
     }
 }";*/
-
-                    // Insert JS to play a sound on each chat message
-                    string script = @"var oldChatInsert = Chat.insert;
-Chat.insert = function() {
-    (async function() {
-	    await CefSharp.BindObjectAsync('jsCallback');
-        jsCallback.playSound();
-    })();
-    return oldChatInsert.apply(oldChatInsert, arguments);
-}";
-
-                    InsertCustomJavaScript(script);
-                }
             }
         }
 
-        private void InsertCustomCSS(string CSS)
+        private void InsertCustomCSS_old(string CSS)
         {
             string base64CSS = Utilities.Base64Encode(CSS.Replace("\r\n", "").Replace("\t", ""));
 
@@ -528,6 +542,15 @@ Chat.insert = function() {
             script += "document.getElementsByTagName('head')[0].appendChild(link);";
 
             this.Browser1.ExecuteScriptAsync(script);
+        }
+
+        private string InsertCustomCSS2(string CSS)
+        {
+            string uriEncodedCSS = Uri.EscapeDataString(CSS);
+            string script = "const ttcCSS = document.createElement('style');";
+            script += "ttcCSS.innerHTML = decodeURIComponent(\"" + uriEncodedCSS + "\");";
+            script += "document.querySelector('head').appendChild(ttcCSS);";
+            return script;
         }
 
         private void InsertCustomJavaScript(string JS)

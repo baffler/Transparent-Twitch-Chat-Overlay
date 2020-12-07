@@ -59,7 +59,7 @@
             <!-- Set a simple context menu  -->
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu Background="White" x:Name="contextMenu">
-                    <MenuItem Header="Twitch Chat Overlay v0.8" IsEnabled="False" />
+                    <MenuItem Header="Twitch Chat Overlay v0.81" IsEnabled="False" />
                     <MenuItem Header="Hide/Show Border (F9)" Click="MenuItem_ToggleBorderVisible" />
                     <MenuItem Header="Settings" Click="MenuItem_SettingsClick" />
                     <MenuItem  Header="Reset Window" Click="MenuItem_ResetWindowClick" />
@@ -108,6 +108,6 @@
             <wpf:ChromiumWebBrowser IsEnabled="false" Grid.Row="1"
                             Background="Transparent"
                               x:Name="Browser1"
-                            Margin="0,0,0,0" LoadingStateChanged="Browser1_LoadingStateChanged" />
+                            Margin="0,0,0,0" LoadingStateChanged="Browser1_LoadingStateChanged" FrameLoadEnd="Browser1_FrameLoadEnd" />
         </Grid>
 </Window>
