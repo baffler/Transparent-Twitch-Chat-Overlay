@@ -370,7 +370,12 @@ namespace TransparentTwitchChatWPF
         {
             if (this.genSettings.ConfirmClose)
             {
-                if (MessageBox.Show("Sure you want to exit the application?", "Exit", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                var msgBoxResult = MessageBox.Show("Sure you want to exit the application?", "Exit", 
+                                                    MessageBoxButton.YesNo, 
+                                                    MessageBoxImage.Question,
+                                                    MessageBoxResult.No,
+                                                    MessageBoxOptions.DefaultDesktopOnly);
+                if (msgBoxResult == MessageBoxResult.Yes)
                 {
                     System.Windows.Application.Current.Shutdown();
                 }
