@@ -478,6 +478,23 @@ namespace TransparentTwitchChatWPF
 
                 if ((this.genSettings.ChatType == (int)ChatTypes.KapChat) && (this.genSettings.ChatNotificationSound.ToLower() != "none"))
                 {
+                    //string[] vipList = new string[] { "Chat", "Baffler", "test" };
+                    /*string script = @"var oldChatInsert = Chat.insert;
+Chat.insert = function(nick, tags, message) {
+    var nick = nick || 'Chat';
+    var vips = ['";
+                    script += string.Join(",", vipList).Replace(",", "','").ToLower();
+                    script += @"'];
+    if (vips.includes(nick.toLowerCase()))
+    {
+        (async function() {
+	        await CefSharp.BindObjectAsync('jsCallback');
+            jsCallback.playSound();
+        })();
+        return oldChatInsert.apply(oldChatInsert, arguments);
+    }
+}";*/
+
                     // Insert JS to play a sound on each chat message
                     string script = @"var oldChatInsert = Chat.insert;
 Chat.insert = function() {
@@ -487,6 +504,7 @@ Chat.insert = function() {
     })();
     return oldChatInsert.apply(oldChatInsert, arguments);
 }";
+
                     InsertCustomJavaScript(script);
                 }
             }
