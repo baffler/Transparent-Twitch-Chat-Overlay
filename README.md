@@ -3,6 +3,9 @@
 
 **Be sure to check out the wiki** [at this link](https://github.com/baffler/Transparent-Twitch-Chat-Overlay/wiki). There's explanations on there on how to add different types of chat, Twitch and Youtube chat integrated together, show subs/followers/redemptions etc, how to show viewer count, or any widget you might need.
 
+* To create an issue: https://github.com/baffler/Transparent-Twitch-Chat-Overlay/issues
+* For feature requests or questions: https://github.com/baffler/Transparent-Twitch-Chat-Overlay/discussions
+
 ![Screenshot](https://i.imgur.com/keN4f9F.jpg)
 
 ## Installation and Usage
