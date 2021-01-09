@@ -69,7 +69,7 @@ namespace TransparentTwitchChatWPF
                 this.config.Username = this.tbUsername.Text;
                 this.config.ChatFade = this.cbFade.IsChecked ?? false;
                 this.config.FadeTime = this.tbFadeTime.Text;
-                this.config.ShowBotActivity = this.cbBotActivity.IsChecked ?? false;
+                //this.config.ShowBotActivity = this.cbBotActivity.IsChecked ?? false;
                 this.config.ChatNotificationSound = this.comboChatSound.SelectedValue.ToString();
                 this.config.Theme = this.comboTheme.SelectedIndex;
 
@@ -97,7 +97,7 @@ namespace TransparentTwitchChatWPF
             this.tbFadeTime.Text = this.config.FadeTime;
             this.tbFadeTime.IsEnabled = this.config.ChatFade;
 
-            this.cbBotActivity.IsChecked = this.config.ShowBotActivity;
+            //this.cbBotActivity.IsChecked = this.config.ShowBotActivity;
             this.comboTheme.SelectedIndex = this.config.Theme;
 
             var comboxBoxItem = this.comboChatSound.Items.OfType<ComboBoxItem>().FirstOrDefault(
@@ -334,6 +334,15 @@ namespace TransparentTwitchChatWPF
             {
                 SoundPlayer sp = new SoundPlayer(file);
                 sp.Play();
+            }
+        }
+
+        private void btOpenChatFilterSettings_Click(object sender, RoutedEventArgs e)
+        {
+            ChatFilters chatFiltersWindow = new ChatFilters();
+
+            if (chatFiltersWindow.ShowDialog() == true)
+            {
             }
         }
     }

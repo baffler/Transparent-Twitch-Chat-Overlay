@@ -85,33 +85,19 @@ namespace TransparentTwitchChatWPF
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, INotifyPropertyChanged, BrowserWindow
+    public partial class MainWindow : Window, BrowserWindow
     {
         SolidColorBrush bgColor;
         int cOpacity = 0;
         bool hiddenBorders = false;
-        GeneralSettings genSettings;
+        //GeneralSettings genSettings;
         TrackingConfiguration genSettingsTrackingConfig;
         JsCallbackFunctions jsCallbackFunctions;
 
         //StringCollection custom_windows = new StringCollection();
         List<BrowserWindow> windows = new List<BrowserWindow>();
 
-        public bool BotActivity
-        {
-            get
-            {
-                return this.genSettings.ShowBotActivity;
-            }
-            set
-            {
-                this.genSettings.ShowBotActivity = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
+        /*public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName]string propertyName = null)
         {
             PropertyChangedEventHandler handler = this.PropertyChanged;
@@ -120,36 +106,15 @@ namespace TransparentTwitchChatWPF
                 var e = new PropertyChangedEventArgs(propertyName);
                 handler(this, e);
             }
-        }
+        }*/
 
         public MainWindow()
         {
             InitializeComponent();
             DataContext = this;
 
-            this.genSettings = new GeneralSettings
-            {
-                CustomWindows = new StringCollection(),
-                Username = string.Empty,
-                FadeChat = false,
-                FadeTime = "120",
-                ShowBotActivity = false,
-                ChatNotificationSound = "None",
-                ThemeIndex = 1,
-                ChatType = 0,
-                CustomURL = string.Empty,
-                ZoomLevel = 0,
-                OpacityLevel = 0,
-                AutoHideBorders = false,
-                EnableTrayIcon = true,
-                ConfirmClose = true,
-                HideTaskbarIcon = false,
-                AllowInteraction = true,
-                VersionTracker = 0.7
-            };
-
             Services.Tracker.Configure(this).IdentifyAs("State").Apply();
-            this.genSettingsTrackingConfig = Services.Tracker.Configure(this.genSettings);
+            this.genSettingsTrackingConfig = Services.Tracker.Configure(SettingsSingleton.Instance.genSettings);
             this.genSettingsTrackingConfig.IdentifyAs("MainWindow").Apply();
 
             var browserSettings = new BrowserSettings
@@ -218,12 +183,12 @@ namespace TransparentTwitchChatWPF
             this.Activate();
             this.Topmost = true;
 
-            this.Browser1.IsEnabled = this.genSettings.AllowInteraction;
+            this.Browser1.IsEnabled = SettingsSingleton.Instance.genSettings.AllowInteraction;
         }
 
         public void hideBorders()
         {
-            if (this.genSettings.HideTaskbarIcon)
+            if (SettingsSingleton.Instance.genSettings.HideTaskbarIcon)
                 this.ShowInTaskbar = false;
 
             var hwnd = new WindowInteropHelper(this).Handle;
@@ -338,18 +303,18 @@ namespace TransparentTwitchChatWPF
             if (chatChannel.Contains("/"))
                 username = chatChannel.Split('/').Last();
 
-            string fade = this.genSettings.FadeTime;
-            if (!this.genSettings.FadeChat) { fade = "false"; }
+            string fade = SettingsSingleton.Instance.genSettings.FadeTime;
+            if (!SettingsSingleton.Instance.genSettings.FadeChat) { fade = "false"; }
 
             string theme = string.Empty;
-            if ((genSettings.ThemeIndex >= 0) && (genSettings.ThemeIndex < KapChat.Themes.Count))
-                theme = KapChat.Themes[genSettings.ThemeIndex];
+            if ((SettingsSingleton.Instance.genSettings.ThemeIndex >= 0) && (SettingsSingleton.Instance.genSettings.ThemeIndex < KapChat.Themes.Count))
+                theme = KapChat.Themes[SettingsSingleton.Instance.genSettings.ThemeIndex];
 
             string url = @"https://www.nightdev.com/hosted/obschat/?";
             url += @"theme=" + theme;
             url += @"&channel=" + username;
             url += @"&fade=" + fade;
-            url += @"&bot_activity=" + this.genSettings.ShowBotActivity.ToString();
+            url += @"&bot_activity=" + SettingsSingleton.Instance.genSettings.ShowBotActivity.ToString();
             url += @"&prevent_clipping=false";
             Browser1.Load(url);
         }
@@ -364,14 +329,14 @@ namespace TransparentTwitchChatWPF
 
                 int.TryParse(fadeTime, out fadeTimeInt);
 
-                this.genSettings.FadeChat = (fadeTimeInt > 0);
-                this.genSettings.FadeTime = fadeTime;
+                SettingsSingleton.Instance.genSettings.FadeChat = (fadeTimeInt > 0);
+                SettingsSingleton.Instance.genSettings.FadeTime = fadeTime;
             }
         }
 
         public void ExitApplication()
         {
-            if (this.genSettings.ConfirmClose)
+            if (SettingsSingleton.Instance.genSettings.ConfirmClose)
             {
                 var msgBoxResult = MessageBox.Show("Sure you want to exit the application?", "Exit", 
                                                     MessageBoxButton.YesNo, 
@@ -392,8 +357,8 @@ namespace TransparentTwitchChatWPF
 
         public void ToggleBotActivitySetting()
         {
-            this.genSettings.ShowBotActivity = !this.genSettings.ShowBotActivity;
-            SetChatAddress(this.genSettings.Username);
+            SettingsSingleton.Instance.genSettings.ShowBotActivity = !SettingsSingleton.Instance.genSettings.ShowBotActivity;
+            SetChatAddress(SettingsSingleton.Instance.genSettings.Username);
         }
 
         private void MenuItem_ToggleBorderVisible(object sender, RoutedEventArgs e)
@@ -439,10 +404,10 @@ namespace TransparentTwitchChatWPF
         {
             if (this.Browser1.ZoomInCommand.CanExecute(null))
             {
-                if (this.genSettings.ZoomLevel < 4.0)
+                if (SettingsSingleton.Instance.genSettings.ZoomLevel < 4.0)
                 {
                     this.Browser1.ZoomInCommand.Execute(null);
-                    this.genSettings.ZoomLevel = this.Browser1.ZoomLevel;
+                    SettingsSingleton.Instance.genSettings.ZoomLevel = this.Browser1.ZoomLevel;
                 }
             }
         }
@@ -451,10 +416,10 @@ namespace TransparentTwitchChatWPF
         {
             if (this.Browser1.ZoomOutCommand.CanExecute(null))
             {
-                if (this.genSettings.ZoomLevel > -4.0)
+                if (SettingsSingleton.Instance.genSettings.ZoomLevel > -4.0)
                 {
                     this.Browser1.ZoomOutCommand.Execute(null);
-                    this.genSettings.ZoomLevel = this.Browser1.ZoomLevel;
+                    SettingsSingleton.Instance.genSettings.ZoomLevel = this.Browser1.ZoomLevel;
                 }
             }
         }
@@ -464,7 +429,7 @@ namespace TransparentTwitchChatWPF
             if (this.Browser1.ZoomResetCommand.CanExecute(null))
             {
                 this.Browser1.ZoomResetCommand.Execute(null);
-                this.genSettings.ZoomLevel = this.Browser1.ZoomLevel;
+                SettingsSingleton.Instance.genSettings.ZoomLevel = this.Browser1.ZoomLevel;
             }
         }
 
@@ -472,12 +437,82 @@ namespace TransparentTwitchChatWPF
         {
             if (e.Frame.IsMain)
             {
-                this.Browser1.Dispatcher.Invoke(new Action(() => { this.Browser1.ZoomLevel = this.genSettings.ZoomLevel; }));
+                this.Browser1.Dispatcher.Invoke(new Action(() => { this.Browser1.ZoomLevel = SettingsSingleton.Instance.genSettings.ZoomLevel; }));
 
-                if ((this.genSettings.ChatType == (int)ChatTypes.KapChat) && (this.genSettings.ChatNotificationSound.ToLower() != "none"))
+                if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.KapChat)
                 {
-                    // Insert JS to play a sound on each chat message
-                    string js = @"var oldChatInsert = Chat.insert;
+                    if (SettingsSingleton.Instance.genSettings.AllowedUsersOnlyChat)
+                    {
+                        string[] vipList = new string[SettingsSingleton.Instance.genSettings.AllowedUsersList.Count];
+                        SettingsSingleton.Instance.genSettings.AllowedUsersList.CopyTo(vipList, 0);
+
+                        string js = @"var oldChatInsert = Chat.insert;
+    Chat.insert = function(nick, tags, message) {
+        var nick = nick || 'Chat';
+        tags2 = tags ? Chat.parseTags(nick, tags) : {};
+
+        var vips = ['";
+                        js += string.Join(",", vipList).Replace(",", "','").ToLower();
+                        js += @"'];
+var allowOther = false;";
+
+                        if (SettingsSingleton.Instance.genSettings.FilterAllowAllVIPs)
+                        {
+                            js += @"
+var vip = false;
+if (tags2.badges)
+{
+    tags2.badges.forEach(function(badge2) {
+        if (badge2.type.toLowerCase() == 'vip')
+        {
+            vip = true;
+            return;
+        }
+    });
+}
+allowOther = vip;";
+                        }
+
+                        if (SettingsSingleton.Instance.genSettings.FilterAllowAllMods)
+                        {
+                            js += @"
+var mod = false;
+
+if (tags2.badges)
+{
+    tags2.badges.forEach(function(badge2) {
+        if (badge2.type.toLowerCase() == 'moderator')
+        {
+            mod = true;
+            return;
+        }
+    });
+}
+if (mod) { allowOther = true; }";
+                        }
+                        js += @"
+                    if (vips.includes(nick.toLowerCase()) || (nick == 'Chat') || allowOther)
+        {";
+                        if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() != "none")
+                        {
+                            js += @"
+            (async function() {
+                await CefSharp.BindObjectAsync('jsCallback');
+                jsCallback.playSound();
+            })();";
+                        }
+
+            js += @"
+            return oldChatInsert.apply(oldChatInsert, arguments);
+        }
+    }";
+
+                        e.Frame.ExecuteJavaScriptAsync(js, "", 0);
+                    }
+                    else if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() != "none")
+                    {
+                        // Insert JS to play a sound on each chat message
+                        string js = @"var oldChatInsert = Chat.insert;
 Chat.insert = function() {
     (async function() {
 	    await CefSharp.BindObjectAsync('jsCallback');
@@ -486,20 +521,21 @@ Chat.insert = function() {
     return oldChatInsert.apply(oldChatInsert, arguments);
 }";
 
-                    e.Frame.ExecuteJavaScriptAsync(js, "", 0);
+                        e.Frame.ExecuteJavaScriptAsync(js, "", 0);
+                    }
                 }
-                
+
                 // Custom CSS
                 string script = string.Empty;
 
-                if (string.IsNullOrEmpty(this.genSettings.CustomCSS))
+                if (string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.CustomCSS))
                 {
                     // Fix for KapChat so a long chat message doesn't wrap to a new line
-                    if (this.genSettings.ChatType == (int)ChatTypes.KapChat)
+                    if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.KapChat)
                         script = InsertCustomCSS2(@".message { display: inline !important; }");
                 }
                 else
-                    script = InsertCustomCSS2(this.genSettings.CustomCSS);
+                    script = InsertCustomCSS2(SettingsSingleton.Instance.genSettings.CustomCSS);
 
                 if (!string.IsNullOrEmpty(script))
                     e.Frame.ExecuteJavaScriptAsync(script, "", 0);
@@ -567,13 +603,13 @@ Chat.insert = function(nick, tags, message) {
 
         public void CreateNewWindow(string URL)
         {
-            if (this.genSettings.CustomWindows.Contains(URL))
+            if (SettingsSingleton.Instance.genSettings.CustomWindows.Contains(URL))
             {
                 MessageBox.Show("That URL already exists as a window.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             else
             {
-                this.genSettings.CustomWindows.Add(URL);
+                SettingsSingleton.Instance.genSettings.CustomWindows.Add(URL);
                 OpenNewCustomWindow(URL);
             }
         }
@@ -596,69 +632,69 @@ Chat.insert = function(nick, tags, message) {
         {
             WindowSettings config = new WindowSettings {
                 Title = "Main Window",
-                ChatType = this.genSettings.ChatType,
-                URL = this.genSettings.CustomURL,
-                Username = this.genSettings.Username,
-                ChatFade = this.genSettings.FadeChat,
-                FadeTime = this.genSettings.FadeTime,
-                ShowBotActivity = this.genSettings.ShowBotActivity,
-                ChatNotificationSound = this.genSettings.ChatNotificationSound,
-                Theme = this.genSettings.ThemeIndex,
-                CustomCSS = this.genSettings.CustomCSS,
-                AutoHideBorders = this.genSettings.AutoHideBorders,
-                ConfirmClose = this.genSettings.ConfirmClose,
-                EnableTrayIcon = this.genSettings.EnableTrayIcon,
-                HideTaskbarIcon = this.genSettings.HideTaskbarIcon,
-                AllowInteraction = this.genSettings.AllowInteraction
+                ChatType = SettingsSingleton.Instance.genSettings.ChatType,
+                URL = SettingsSingleton.Instance.genSettings.CustomURL,
+                Username = SettingsSingleton.Instance.genSettings.Username,
+                ChatFade = SettingsSingleton.Instance.genSettings.FadeChat,
+                FadeTime = SettingsSingleton.Instance.genSettings.FadeTime,
+                //ShowBotActivity = SettingsSingleton.Instance.genSettings.ShowBotActivity,
+                ChatNotificationSound = SettingsSingleton.Instance.genSettings.ChatNotificationSound,
+                Theme = SettingsSingleton.Instance.genSettings.ThemeIndex,
+                CustomCSS = SettingsSingleton.Instance.genSettings.CustomCSS,
+                AutoHideBorders = SettingsSingleton.Instance.genSettings.AutoHideBorders,
+                ConfirmClose = SettingsSingleton.Instance.genSettings.ConfirmClose,
+                EnableTrayIcon = SettingsSingleton.Instance.genSettings.EnableTrayIcon,
+                HideTaskbarIcon = SettingsSingleton.Instance.genSettings.HideTaskbarIcon,
+                AllowInteraction = SettingsSingleton.Instance.genSettings.AllowInteraction
             };
 
             SettingsWindow settingsWindow = new SettingsWindow(this, config);
 
             if (settingsWindow.ShowDialog() == true)
             {
-                this.genSettings.ChatType = config.ChatType;
+                SettingsSingleton.Instance.genSettings.ChatType = config.ChatType;
 
                 if (config.ChatType == (int)ChatTypes.CustomURL)
                 {
-                    this.genSettings.CustomURL = config.URL;
-                    this.genSettings.CustomCSS = config.CustomCSS;
+                    SettingsSingleton.Instance.genSettings.CustomURL = config.URL;
+                    SettingsSingleton.Instance.genSettings.CustomCSS = config.CustomCSS;
 
-                    if (!string.IsNullOrEmpty(this.genSettings.CustomURL))
-                        SetCustomChatAddress(this.genSettings.CustomURL);
+                    if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.CustomURL))
+                        SetCustomChatAddress(SettingsSingleton.Instance.genSettings.CustomURL);
                 }
                 else if (config.ChatType == (int)ChatTypes.TwitchPopout)
                 {
-                    this.genSettings.Username = config.Username;
-                    this.genSettings.CustomCSS = config.TwitchPopoutCSS;
+                    SettingsSingleton.Instance.genSettings.Username = config.Username;
+                    SettingsSingleton.Instance.genSettings.CustomCSS = config.TwitchPopoutCSS;
 
-                    if (!string.IsNullOrEmpty(this.genSettings.Username))
-                        SetCustomChatAddress("https://www.twitch.tv/popout/" + this.genSettings.Username + "/chat?popout=");
+                    if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.Username))
+                        SetCustomChatAddress("https://www.twitch.tv/popout/" + SettingsSingleton.Instance.genSettings.Username + "/chat?popout=");
                 }
                 else if (config.ChatType == (int)ChatTypes.KapChat)
                 {
-                    this.genSettings.Username = config.Username;
-                    this.genSettings.FadeChat = config.ChatFade;
-                    this.genSettings.FadeTime = config.FadeTime;
-                    this.genSettings.ShowBotActivity = config.ShowBotActivity;
-                    this.genSettings.ChatNotificationSound = config.ChatNotificationSound;
-                    this.genSettings.ThemeIndex = config.Theme;
+                    SettingsSingleton.Instance.genSettings.Username = config.Username;
+                    SettingsSingleton.Instance.genSettings.FadeChat = config.ChatFade;
+                    SettingsSingleton.Instance.genSettings.FadeTime = config.FadeTime;
+                    //SettingsSingleton.Instance.genSettings.ShowBotActivity = config.ShowBotActivity;
+                    SettingsSingleton.Instance.genSettings.ChatNotificationSound = config.ChatNotificationSound;
+                    SettingsSingleton.Instance.genSettings.ThemeIndex = config.Theme;
 
-                    if (this.genSettings.ThemeIndex == 0)
-                        this.genSettings.CustomCSS = config.CustomCSS;
+                    if (SettingsSingleton.Instance.genSettings.ThemeIndex == 0)
+                        SettingsSingleton.Instance.genSettings.CustomCSS = config.CustomCSS;
                     else
-                        this.genSettings.CustomCSS = string.Empty;
+                        SettingsSingleton.Instance.genSettings.CustomCSS = string.Empty;
 
 
-                    if (!string.IsNullOrEmpty(this.genSettings.Username))
-                        SetChatAddress(this.genSettings.Username);
+                    if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.Username))
+                        SetChatAddress(SettingsSingleton.Instance.genSettings.Username);
 
 
-                    if (this.genSettings.ChatNotificationSound.ToLower() == "none")
+                    if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() == "none")
                         this.jsCallbackFunctions.MediaFile = string.Empty;
                     else
                     {
                         Uri startupPath = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
-                        string file = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\assets\\" + this.genSettings.ChatNotificationSound + ".wav";
+                        string file = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\assets\\" + SettingsSingleton.Instance.genSettings.ChatNotificationSound + ".wav";
                         if (System.IO.File.Exists(file))
                         {
                             this.jsCallbackFunctions.MediaFile = file;
@@ -666,11 +702,11 @@ Chat.insert = function(nick, tags, message) {
                     }
                 }
 
-                this.genSettings.AutoHideBorders = config.AutoHideBorders;
-                this.genSettings.ConfirmClose = config.ConfirmClose;
-                this.genSettings.EnableTrayIcon = config.EnableTrayIcon;
-                this.genSettings.HideTaskbarIcon = config.HideTaskbarIcon;
-                this.genSettings.AllowInteraction = config.AllowInteraction;
+                SettingsSingleton.Instance.genSettings.AutoHideBorders = config.AutoHideBorders;
+                SettingsSingleton.Instance.genSettings.ConfirmClose = config.ConfirmClose;
+                SettingsSingleton.Instance.genSettings.EnableTrayIcon = config.EnableTrayIcon;
+                SettingsSingleton.Instance.genSettings.HideTaskbarIcon = config.HideTaskbarIcon;
+                SettingsSingleton.Instance.genSettings.AllowInteraction = config.AllowInteraction;
 
                 this.taskbarControl.Visibility = config.EnableTrayIcon ? Visibility.Visible : Visibility.Hidden;
                 this.ShowInTaskbar = !config.HideTaskbarIcon;
@@ -694,9 +730,9 @@ Chat.insert = function(nick, tags, message) {
 
         public void RemoveCustomWindow(string url)
         {
-            if (this.genSettings.CustomWindows.Contains(url))
+            if (SettingsSingleton.Instance.genSettings.CustomWindows.Contains(url))
             {
-                this.genSettings.CustomWindows.Remove(url);
+                SettingsSingleton.Instance.genSettings.CustomWindows.Remove(url);
             }
         }
 
@@ -723,14 +759,14 @@ Chat.insert = function(nick, tags, message) {
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            if (!this.genSettings.EnableTrayIcon)
+            if (!SettingsSingleton.Instance.genSettings.EnableTrayIcon)
                 this.taskbarControl.Visibility = Visibility.Hidden;
 
             // fix to reset setting for HideTaskbarIcon
-            if (this.genSettings.VersionTracker <= 0.7)
+            if (SettingsSingleton.Instance.genSettings.VersionTracker <= 0.7)
             {
-                this.genSettings.HideTaskbarIcon = false;
-                this.genSettings.VersionTracker = 0.8;
+                SettingsSingleton.Instance.genSettings.HideTaskbarIcon = false;
+                SettingsSingleton.Instance.genSettings.VersionTracker = 0.8;
             }
 
             SetupBrowser();
@@ -752,44 +788,44 @@ Chat.insert = function(nick, tags, message) {
                 return;
             }
 
-            this.bgColor = new SolidColorBrush(Color.FromArgb(this.genSettings.OpacityLevel, 0, 0, 0));
+            this.bgColor = new SolidColorBrush(Color.FromArgb(SettingsSingleton.Instance.genSettings.OpacityLevel, 0, 0, 0));
             this.Background = this.bgColor;
-            this.cOpacity = this.genSettings.OpacityLevel;
+            this.cOpacity = SettingsSingleton.Instance.genSettings.OpacityLevel;
 
-            if (this.genSettings.AutoHideBorders)
+            if (SettingsSingleton.Instance.genSettings.AutoHideBorders)
                 hideBorders();
             else
                 drawBorders();
 
-            if (this.genSettings.ChatNotificationSound.ToLower() != "none")
+            if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() != "none")
             {
                 Uri startupPath = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
-                string file = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\assets\\" + this.genSettings.ChatNotificationSound + ".wav";
+                string file = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\assets\\" + SettingsSingleton.Instance.genSettings.ChatNotificationSound + ".wav";
                 if (System.IO.File.Exists(file))
                 {
                     this.jsCallbackFunctions.MediaFile = file;
                 }
             }
 
-            if (this.genSettings.CustomWindows != null)
+            if (SettingsSingleton.Instance.genSettings.CustomWindows != null)
             {
-                foreach (string url in this.genSettings.CustomWindows)
-                    OpenNewCustomWindow(url, this.genSettings.AutoHideBorders);
+                foreach (string url in SettingsSingleton.Instance.genSettings.CustomWindows)
+                    OpenNewCustomWindow(url, SettingsSingleton.Instance.genSettings.AutoHideBorders);
             }
 
             this.Browser1.ZoomLevelIncrement = 0.25;
 
-            if ((this.genSettings.ChatType == (int)ChatTypes.CustomURL) && (!string.IsNullOrWhiteSpace(this.genSettings.CustomURL)))
+            if ((SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.CustomURL) && (!string.IsNullOrWhiteSpace(SettingsSingleton.Instance.genSettings.CustomURL)))
             {
-                SetCustomChatAddress(this.genSettings.CustomURL);
+                SetCustomChatAddress(SettingsSingleton.Instance.genSettings.CustomURL);
             }
-            else if ((this.genSettings.ChatType == (int)ChatTypes.TwitchPopout) && (!string.IsNullOrEmpty(this.genSettings.Username)))
+            else if ((SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.TwitchPopout) && (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.Username)))
             {
-                SetCustomChatAddress("https://www.twitch.tv/popout/" + this.genSettings.Username + "/chat?popout=");
+                SetCustomChatAddress("https://www.twitch.tv/popout/" + SettingsSingleton.Instance.genSettings.Username + "/chat?popout=");
             }
-            else if (!string.IsNullOrWhiteSpace(this.genSettings.Username))
+            else if (!string.IsNullOrWhiteSpace(SettingsSingleton.Instance.genSettings.Username))
             {
-                SetChatAddress(this.genSettings.Username);
+                SetChatAddress(SettingsSingleton.Instance.genSettings.Username);
             }
             else
             {
@@ -835,7 +871,7 @@ Chat.insert = function(nick, tags, message) {
         {
             this.cOpacity += 15;
             if (this.cOpacity > 255) this.cOpacity = 255;
-            this.genSettings.OpacityLevel = (byte)this.cOpacity;
+            SettingsSingleton.Instance.genSettings.OpacityLevel = (byte)this.cOpacity;
             this.bgColor.Color = Color.FromArgb((byte)this.cOpacity, 0, 0, 0);
         }
 
@@ -843,14 +879,14 @@ Chat.insert = function(nick, tags, message) {
         {
             this.cOpacity -= 15;
             if (this.cOpacity < 0) this.cOpacity = 0;
-            this.genSettings.OpacityLevel = (byte)this.cOpacity;
+            SettingsSingleton.Instance.genSettings.OpacityLevel = (byte)this.cOpacity;
             this.bgColor.Color = Color.FromArgb((byte)this.cOpacity, 0, 0, 0);
         }
 
         private void MenuItem_ResetOpacity(object sender, RoutedEventArgs e)
         {
             this.cOpacity = 0;
-            this.genSettings.OpacityLevel = 0;
+            SettingsSingleton.Instance.genSettings.OpacityLevel = 0;
             this.bgColor.Color = Color.FromArgb(0, 0, 0, 0);
         }
     }
@@ -876,6 +912,14 @@ Chat.insert = function(nick, tags, message) {
                     //mp.Volume = 0.5f;
                     sp.Play();
                 }
+            } catch { }
+        }
+
+        public void showMessageBox(string msg)
+        {
+            try
+            {
+                MessageBox.Show(msg);
             } catch { }
         }
     }
@@ -918,5 +962,13 @@ Chat.insert = function(nick, tags, message) {
         public bool AllowInteraction { get; set; }
         [Trackable]
         public double VersionTracker { get; set; }
+        [Trackable]
+        public bool AllowedUsersOnlyChat { get; set; }
+        [Trackable]
+        public bool FilterAllowAllMods { get; set; }
+        [Trackable]
+        public bool FilterAllowAllVIPs { get; set; }
+        [Trackable]
+        public StringCollection AllowedUsersList { get; set; }
     }
 }

@@ -73,10 +73,10 @@
                 <StackPanel HorizontalAlignment="Left" Orientation="Vertical" Width="127">
                     <Label Content="Username" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                     <Label Content="Chat Fade" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                    <Label Content="Chat Fade Time" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                    <Label Content="Show Bots" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                    <Label Content="Chat Sound" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                    <Label Content="Theme" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                    <Label Content="Chat Fade Time" HorizontalAlignment="Left" Margin="20,15,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                    <Label Content="Filter Settings" HorizontalAlignment="Left" Margin="20,15,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                    <Label Content="Chat Sound" HorizontalAlignment="Left" Margin="20,15,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                    <Label Content="Theme" HorizontalAlignment="Left" Margin="20,18,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                     <Label Name="lblCSS" Content="Custom CSS" Visibility="Hidden" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                 </StackPanel>
 
@@ -85,9 +85,10 @@
                     <Label Content="Your Twitch username (NOT the URL)" HorizontalAlignment="Left" Margin="16,0,0,0" VerticalAlignment="Top" FontSize="10" />
 
                     <CheckBox Name="cbFade" Margin="20,10,0,0" Content="Fade out old chat lines" Checked="cbFade_Checked" Unchecked="cbFade_Unchecked" />
-                    <TextBox Name="tbFadeTime" IsEnabled="False" HorizontalAlignment="Left" Height="23" Margin="20,32,0,0" TextWrapping="NoWrap" Text="120" VerticalAlignment="Top" Width="240"/>
-                    <CheckBox Name="cbBotActivity" Margin="20,32,0,0" Content="Enable to show bot activity in your chat" />
-                    <ComboBox Name="comboChatSound" SelectedValuePath="Content" Margin="20,36,14,0" DropDownClosed="comboChatSound_DropDownClosed" SelectionChanged="comboChatSound_SelectionChanged">
+                    <TextBox Name="tbFadeTime" IsEnabled="False" HorizontalAlignment="Left" Height="23" Margin="20,22,0,0" TextWrapping="NoWrap" Text="120" VerticalAlignment="Top" Width="240"/>
+                    <!--<CheckBox Name="cbBotActivity" Margin="20,22,0,0" Content="Enable to show bot activity in your chat" />-->
+                    <Button Name="btOpenChatFilterSettings" Margin="20,18,14,0" Content="Open Chat Filter Settings" Height="23" Click="btOpenChatFilterSettings_Click" />
+                    <ComboBox Name="comboChatSound" SelectedValuePath="Content" Margin="20,20,14,0" DropDownClosed="comboChatSound_DropDownClosed" SelectionChanged="comboChatSound_SelectionChanged">
                         <ComboBoxItem>None</ComboBoxItem>
                         <ComboBoxItem>Alert 1</ComboBoxItem>
                         <ComboBoxItem>Alert 1 (Low)</ComboBoxItem>
@@ -97,7 +98,7 @@
                         <ComboBoxItem>Alert 3 (Low)</ComboBoxItem>
                     </ComboBox>
 
-                    <ComboBox Name="comboTheme" Margin="20,32,14,0" SelectionChanged="comboTheme_SelectionChanged">
+                    <ComboBox Name="comboTheme" Margin="20,20,14,0" SelectionChanged="comboTheme_SelectionChanged">
                         <ComboBoxItem Content="None (Custom CSS)" />
                         <ComboBoxItem Content="BetterTTV's &quot;Black Chat&quot;" />
                         <ComboBoxItem Content="BetterTTV Dark" />

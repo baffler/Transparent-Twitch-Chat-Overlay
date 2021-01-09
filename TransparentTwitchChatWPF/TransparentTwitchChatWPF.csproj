@@ -115,6 +115,13 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChatFilters.xaml.cs">
+      <DependentUpon>ChatFilters.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Input_Username.xaml.cs">
+      <DependentUpon>Input_Username.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsSingleton.cs" />
     <Compile Include="WindowSettings.cs" />
     <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -133,6 +140,10 @@
     </Compile>
     <Compile Include="SingleInstance.cs" />
     <Compile Include="Win32Utils.cs" />
+    <Page Include="ChatFilters.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="CustomWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -146,6 +157,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Input.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Input_Username.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

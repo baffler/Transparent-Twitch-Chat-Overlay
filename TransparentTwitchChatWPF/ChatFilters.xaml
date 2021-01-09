@@ -1,0 +1,126 @@
+﻿<Window x:Class="TransparentTwitchChatWPF.ChatFilters"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TransparentTwitchChatWPF"
+        mc:Ignorable="d"
+        Title="ChatFilters" Height="450" Width="400" WindowStyle="ToolWindow" Topmost="True" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0">
+            <ListView Name="lvFilters" FontSize="16">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="Margin" Value="4"/>
+                        <Setter Property="Padding" Value="4"/>
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListViewItem>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Usernames" VerticalAlignment="Center" />
+                    </StackPanel>
+                </ListViewItem>
+                <ListViewItem>
+                    <StackPanel Orientation="Horizontal">
+                        <!-- <TextBlock Text="Words" VerticalAlignment="Center" /> -->
+                    </StackPanel>
+                </ListViewItem>
+            </ListView>
+        </Grid>
+
+        <Grid Name="filterUsernamesGrid" Visibility="Visible"  Grid.Column="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="27*"/>
+                <ColumnDefinition Width="265*"/>
+            </Grid.ColumnDefinitions>
+
+            <CheckBox 
+                Name="cbShowBotActivity"
+                Content="Show Bot Activity"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="20,5,0,0" Grid.ColumnSpan="2"
+                />
+            
+            <CheckBox 
+                Name="cbAllowedUsers"
+                Content="Filter by Allowed Usernames Only"
+                Checked="cbAllowedUsers_Checked"
+                Unchecked="cbAllowedUsers_Unchecked"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="20,35,0,0" Grid.ColumnSpan="2"
+                />
+
+            <CheckBox 
+                Name="cbAllMods"
+                IsEnabled="false"
+                Content="Allow all mods"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="20,60,0,0" Grid.ColumnSpan="2"
+                />
+
+            <CheckBox 
+                Name="cbAllVIPs"
+                IsEnabled="false"
+                Content="Allow all VIPs"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="20,84,0,0" Grid.ColumnSpan="2"
+                />
+
+            <ListBox Name="lvAllowedUsernames" 
+                     IsEnabled="false"
+                      FontSize="12"
+                      SelectionMode="Single"
+                      Margin="20,150,20,50" Grid.ColumnSpan="2">
+            </ListBox>
+
+            <Button Name="btnAddUser"
+                IsEnabled="false"
+                Content="Add" 
+                Height="23"
+                HorizontalAlignment="Left" 
+                Margin="20,115,0,0"
+                VerticalAlignment="Top" 
+                Width="75" Grid.ColumnSpan="2" Click="Button_Click_1" />
+            <Button Name="btnRemoveUser"
+                IsEnabled="false"
+                Content="Remove" 
+                Height="23"
+                HorizontalAlignment="Left" 
+                Margin="80,115,0,0"
+                VerticalAlignment="Top" 
+                Width="75" Grid.Column="1" Click="Button_Click" />
+        </Grid>
+
+        <Grid Grid.Column="1">
+            <Button
+                Name="OKButton"
+                Content="Save"
+                Height="23"
+                HorizontalAlignment="Right" 
+                Margin="0,0,93,12"
+                VerticalAlignment="Bottom" 
+                Width="75" 
+                Click="OKButton_Click"
+                IsDefault="True" />
+
+            <Button
+                Name="CancelButton"
+                Content="Cancel" 
+                Height="23" 
+                HorizontalAlignment="Right" 
+                Margin="0,0,12,12"
+                VerticalAlignment="Bottom"
+                Width="75" 
+                IsCancel="True" />
+        </Grid>
+    </Grid>
+</Window>
