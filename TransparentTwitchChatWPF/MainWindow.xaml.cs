@@ -441,71 +441,75 @@ namespace TransparentTwitchChatWPF
 
                 if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.KapChat)
                 {
-                    if (SettingsSingleton.Instance.genSettings.AllowedUsersOnlyChat)
+                    if (SettingsSingleton.Instance.genSettings.HighlightUsersChat)
                     {
                         string[] vipList = new string[SettingsSingleton.Instance.genSettings.AllowedUsersList.Count];
                         SettingsSingleton.Instance.genSettings.AllowedUsersList.CopyTo(vipList, 0);
 
                         string js = @"var oldChatInsert = Chat.insert;
-    Chat.insert = function(nick, tags, message) {
-        var nick = nick || 'Chat';
-        tags2 = tags ? Chat.parseTags(nick, tags) : {};
+                            Chat.insert = function(nick, tags, message) {
+                                var nick = nick || 'Chat';
+                                var tags2 = tags ? Chat.parseTags(nick, tags) : {};
 
-        var vips = ['";
+                                var vips = ['";
                         js += string.Join(",", vipList).Replace(",", "','").ToLower();
                         js += @"'];
-var allowOther = false;";
+                                var allowOther = false;";
 
                         if (SettingsSingleton.Instance.genSettings.FilterAllowAllVIPs)
-                        {
-                            js += @"
-var vip = false;
-if (tags2.badges)
-{
-    tags2.badges.forEach(function(badge2) {
-        if (badge2.type.toLowerCase() == 'vip')
-        {
-            vip = true;
-            return;
-        }
-    });
-}
-allowOther = vip;";
-                        }
+                            js += CustomJS_Defaults.VIP_Check;
 
                         if (SettingsSingleton.Instance.genSettings.FilterAllowAllMods)
-                        {
-                            js += @"
-var mod = false;
+                            js += CustomJS_Defaults.Mod_Check;
 
-if (tags2.badges)
-{
-    tags2.badges.forEach(function(badge2) {
-        if (badge2.type.toLowerCase() == 'moderator')
-        {
-            mod = true;
-            return;
-        }
-    });
-}
-if (mod) { allowOther = true; }";
-                        }
-                        js += @"
-                    if (vips.includes(nick.toLowerCase()) || (nick == 'Chat') || allowOther)
-        {";
+                        js += @"if (vips.includes(nick.toLowerCase()) || allowOther) {";
+
                         if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() != "none")
-                        {
-                            js += @"
-            (async function() {
-                await CefSharp.BindObjectAsync('jsCallback');
-                jsCallback.playSound();
-            })();";
-                        }
+                            js += CustomJS_Defaults.Callback_PlaySound;
 
-            js += @"
-            return oldChatInsert.apply(oldChatInsert, arguments);
-        }
-    }";
+                        js += @"
+                                Chat.vars.queue.push('<div class=""highlight"">');
+                                oldChatInsert.apply(oldChatInsert, arguments);
+                                Chat.vars.queue.push('</div>');
+                                return;
+                            }
+                            else
+                            {
+                                return oldChatInsert.apply(oldChatInsert, arguments);
+                            }
+                        }";
+                        e.Frame.ExecuteJavaScriptAsync(js, "", 0);
+                    }
+                    else if (SettingsSingleton.Instance.genSettings.AllowedUsersOnlyChat)
+                    {
+                        string[] vipList = new string[SettingsSingleton.Instance.genSettings.AllowedUsersList.Count];
+                        SettingsSingleton.Instance.genSettings.AllowedUsersList.CopyTo(vipList, 0);
+
+                        string js = @"var oldChatInsert = Chat.insert;
+                            Chat.insert = function(nick, tags, message) {
+                                var nick = nick || 'Chat';
+                                var tags2 = tags ? Chat.parseTags(nick, tags) : {};
+
+                                var vips = ['";
+                        js += string.Join(",", vipList).Replace(",", "','").ToLower();
+                        js += @"'];
+                                var allowOther = false;";
+
+                        if (SettingsSingleton.Instance.genSettings.FilterAllowAllVIPs)
+                            js += CustomJS_Defaults.VIP_Check;
+
+                        if (SettingsSingleton.Instance.genSettings.FilterAllowAllMods)
+                            js += CustomJS_Defaults.Mod_Check;
+
+                        js += @"if (vips.includes(nick.toLowerCase()) || (nick == 'Chat') || allowOther) {";
+
+                        if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() != "none")
+                            js += CustomJS_Defaults.Callback_PlaySound;
+
+                        js += @"
+                            return oldChatInsert.apply(oldChatInsert, arguments);
+                        }
+                    }";
 
                         e.Frame.ExecuteJavaScriptAsync(js, "", 0);
                     }
@@ -513,13 +517,13 @@ if (mod) { allowOther = true; }";
                     {
                         // Insert JS to play a sound on each chat message
                         string js = @"var oldChatInsert = Chat.insert;
-Chat.insert = function() {
-    (async function() {
-	    await CefSharp.BindObjectAsync('jsCallback');
-        jsCallback.playSound();
-    })();
-    return oldChatInsert.apply(oldChatInsert, arguments);
-}";
+                            Chat.insert = function() {
+                                (async function() {
+	                                await CefSharp.BindObjectAsync('jsCallback');
+                                    jsCallback.playSound();
+                                })();
+                                return oldChatInsert.apply(oldChatInsert, arguments);
+                            }";
 
                         e.Frame.ExecuteJavaScriptAsync(js, "", 0);
                     }
@@ -532,7 +536,7 @@ Chat.insert = function() {
                 {
                     // Fix for KapChat so a long chat message doesn't wrap to a new line
                     if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.KapChat)
-                        script = InsertCustomCSS2(@".message { display: inline !important; }");
+                        script = InsertCustomCSS2(@".message { display: inline !important; } .highlight { background-color: rgba(255,255,0,0.5) !important; }");
                 }
                 else
                     script = InsertCustomCSS2(SettingsSingleton.Instance.genSettings.CustomCSS);
@@ -962,6 +966,8 @@ Chat.insert = function(nick, tags, message) {
         public bool AllowInteraction { get; set; }
         [Trackable]
         public double VersionTracker { get; set; }
+        [Trackable]
+        public bool HighlightUsersChat { get; set; }
         [Trackable]
         public bool AllowedUsersOnlyChat { get; set; }
         [Trackable]

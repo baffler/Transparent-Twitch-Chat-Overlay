@@ -51,5 +51,61 @@ namespace TransparentTwitchChatWPF
         public static string WebCaptioner = @"body { background-color: rgba(0,0,0,0.1) !important; }
 .transcript { background-color: rgba(0,0,0,0) !important; margin-bottom: -1em !important; }
 .bg-dark { background-color: rgba(0,0,0,0) !important; }";
+
+        public static string NoneTheme_CustomCSS = @"#chat_box {
+ text-shadow: 2px 2px 0 #000, 2px 2px 4px #000;
+ letter-spacing: 1px;
+}
+
+.chat_line {
+ color: #fff;
+ font-size: 16px!important;
+ font-weight: bold;
+}
+
+.chat_line .nick {
+
+}
+
+.message { display: inline !important; }
+.highlight { background-color: rgba(255,255,0,0.5) !important; }";
+    }
+
+    public static class CustomJS_Defaults
+    {
+        public static string VIP_Check = @"
+var vip = false;
+if (tags2.badges)
+{
+    tags2.badges.forEach(function(badge2) {
+        if (badge2.type.toLowerCase() == 'vip')
+        {
+            vip = true;
+            return;
+        }
+    });
+}
+allowOther = vip;";
+
+        public static string Mod_Check = @"
+var mod = false;
+
+if (tags2.badges)
+{
+    tags2.badges.forEach(function(badge2) {
+        if (badge2.type.toLowerCase() == 'moderator')
+        {
+            mod = true;
+            return;
+        }
+    });
+}
+if (mod) { allowOther = true; }";
+
+        public static string Callback_PlaySound = @"
+            (async function() {
+                await CefSharp.BindObjectAsync('jsCallback');
+                jsCallback.playSound();
+            })();";
     }
 }

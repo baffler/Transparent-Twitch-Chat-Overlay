@@ -58,12 +58,22 @@
                 />
 
             <CheckBox 
+                Name="cbHighlightUsers"
+                Content="Highlight Usernames (Filtering Off)"
+                Checked="cbHighlightUsers_Checked"
+                Unchecked="cbHighlightUsers_Unchecked"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="20,55,0,0" Grid.ColumnSpan="2"
+                />
+
+            <CheckBox 
                 Name="cbAllMods"
                 IsEnabled="false"
                 Content="Allow all mods"
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top"
-                Margin="20,60,0,0" Grid.ColumnSpan="2"
+                Margin="20,80,0,0" Grid.ColumnSpan="2"
                 />
 
             <CheckBox 
@@ -72,14 +82,14 @@
                 Content="Allow all VIPs"
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top"
-                Margin="20,84,0,0" Grid.ColumnSpan="2"
+                Margin="20,100,0,0" Grid.ColumnSpan="2"
                 />
 
             <ListBox Name="lvAllowedUsernames" 
                      IsEnabled="false"
                       FontSize="12"
                       SelectionMode="Single"
-                      Margin="20,150,20,50" Grid.ColumnSpan="2">
+                      Margin="20,155,20,50" Grid.ColumnSpan="2">
             </ListBox>
 
             <Button Name="btnAddUser"
@@ -87,7 +97,7 @@
                 Content="Add" 
                 Height="23"
                 HorizontalAlignment="Left" 
-                Margin="20,115,0,0"
+                Margin="20,125,0,0"
                 VerticalAlignment="Top" 
                 Width="75" Grid.ColumnSpan="2" Click="Button_Click_1" />
             <Button Name="btnRemoveUser"
@@ -95,7 +105,7 @@
                 Content="Remove" 
                 Height="23"
                 HorizontalAlignment="Left" 
-                Margin="80,115,0,0"
+                Margin="80,125,0,0"
                 VerticalAlignment="Top" 
                 Width="75" Grid.Column="1" Click="Button_Click" />
         </Grid>

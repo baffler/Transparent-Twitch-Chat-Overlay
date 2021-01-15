@@ -31,6 +31,7 @@ namespace TransparentTwitchChatWPF
 
             refreshLB();
 
+            this.cbHighlightUsers.IsChecked = SettingsSingleton.Instance.genSettings.HighlightUsersChat;
             this.cbAllowedUsers.IsChecked = SettingsSingleton.Instance.genSettings.AllowedUsersOnlyChat;
             this.cbAllMods.IsChecked = SettingsSingleton.Instance.genSettings.FilterAllowAllMods;
             this.cbAllVIPs.IsChecked = SettingsSingleton.Instance.genSettings.FilterAllowAllVIPs;
@@ -72,6 +73,7 @@ namespace TransparentTwitchChatWPF
 
         private void OKButton_Click(object sender, RoutedEventArgs e)
         {
+            SettingsSingleton.Instance.genSettings.HighlightUsersChat = this.cbHighlightUsers.IsChecked ?? false;
             SettingsSingleton.Instance.genSettings.AllowedUsersOnlyChat = this.cbAllowedUsers.IsChecked ?? false;
             SettingsSingleton.Instance.genSettings.FilterAllowAllMods = this.cbAllMods.IsChecked ?? false;
             SettingsSingleton.Instance.genSettings.FilterAllowAllVIPs = this.cbAllVIPs.IsChecked ?? false;
@@ -82,14 +84,38 @@ namespace TransparentTwitchChatWPF
 
         private void cbAllowedUsers_Checked(object sender, RoutedEventArgs e)
         {
+            cbHighlightUsers.IsChecked = false;
             cbAllMods.IsEnabled = true;
+            cbAllMods.Content = "Allow all mods";
             cbAllVIPs.IsEnabled = true;
+            cbAllVIPs.Content = "Allow all VIPs";
             btnAddUser.IsEnabled = true;
             btnRemoveUser.IsEnabled = true;
             lvAllowedUsernames.IsEnabled = true;
         }
 
         private void cbAllowedUsers_Unchecked(object sender, RoutedEventArgs e)
+        {
+            cbAllMods.IsEnabled = false;
+            cbAllVIPs.IsEnabled = false;
+            btnAddUser.IsEnabled = false;
+            btnRemoveUser.IsEnabled = false;
+            lvAllowedUsernames.IsEnabled = false;
+        }
+
+        private void cbHighlightUsers_Checked(object sender, RoutedEventArgs e)
+        {
+            cbAllowedUsers.IsChecked = false;
+            cbAllMods.IsEnabled = true;
+            cbAllMods.Content = "Highlight all mods";
+            cbAllVIPs.IsEnabled = true;
+            cbAllVIPs.Content = "Highlight all VIPs";
+            btnAddUser.IsEnabled = true;
+            btnRemoveUser.IsEnabled = true;
+            lvAllowedUsernames.IsEnabled = true;
+        }
+
+        private void cbHighlightUsers_Unchecked(object sender, RoutedEventArgs e)
         {
             cbAllMods.IsEnabled = false;
             cbAllVIPs.IsEnabled = false;
