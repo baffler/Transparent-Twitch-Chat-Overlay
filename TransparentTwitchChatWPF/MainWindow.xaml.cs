@@ -22,8 +22,14 @@ using System.Collections.Specialized;
 using Jot;
 using Jot.DefaultInitializer;
 using System.Media;
+using TwitchLib;
+using TwitchLib.PubSub;
+using TwitchLib.PubSub.Events;
 
 /*
+ * v0.9
+ * - TwitchLib support for points redemption
+ * 
  * v0.81
  * - Updated CefSharp to 86.0.241
  * - Fix for how custom CSS was added
@@ -97,6 +103,8 @@ namespace TransparentTwitchChatWPF
         //StringCollection custom_windows = new StringCollection();
         List<BrowserWindow> windows = new List<BrowserWindow>();
 
+        private TwitchPubSub _pubSub;
+
         /*public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName]string propertyName = null)
         {
@@ -149,7 +157,7 @@ namespace TransparentTwitchChatWPF
                 {
                     ResetWindowPosition();
 
-                    if (MessageBox.Show("Show settings folder?", "Settings Folder", MessageBoxButton.YesNo, MessageBoxImage.Question) 
+                    if (MessageBox.Show("Show settings folder?", "Settings Folder", MessageBoxButton.YesNo, MessageBoxImage.Question)
                         == MessageBoxResult.Yes)
                     {
                         System.Diagnostics.Process.Start((Services.Tracker.StoreFactory as Jot.Storage.JsonFileStoreFactory).StoreFolderPath);
@@ -338,8 +346,8 @@ namespace TransparentTwitchChatWPF
         {
             if (SettingsSingleton.Instance.genSettings.ConfirmClose)
             {
-                var msgBoxResult = MessageBox.Show("Sure you want to exit the application?", "Exit", 
-                                                    MessageBoxButton.YesNo, 
+                var msgBoxResult = MessageBox.Show("Sure you want to exit the application?", "Exit",
+                                                    MessageBoxButton.YesNo,
                                                     MessageBoxImage.Question,
                                                     MessageBoxResult.No,
                                                     MessageBoxOptions.DefaultDesktopOnly);
@@ -550,21 +558,21 @@ namespace TransparentTwitchChatWPF
         {
             if (!e.IsLoading)
             {
-                    //string[] vipList = new string[] { "Chat", "Baffler", "test" };
-                    /*string script = @"var oldChatInsert = Chat.insert;
+                //string[] vipList = new string[] { "Chat", "Baffler", "test" };
+                /*string script = @"var oldChatInsert = Chat.insert;
 Chat.insert = function(nick, tags, message) {
-    var nick = nick || 'Chat';
-    var vips = ['";
-                    script += string.Join(",", vipList).Replace(",", "','").ToLower();
-                    script += @"'];
-    if (vips.includes(nick.toLowerCase()))
-    {
-        (async function() {
-	        await CefSharp.BindObjectAsync('jsCallback');
-            jsCallback.playSound();
-        })();
-        return oldChatInsert.apply(oldChatInsert, arguments);
-    }
+var nick = nick || 'Chat';
+var vips = ['";
+                script += string.Join(",", vipList).Replace(",", "','").ToLower();
+                script += @"'];
+if (vips.includes(nick.toLowerCase()))
+{
+    (async function() {
+        await CefSharp.BindObjectAsync('jsCallback');
+        jsCallback.playSound();
+    })();
+    return oldChatInsert.apply(oldChatInsert, arguments);
+}
 }";*/
             }
         }
@@ -634,7 +642,8 @@ Chat.insert = function(nick, tags, message) {
 
         private void ShowSettingsWindow()
         {
-            WindowSettings config = new WindowSettings {
+            WindowSettings config = new WindowSettings
+            {
                 Title = "Main Window",
                 ChatType = SettingsSingleton.Instance.genSettings.ChatType,
                 URL = SettingsSingleton.Instance.genSettings.CustomURL,
@@ -649,7 +658,9 @@ Chat.insert = function(nick, tags, message) {
                 ConfirmClose = SettingsSingleton.Instance.genSettings.ConfirmClose,
                 EnableTrayIcon = SettingsSingleton.Instance.genSettings.EnableTrayIcon,
                 HideTaskbarIcon = SettingsSingleton.Instance.genSettings.HideTaskbarIcon,
-                AllowInteraction = SettingsSingleton.Instance.genSettings.AllowInteraction
+                AllowInteraction = SettingsSingleton.Instance.genSettings.AllowInteraction,
+                RedemptionsEnabled = SettingsSingleton.Instance.genSettings.RedemptionsEnabled,
+                ChannelID = SettingsSingleton.Instance.genSettings.ChannelID
             };
 
             SettingsWindow settingsWindow = new SettingsWindow(this, config);
@@ -690,7 +701,14 @@ Chat.insert = function(nick, tags, message) {
 
 
                     if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.Username))
+                    {
                         SetChatAddress(SettingsSingleton.Instance.genSettings.Username);
+
+                        if (config.RedemptionsEnabled)
+                            SetupPubSubRedemptions();
+                        else
+                            DisablePubSubRedemptions();
+                    }
 
 
                     if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() == "none")
@@ -711,6 +729,8 @@ Chat.insert = function(nick, tags, message) {
                 SettingsSingleton.Instance.genSettings.EnableTrayIcon = config.EnableTrayIcon;
                 SettingsSingleton.Instance.genSettings.HideTaskbarIcon = config.HideTaskbarIcon;
                 SettingsSingleton.Instance.genSettings.AllowInteraction = config.AllowInteraction;
+                SettingsSingleton.Instance.genSettings.RedemptionsEnabled = config.RedemptionsEnabled;
+                SettingsSingleton.Instance.genSettings.ChannelID = config.ChannelID;
 
                 this.taskbarControl.Visibility = config.EnableTrayIcon ? Visibility.Visible : Visibility.Hidden;
                 this.ShowInTaskbar = !config.HideTaskbarIcon;
@@ -727,7 +747,7 @@ Chat.insert = function(nick, tags, message) {
             CustomWindow newWindow = new CustomWindow(this, url);
             windows.Add(newWindow);
             newWindow.Show();
-            
+
             if (hideBorder)
                 newWindow.hideBorders();
         }
@@ -778,7 +798,7 @@ Chat.insert = function(nick, tags, message) {
 
         private void Browser1_Initialized(object sender, EventArgs e)
         {
-            
+
         }
 
         private void SetupBrowser()
@@ -830,6 +850,11 @@ Chat.insert = function(nick, tags, message) {
             else if (!string.IsNullOrWhiteSpace(SettingsSingleton.Instance.genSettings.Username))
             {
                 SetChatAddress(SettingsSingleton.Instance.genSettings.Username);
+
+                if (SettingsSingleton.Instance.genSettings.RedemptionsEnabled)
+                {
+                    SetupPubSubRedemptions();
+                }
             }
             else
             {
@@ -892,6 +917,87 @@ Chat.insert = function(nick, tags, message) {
             this.cOpacity = 0;
             SettingsSingleton.Instance.genSettings.OpacityLevel = 0;
             this.bgColor.Color = Color.FromArgb(0, 0, 0, 0);
+        }
+
+        private void PushNewChatMessage(string message = "", string nick = "", string color = "")
+        {
+            //this.Browser1.Dispatcher.Invoke(new Action(() => { });
+
+            if (string.IsNullOrEmpty(nick))
+                nick = "null";
+            else
+                nick = $"\"{nick}\"";
+
+            string js = $"Chat.insert({nick}, null, \"{message}\");";
+
+            if (!string.IsNullOrEmpty(color))
+            {
+                js = "var ttags = { color : \"" + color + "\", };\n";
+                js += $"Chat.insert({nick}, ttags, \"\\x01ACTION {message}\\x01\");";
+            }
+
+            if (this.Browser1.CanExecuteJavascriptInMainFrame)
+                this.Browser1.ExecuteScriptAsync(js);
+            else
+                this.Browser1.ExecuteScriptAsyncWhenPageLoaded($"Chat.insert(null, null, \"{message}\");");
+        }
+
+        public void SetupPubSubRedemptions()
+        {
+            DisablePubSubRedemptions();
+
+            _pubSub = new TwitchPubSub();
+            _pubSub.OnPubSubServiceConnected += _pubSub_OnPubSubServiceConnected;
+            _pubSub.OnListenResponse += _pubSub_OnListenResponse;
+            _pubSub.OnRewardRedeemed += _pubSub_OnRewardRedeemed;
+            _pubSub.Connect();
+        }
+
+        public void DisablePubSubRedemptions()
+        {
+            if (_pubSub != null)
+            {
+                try {  _pubSub.OnPubSubServiceConnected -= _pubSub_OnPubSubServiceConnected; }
+                catch { }
+                try { _pubSub.OnListenResponse -= _pubSub_OnListenResponse; }
+                catch { }
+                try {  _pubSub.OnRewardRedeemed -= _pubSub_OnRewardRedeemed; }
+                catch { }
+                try { _pubSub.Disconnect(); }
+                catch { }
+
+                _pubSub = null;
+            }
+        }
+
+        private void _pubSub_OnPubSubServiceConnected(object sender, System.EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.ChannelID))
+            {
+                PushNewChatMessage("PubSub Service Connected");
+                _pubSub.ListenToRewards(SettingsSingleton.Instance.genSettings.ChannelID);
+                _pubSub.SendTopics("");
+            }
+        }
+
+        private void _pubSub_OnListenResponse(object sender, OnListenResponseArgs e)
+        {
+            if (!e.Successful)
+            {
+                PushNewChatMessage($"Failed to listen! Response: {e.Response.Error}");
+            }
+            else
+                PushNewChatMessage($"Success! Listening to topic: {e.Topic}");
+        }
+
+        private void _pubSub_OnRewardRedeemed(object sender, OnRewardRedeemedArgs e)
+        {
+            if (SettingsSingleton.Instance.genSettings.RedemptionsEnabled)
+            {
+                PushNewChatMessage(
+                    $"redeemed '{e.RewardTitle}' ({e.RewardCost} points)", // ~ {e.ChannelId}",
+                    e.DisplayName, "#708090");
+            }
         }
     }
 
@@ -976,5 +1082,11 @@ Chat.insert = function(nick, tags, message) {
         public bool FilterAllowAllVIPs { get; set; }
         [Trackable]
         public StringCollection AllowedUsersList { get; set; }
+        [Trackable]
+        public bool RedemptionsEnabled { get; set; }
+        [Trackable]
+        public string ChannelID { get; set; }
+        [Trackable]
+        public string OAuthToken { get; set; }
     }
 }

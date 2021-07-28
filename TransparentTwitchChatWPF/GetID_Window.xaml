@@ -1,0 +1,34 @@
+﻿<Window x:Class="TransparentTwitchChatWPF.GetID_Window"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TransparentTwitchChatWPF"
+        mc:Ignorable="d"
+        Title="Get Channel ID" Height="330" Width="305" WindowStyle="ToolWindow" Topmost="True" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <StackPanel Orientation="Vertical">
+            <Label Content="Access Token:" />
+            <TextBox Name="tbAccessToken" Height="23" Margin="5,0,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="240" />
+            <Label Content="Client ID:" />
+            <TextBox Name="tbClientID" Height="23" Margin="5,0,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" Width="240" />
+            <Label Name="lblChannelID" Content="Channel ID:" />
+            <TextBox Name="tbChannelID" IsEnabled="false" Height="23" Margin="5,0,0,0" TextWrapping="NoWrap" Text="(ID will be populated here)" VerticalAlignment="Top" Width="240" />
+            <StackPanel Orientation="Horizontal">
+                <Button Name="btnFetchID" Content="Fetch ID" Width="90" Margin="25,10,0,0" Click="btnFetchID_Click" />
+                <Button Name="btnCancel" Content="Cancel" Width="90" Margin="60,10,0,0" Click="btnCancel_Click" />
+            </StackPanel>
+
+            <TextBlock Margin="10,10,0,0" Text="To generate the Token and Client ID, go to:" />
+            <Label Margin="5,0,0,0">
+                <Hyperlink NavigateUri="" RequestNavigate="Hyperlink_RequestNavigate">
+                    <TextBlock Text="https://twitchtokengenerator.com" />
+                </Hyperlink>
+            </Label>
+            <TextBlock Margin="10,5,0,0" Text="(Click 'Bot Chat Token' if you're unsure how to set it up)" FontSize="11" />
+            <TextBlock Margin="10,5,0,0" Text="Also you might want to save the tokens for later use" FontSize="11" />
+            <TextBlock Margin="10,0,0,0" Text="but keep them safe and don't share them!" FontSize="11" />
+
+        </StackPanel>
+    </Grid>
+</Window>

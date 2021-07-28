@@ -27,7 +27,7 @@
 
     <Window.Resources>
         <ContextMenu Background="White" x:Key="contextMenu">
-            <MenuItem Header="Twitch Chat Overlay v0.8" IsEnabled="False" />
+            <MenuItem Header="Twitch Chat Overlay v0.91" IsEnabled="False" />
             <MenuItem Header="Toggle Borders (F9)" Click="MenuItem_ToggleBorderVisible" />
             <MenuItem Header="New Widget" Click="MenuItem_ClickNewWindow" />
             <MenuItem Header="Zoom Level">
@@ -59,7 +59,7 @@
             <!-- Set a simple context menu  -->
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu Background="White" x:Name="contextMenu">
-                    <MenuItem Header="Twitch Chat Overlay v0.81" IsEnabled="False" />
+                    <MenuItem Header="Twitch Chat Overlay v0.91" IsEnabled="False" />
                     <MenuItem Header="Hide/Show Border (F9)" Click="MenuItem_ToggleBorderVisible" />
                     <MenuItem Header="Settings" Click="MenuItem_SettingsClick" />
                     <MenuItem  Header="Reset Window" Click="MenuItem_ResetWindowClick" />

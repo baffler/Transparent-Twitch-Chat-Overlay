@@ -20,7 +20,6 @@ namespace TransparentTwitchChatWPF
     /// </summary>
     public partial class ChatFilters : Window
     {
-        int i = 0;
         StringCollection sc = new StringCollection();
 
         public ChatFilters()

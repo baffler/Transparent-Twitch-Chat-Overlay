@@ -40,7 +40,9 @@ namespace TransparentTwitchChatWPF
                 AllowedUsersOnlyChat = false,
                 FilterAllowAllMods = false,
                 FilterAllowAllVIPs = false,
-                AllowedUsersList = new StringCollection()
+                AllowedUsersList = new StringCollection(),
+                RedemptionsEnabled = false,
+                ChannelID = string.Empty
             };
         }
     }

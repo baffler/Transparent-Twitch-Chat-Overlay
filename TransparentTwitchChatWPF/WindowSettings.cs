@@ -31,6 +31,8 @@ namespace TransparentTwitchChatWPF
         public bool ConfirmClose { get; set; }
         public bool HideTaskbarIcon { get; set; }
         public bool AllowInteraction { get; set; }
+        public bool RedemptionsEnabled { get; set; }
+        public string ChannelID { get; set; }
     }
 
     public static class CustomCSS_Defaults

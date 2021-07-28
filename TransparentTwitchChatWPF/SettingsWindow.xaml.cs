@@ -35,6 +35,8 @@ namespace TransparentTwitchChatWPF
         {
             this.config.ChatType = this.comboChatType.SelectedIndex;
 
+            this.config.RedemptionsEnabled = false;
+
             if (this.config.ChatType == (int)ChatTypes.CustomURL)
             {
                 this.config.URL = this.tbURL.Text;
@@ -67,6 +69,8 @@ namespace TransparentTwitchChatWPF
             {
                 this.config.URL = string.Empty;
                 this.config.Username = this.tbUsername.Text;
+                this.config.RedemptionsEnabled = this.cbRedemptions.IsChecked ?? false;
+                this.config.ChannelID = this.tbChannelID.Text;
                 this.config.ChatFade = this.cbFade.IsChecked ?? false;
                 this.config.FadeTime = this.tbFadeTime.Text;
                 //this.config.ShowBotActivity = this.cbBotActivity.IsChecked ?? false;
@@ -92,6 +96,10 @@ namespace TransparentTwitchChatWPF
         {
             this.tbUsername.Text = this.config.Username;
             this.tbTwitchPopoutUsername.Text = this.config.Username;
+            this.cbRedemptions.IsChecked = this.config.RedemptionsEnabled;
+            this.tbChannelID.Text = this.config.ChannelID;
+            this.tbChannelID.IsEnabled = this.config.RedemptionsEnabled;
+            this.btGetChannelID.IsEnabled = this.config.RedemptionsEnabled;
             this.cbFade.IsChecked = this.config.ChatFade;
 
             this.tbFadeTime.Text = this.config.FadeTime;
@@ -325,6 +333,27 @@ namespace TransparentTwitchChatWPF
             if (chatFiltersWindow.ShowDialog() == true)
             {
             }
+        }
+
+        private void btGetChannelID_Click(object sender, RoutedEventArgs e)
+        {
+            GetID_Window getidWindow = new GetID_Window(this.tbUsername.Text);
+            if (getidWindow.ShowDialog() == true)
+            {
+                this.tbChannelID.Text = SettingsSingleton.Instance.genSettings.ChannelID;
+            }
+        }
+
+        private void cbRedemptions_Checked(object sender, RoutedEventArgs e)
+        {
+            this.tbChannelID.IsEnabled = true;
+            this.btGetChannelID.IsEnabled = true;
+        }
+
+        private void cbRedemptions_Unchecked(object sender, RoutedEventArgs e)
+        {
+            this.tbChannelID.IsEnabled = false;
+            this.btGetChannelID.IsEnabled = false;
         }
     }
 }
