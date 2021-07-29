@@ -16,6 +16,7 @@ using System.Windows.Navigation;
 using TwitchLib;
 using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
+using TwitchLib.Api.V5.Models.Users;
 
 namespace TransparentTwitchChatWPF
 {
@@ -69,11 +70,13 @@ namespace TransparentTwitchChatWPF
 
         private async void _getChannelID(string channel)
         {
-            GetUsersResponse getUsersResponse = null;
+            //GetUsersResponse getUsersResponse = null;
+            Users users = null;
 
             try
             {
-                getUsersResponse = await _api.Helix.Users.GetUsersAsync(logins: new List<string> { channel });
+                users = await _api.V5.Users.GetUserByNameAsync(channel);
+                ///getUsersResponse = await _api.Helix.Users.GetUsersAsync(logins: new List<string> { channel });
             } 
             catch (Exception e) 
             {
@@ -83,13 +86,30 @@ namespace TransparentTwitchChatWPF
                 MessageBox.Show(e.Message); 
             }
 
-            if (getUsersResponse != null)
+            /*if (getUsersResponse != null)
             {
                 var users = getUsersResponse.Users;
                 if (users.Length > 0)
                 {
                     SettingsSingleton.Instance.genSettings.ChannelID = users[0].Id;
                     tbChannelID.Text = users[0].Id;
+                    btnFetchID.Content = "OK";
+                    btnFetchID.IsEnabled = true;
+                }
+                else
+                {
+                    tbChannelID.Text = "(Error fetching channel ID)";
+                    btnFetchID.IsEnabled = true;
+                    btnFetchID.Content = "Fetch ID";
+                }
+            }*/
+
+            if (users != null)
+            {
+                if (users.Total > 0)
+                {
+                    SettingsSingleton.Instance.genSettings.ChannelID = users.Matches[0].Id;
+                    tbChannelID.Text = users.Matches[0].Id;
                     btnFetchID.Content = "OK";
                     btnFetchID.IsEnabled = true;
                 }

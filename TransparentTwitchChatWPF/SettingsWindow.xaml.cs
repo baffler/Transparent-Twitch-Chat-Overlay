@@ -12,6 +12,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Media;
+using TwitchLib.Api;
+using TwitchLib.Api.V5.Models.Users;
 
 namespace TransparentTwitchChatWPF
 {
@@ -22,6 +24,7 @@ namespace TransparentTwitchChatWPF
     {
         WindowSettings config;
         MainWindow _main;
+        TwitchAPI _api;
 
         public SettingsWindow(MainWindow mainWindow, WindowSettings windowConfig)
         {
@@ -337,10 +340,54 @@ namespace TransparentTwitchChatWPF
 
         private void btGetChannelID_Click(object sender, RoutedEventArgs e)
         {
-            GetID_Window getidWindow = new GetID_Window(this.tbUsername.Text);
+            string _clientid = "gp762nuuoqcoxypju8c569th9wz7q5";
+
+            btGetChannelID.IsEnabled = false;
+
+            _api = new TwitchAPI();
+            _api.Settings.ClientId = _clientid;
+
+            _getChannelID(tbUsername.Text);
+
+            /*GetID_Window getidWindow = new GetID_Window(this.tbUsername.Text);
             if (getidWindow.ShowDialog() == true)
             {
                 this.tbChannelID.Text = SettingsSingleton.Instance.genSettings.ChannelID;
+            }*/
+        }
+
+        private async void _getChannelID(string channel)
+        {
+            Users users = null;
+
+            try
+            {
+                users = await _api.V5.Users.GetUserByNameAsync(channel);
+            }
+            catch (Exception e)
+            {
+                tbChannelID.Text = "0";
+                MessageBox.Show(e.Message);
+            }
+
+            if (users != null)
+            {
+                if (users.Total > 0)
+                {
+                    SettingsSingleton.Instance.genSettings.ChannelID = users.Matches[0].Id;
+                    tbChannelID.Text = users.Matches[0].Id;
+                    btGetChannelID.IsEnabled = true;
+                }
+                else
+                {
+                    tbChannelID.Text = "0";
+                    btGetChannelID.IsEnabled = true;
+                }
+            }
+            else
+            {
+                tbChannelID.Text = "0";
+                btGetChannelID.IsEnabled = true;
             }
         }
 

@@ -21,7 +21,7 @@
 
             <TextBlock Margin="10,10,0,0" Text="To generate the Token and Client ID, go to:" />
             <Label Margin="5,0,0,0">
-                <Hyperlink NavigateUri="" RequestNavigate="Hyperlink_RequestNavigate">
+                <Hyperlink NavigateUri="https://twitchtokengenerator.com/" RequestNavigate="Hyperlink_RequestNavigate">
                     <TextBlock Text="https://twitchtokengenerator.com" />
                 </Hyperlink>
             </Label>
