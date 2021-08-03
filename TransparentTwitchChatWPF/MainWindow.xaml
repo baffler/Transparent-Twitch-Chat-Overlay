@@ -108,6 +108,6 @@
             <wpf:ChromiumWebBrowser IsEnabled="false" Grid.Row="1"
                             Background="Transparent"
                               x:Name="Browser1"
-                            Margin="0,0,0,0" LoadingStateChanged="Browser1_LoadingStateChanged" FrameLoadEnd="Browser1_FrameLoadEnd" />
+                            Margin="0,0,0,0" LoadingStateChanged="Browser1_LoadingStateChanged" IsBrowserInitializedChanged="Browser1_IsBrowserInitializedChanged" FrameLoadEnd="Browser1_FrameLoadEnd" />
         </Grid>
 </Window>

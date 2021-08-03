@@ -120,7 +120,7 @@ namespace TransparentTwitchChatWPF
 
             // General
             this.cbAutoHideBorders.IsChecked = this.config.AutoHideBorders;
-            this.cbEnableTrayIcon.IsChecked = this.config.EnableTrayIcon;
+            this.cbEnableTrayIcon.IsChecked = true; //TODO: Temp fix for a bug ~ this.config.EnableTrayIcon;
             this.cbConfirmClose.IsChecked = this.config.ConfirmClose;
             this.cbTaskbar.IsChecked = this.config.HideTaskbarIcon;
             this.cbInteraction.IsChecked = this.config.AllowInteraction;
@@ -401,6 +401,18 @@ namespace TransparentTwitchChatWPF
         {
             this.tbChannelID.IsEnabled = false;
             this.btGetChannelID.IsEnabled = false;
+        }
+
+        private void cbTaskbar_Checked(object sender, RoutedEventArgs e)
+        {
+            //this.cbEnableTrayIcon.IsEnabled = false;
+            //this.cbEnableTrayIcon.IsChecked = true;
+        }
+
+        private void cbTaskbar_Unchecked(object sender, RoutedEventArgs e)
+        {
+            //this.cbEnableTrayIcon.IsEnabled = true;
+            //this.cbEnableTrayIcon.IsChecked = true;
         }
     }
 }

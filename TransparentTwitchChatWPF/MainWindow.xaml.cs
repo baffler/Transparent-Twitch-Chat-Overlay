@@ -27,8 +27,17 @@ using TwitchLib.PubSub;
 using TwitchLib.PubSub.Events;
 
 /*
- * v0.9
+ * v0.91
  * - TwitchLib support for points redemption
+ * - Filter settings will let you highlight certain usernames/mods/vip
+ * - Possible bug fix for startup crash Load() issue.
+ * - System tray icon will always be enabled for now (to prevent no interaction with app)
+ * 
+ * v0.9
+ * - Chat filter settings for KapChat version
+ * - Filter by allowed usernames, all mods, or all VIPs
+ * - You can configure the filter settings under Chat settings and click the Open Chat Filter Settings button
+ *
  * 
  * v0.81
  * - Updated CefSharp to 86.0.241
@@ -783,22 +792,24 @@ if (vips.includes(nick.toLowerCase()))
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            if (!SettingsSingleton.Instance.genSettings.EnableTrayIcon)
-                this.taskbarControl.Visibility = Visibility.Hidden;
-
             // fix to reset setting for HideTaskbarIcon
-            if (SettingsSingleton.Instance.genSettings.VersionTracker <= 0.7)
+            if (SettingsSingleton.Instance.genSettings.VersionTracker <= 0.8)
             {
                 SettingsSingleton.Instance.genSettings.HideTaskbarIcon = false;
-                SettingsSingleton.Instance.genSettings.VersionTracker = 0.8;
+                SettingsSingleton.Instance.genSettings.EnableTrayIcon = true;
+                SettingsSingleton.Instance.genSettings.VersionTracker = 0.9;
             }
 
-            SetupBrowser();
+            if (!SettingsSingleton.Instance.genSettings.EnableTrayIcon)
+                this.taskbarControl.Visibility = Visibility.Hidden;
         }
 
-        private void Browser1_Initialized(object sender, EventArgs e)
+        private void Browser1_IsBrowserInitializedChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-
+            if (this.Browser1.IsBrowserInitialized)
+            {
+                SetupBrowser();
+            }
         }
 
         private void SetupBrowser()

@@ -261,7 +261,7 @@ namespace TransparentTwitchChatWPF
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            SetupBrowser();
+            
         }
 
         private void btnMax_Click(object sender, RoutedEventArgs e)
@@ -270,6 +270,14 @@ namespace TransparentTwitchChatWPF
                 this.WindowState = WindowState.Normal;
             else
                 this.WindowState = WindowState.Maximized;
+        }
+
+        private void Browser2_IsBrowserInitializedChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (this.Browser2.IsBrowserInitialized)
+            {
+                SetupBrowser();
+            }
         }
     }
 }

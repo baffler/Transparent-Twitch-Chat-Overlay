@@ -149,13 +149,14 @@
                 VerticalAlignment="Top"
                 Margin="20,90,0,0"
                 />
-            
+
             <CheckBox 
                 Name="cbEnableTrayIcon"
                 Content="Show Tray Icon"
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top"
                 Margin="20,120,0,0"
+                IsEnabled="false"
                 />
             <Label 
                 FontStyle="Italic"
@@ -174,8 +175,10 @@
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top"
                 Margin="20,170,0,0"
+                Checked="cbTaskbar_Checked"
+                Unchecked="cbTaskbar_Unchecked"
                 />
-            <TextBlock Text="*Note: Hiding the taskbar icon will require you to use the Tray Icon to interact with the menus for the app. Make sure the Show Tray Icon setting is enabled as well."
+            <TextBlock Text="*Note: Hiding the taskbar icon will require you to use the Tray Icon to interact with the menus for the app."
                 FontStyle="Italic"
                 TextWrapping="Wrap"
                 HorizontalAlignment="Left" 
