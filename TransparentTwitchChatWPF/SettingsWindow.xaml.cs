@@ -66,7 +66,12 @@ namespace TransparentTwitchChatWPF
                     this.config.TwitchPopoutCSS = this.tbPopoutCSS.Text;
                 }
                 else
+                {
                     this.config.TwitchPopoutCSS = CustomCSS_Defaults.TwitchPopoutChat;
+                }
+
+                this.config.BetterTtv = this.cbBetterTtv.IsChecked ?? false;
+                this.config.FrankerFaceZ = this.cbFfz.IsChecked ?? false;
             }
             else if (this.config.ChatType == (int)ChatTypes.KapChat)
             {
@@ -149,6 +154,9 @@ namespace TransparentTwitchChatWPF
                     this.tbPopoutCSS.Text = CustomCSS_Defaults.TwitchPopoutChat;
                 else
                     this.tbPopoutCSS.Text = this.config.TwitchPopoutCSS;
+
+                this.cbBetterTtv.IsChecked = this.config.BetterTtv;
+                this.cbFfz.IsChecked = this.config.FrankerFaceZ;
             }
             else if (this.config.ChatType == (int)ChatTypes.KapChat)
             {

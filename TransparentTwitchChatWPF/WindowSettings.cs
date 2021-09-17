@@ -33,6 +33,8 @@ namespace TransparentTwitchChatWPF
         public bool AllowInteraction { get; set; }
         public bool RedemptionsEnabled { get; set; }
         public string ChannelID { get; set; }
+        public bool BetterTtv { get; set; }
+        public bool FrankerFaceZ { get; set; }
     }
 
     public static class CustomCSS_Defaults

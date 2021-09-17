@@ -583,6 +583,41 @@ if (vips.includes(nick.toLowerCase()))
     return oldChatInsert.apply(oldChatInsert, arguments);
 }
 }";*/
+                if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.TwitchPopout)
+                {
+                    if (SettingsSingleton.Instance.genSettings.BetterTtv)
+                    {
+                        InsertCustomJavaScriptFromUrl("https://cdn.betterttv.net/betterttv.js");
+                    }
+                    if (SettingsSingleton.Instance.genSettings.FrankerFaceZ)
+                    {
+                        // Observe for FrankerFaceZ's reskin stylesheet
+                        // that breaks the transparency and remove it
+                        InsertCustomJavaScript(@"
+(function() {
+    const head = document.getElementsByTagName(""head"")[0];
+    const observer = new MutationObserver((mutations, observer) => {
+        for (const mut of mutations) {
+            if (mut.type === ""childList"") {
+                for (const node of mut.addedNodes) {
+                    if (node.tagName.toLowerCase() === ""link"" && node.href.includes(""color_normalizer"")) {
+                        node.remove();
+                    }
+                }
+            }
+        }
+    });
+    observer.observe(head, {
+        attributes: false,
+        childList: true,
+        subtree: false,
+    });
+})();
+                        ");
+
+                        InsertCustomJavaScriptFromUrl("https://cdn.frankerfacez.com/static/script.min.js");
+                    }
+                }
             }
         }
 
@@ -620,6 +655,17 @@ if (vips.includes(nick.toLowerCase()))
             {
                 MessageBox.Show(e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void InsertCustomJavaScriptFromUrl(string scriptUrl)
+        {
+            InsertCustomJavaScript(@"
+(function() {
+    const script = document.createElement(""script"");
+    script.src = """ + scriptUrl + @""";
+    document.getElementsByTagName(""head"")[0].appendChild(script);
+})();
+            ");
         }
 
         public void CreateNewWindow(string URL)
@@ -669,7 +715,9 @@ if (vips.includes(nick.toLowerCase()))
                 HideTaskbarIcon = SettingsSingleton.Instance.genSettings.HideTaskbarIcon,
                 AllowInteraction = SettingsSingleton.Instance.genSettings.AllowInteraction,
                 RedemptionsEnabled = SettingsSingleton.Instance.genSettings.RedemptionsEnabled,
-                ChannelID = SettingsSingleton.Instance.genSettings.ChannelID
+                ChannelID = SettingsSingleton.Instance.genSettings.ChannelID,
+                BetterTtv = SettingsSingleton.Instance.genSettings.BetterTtv,
+                FrankerFaceZ = SettingsSingleton.Instance.genSettings.FrankerFaceZ,
             };
 
             SettingsWindow settingsWindow = new SettingsWindow(this, config);
@@ -693,6 +741,9 @@ if (vips.includes(nick.toLowerCase()))
 
                     if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.Username))
                         SetCustomChatAddress("https://www.twitch.tv/popout/" + SettingsSingleton.Instance.genSettings.Username + "/chat?popout=");
+
+                    SettingsSingleton.Instance.genSettings.BetterTtv = config.BetterTtv;
+                    SettingsSingleton.Instance.genSettings.FrankerFaceZ = config.FrankerFaceZ;
                 }
                 else if (config.ChatType == (int)ChatTypes.KapChat)
                 {
@@ -1099,5 +1150,9 @@ if (vips.includes(nick.toLowerCase()))
         public string ChannelID { get; set; }
         [Trackable]
         public string OAuthToken { get; set; }
+        [Trackable]
+        public bool BetterTtv { get; set; }
+        [Trackable]
+        public bool FrankerFaceZ { get; set; }
     }
 }
