@@ -127,6 +127,15 @@ namespace TransparentTwitchChatWPF
 
         public MainWindow()
         {
+            CefSettings settings = new CefSettings()
+            {
+                PersistSessionCookies = true,
+                PersistUserPreferences = true,
+                RootCachePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF", "cef"),
+                CachePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF", "cef", "cache")
+            };
+            Cef.Initialize(settings);
+
             InitializeComponent();
             DataContext = this;
 
@@ -136,10 +145,18 @@ namespace TransparentTwitchChatWPF
 
             var browserSettings = new BrowserSettings
             {
+                ApplicationCache = CefState.Enabled,
+                LocalStorage = CefState.Enabled,
                 FileAccessFromFileUrls = CefState.Enabled,
-                UniversalAccessFromFileUrls = CefState.Enabled
+                UniversalAccessFromFileUrls = CefState.Enabled,
             };
             Browser1.BrowserSettings = browserSettings;
+            Browser1.RequestContext = new RequestContext(new RequestContextSettings()
+            {
+                CachePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF", "cef", "cache"),
+                PersistSessionCookies = true,
+                PersistUserPreferences = true,
+            });
             CefSharpSettings.LegacyJavascriptBindingEnabled = true;
 
             //this.Browser1.RegisterAsyncJsObject("jsCallback", new JsCallbackFunctions());
