@@ -10,7 +10,8 @@ namespace TransparentTwitchChatWPF
     {
         KapChat = 0,
         TwitchPopout = 1,
-        CustomURL = 2
+        CustomURL = 2,
+        jChat = 3
     }
 
     public class WindowSettings
@@ -33,6 +34,7 @@ namespace TransparentTwitchChatWPF
         public bool AllowInteraction { get; set; }
         public bool RedemptionsEnabled { get; set; }
         public string ChannelID { get; set; }
+        public string jChatURL { get; set; }
     }
 
     public static class CustomCSS_Defaults
@@ -109,5 +111,38 @@ if (mod) { allowOther = true; }";
                 await CefSharp.BindObjectAsync('jsCallback');
                 jsCallback.playSound();
             })();";
+
+
+
+        public static string jChat_VIP_Check = @"
+var vip = false;
+if (typeof(info.badges) === 'string')
+{
+    info.badges.split(',').forEach(badge => {
+        badge = badge.split('/');
+        if (badge[0].toLowerCase() == 'vip')
+        {
+            vip = true;
+            return;
+        }
+    });
+}
+allowOther = vip;";
+
+        public static string jChat_Mod_Check = @"
+var mod = false;
+
+if (typeof(info.badges) === 'string')
+{
+    info.badges.split(',').forEach(badge => {
+        badge = badge.split('/');
+        if (badge[0].toLowerCase() == 'moderator')
+        {
+            mod = true;
+            return;
+        }
+    });
+}
+if (mod) { allowOther = true; }";
     }
 }
