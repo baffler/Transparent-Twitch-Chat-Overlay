@@ -485,9 +485,6 @@ namespace TransparentTwitchChatWPF
             if (e.Frame.IsMain)
             {
                 this.Browser1.Dispatcher.Invoke(new Action(() => { this.Browser1.ZoomLevel = SettingsSingleton.Instance.genSettings.ZoomLevel; }));
-
-                //if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.KapChat)
-                //{
                 
                 string js = this.currentChat.SetupJavascript();
                 if (!string.IsNullOrEmpty(js))
@@ -502,6 +499,8 @@ namespace TransparentTwitchChatWPF
 
                 if (!string.IsNullOrEmpty(script))
                     e.Frame.ExecuteJavaScriptAsync(script, "", 0);
+
+                this.PushNewMessage("Loading...");
             }
         }
         
@@ -978,14 +977,11 @@ namespace TransparentTwitchChatWPF
         {
             string js = this.currentChat.PushNewMessage(message);
 
-            if (this.Browser1.CanExecuteJavascriptInMainFrame)
+            if (!string.IsNullOrEmpty(js))
             {
-                if (!string.IsNullOrEmpty(js))
+                if (this.Browser1.CanExecuteJavascriptInMainFrame)
                     this.Browser1.ExecuteScriptAsync(js);
-            }
-            else
-            {
-                if (!string.IsNullOrEmpty(js))
+                else
                     this.Browser1.ExecuteScriptAsyncWhenPageLoaded(js);
             }
         }
