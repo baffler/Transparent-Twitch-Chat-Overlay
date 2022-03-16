@@ -45,6 +45,7 @@ namespace TransparentTwitchChatWPF
                 ChannelID = string.Empty,
                 BetterTtv = false,
                 FrankerFaceZ = false,
+                jChatURL = string.Empty
             };
         }
     }

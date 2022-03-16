@@ -90,6 +90,16 @@ namespace TransparentTwitchChatWPF
                     this.config.CustomCSS = this.tbCSS.Text;
                 }
             }
+            else if (this.config.ChatType == (int)ChatTypes.jChat)
+            {
+                this.config.URL = string.Empty;
+                this.config.jChatURL = this.tb_jChatURL.Text;
+                this.config.RedemptionsEnabled = this.cbRedemptions2.IsChecked ?? false;
+                if (this.config.RedemptionsEnabled)
+                    this.config.Username = this.tbUsername2.Text;
+                this.config.ChannelID = this.tbChannelID2.Text;
+                this.config.ChatNotificationSound = this.comboChatSound2.SelectedValue.ToString();
+            }
 
             this.config.AutoHideBorders  = this.cbAutoHideBorders.IsChecked ?? false;
             this.config.EnableTrayIcon   = this.cbEnableTrayIcon.IsChecked ?? false;
@@ -103,11 +113,20 @@ namespace TransparentTwitchChatWPF
         private void SetupValues()
         {
             this.tbUsername.Text = this.config.Username;
+            this.tb_jChatURL.Text = this.config.jChatURL;
+            this.tbUsername2.Text = this.config.Username;
             this.tbTwitchPopoutUsername.Text = this.config.Username;
             this.cbRedemptions.IsChecked = this.config.RedemptionsEnabled;
+            this.cbRedemptions2.IsChecked = this.config.RedemptionsEnabled;
             this.tbChannelID.Text = this.config.ChannelID;
             this.tbChannelID.IsEnabled = this.config.RedemptionsEnabled;
             this.btGetChannelID.IsEnabled = this.config.RedemptionsEnabled;
+            
+            this.tbChannelID2.Text = this.config.ChannelID;
+            this.tbChannelID2.IsEnabled = this.config.RedemptionsEnabled;
+            this.btGetChannelID2.IsEnabled = this.config.RedemptionsEnabled;
+            this.tbUsername2.IsEnabled = this.config.RedemptionsEnabled;
+
             this.cbFade.IsChecked = this.config.ChatFade;
 
             this.tbFadeTime.Text = this.config.FadeTime;
@@ -122,6 +141,8 @@ namespace TransparentTwitchChatWPF
                 this.comboChatSound.SelectedIndex = 0;
             else
                 this.comboChatSound.SelectedIndex = this.comboChatSound.Items.IndexOf(comboxBoxItem);
+
+            this.comboChatSound2.SelectedIndex = this.comboChatSound.SelectedIndex;
 
             // General
             this.cbAutoHideBorders.IsChecked = this.config.AutoHideBorders;
@@ -138,6 +159,7 @@ namespace TransparentTwitchChatWPF
                 this.kapChatGrid.Visibility = Visibility.Hidden;
                 this.twitchPopoutChat.Visibility = Visibility.Hidden;
                 this.customURLGrid.Visibility = Visibility.Visible;
+                this.jChatGrid.Visibility = Visibility.Hidden;
 
                 this.tbURL.Text = this.config.URL;
                 this.tbCSS2.Text = this.config.CustomCSS;
@@ -149,6 +171,7 @@ namespace TransparentTwitchChatWPF
                 this.kapChatGrid.Visibility = Visibility.Hidden;
                 this.twitchPopoutChat.Visibility = Visibility.Visible;
                 this.customURLGrid.Visibility = Visibility.Hidden;
+                this.jChatGrid.Visibility = Visibility.Hidden;
 
                 if (string.IsNullOrEmpty(this.config.TwitchPopoutCSS))
                     this.tbPopoutCSS.Text = CustomCSS_Defaults.TwitchPopoutChat;
@@ -163,6 +186,7 @@ namespace TransparentTwitchChatWPF
                 this.kapChatGrid.Visibility = Visibility.Visible;
                 this.twitchPopoutChat.Visibility = Visibility.Hidden;
                 this.customURLGrid.Visibility = Visibility.Hidden;
+                this.jChatGrid.Visibility = Visibility.Hidden;
 
                 this.tbURL.Text = string.Empty;
 
@@ -174,6 +198,15 @@ namespace TransparentTwitchChatWPF
                 {
                     this.tbCSS.Text = this.config.CustomCSS;
                 }
+            }
+            else if (this.config.ChatType == (int)ChatTypes.KapChat)
+            {
+                this.kapChatGrid.Visibility = Visibility.Hidden;
+                this.twitchPopoutChat.Visibility = Visibility.Hidden;
+                this.customURLGrid.Visibility = Visibility.Hidden;
+                this.jChatGrid.Visibility = Visibility.Visible;
+
+                this.tbURL.Text = string.Empty;
             }
         }
 
@@ -295,11 +328,13 @@ namespace TransparentTwitchChatWPF
                     this.kapChatGrid.Visibility = Visibility.Visible;
                     this.customURLGrid.Visibility = Visibility.Hidden;
                     this.twitchPopoutChat.Visibility = Visibility.Hidden;
+                    this.jChatGrid.Visibility = Visibility.Hidden;
                     break;
                 case (int)ChatTypes.TwitchPopout:
                     this.kapChatGrid.Visibility = Visibility.Hidden;
                     this.customURLGrid.Visibility = Visibility.Hidden;
                     this.twitchPopoutChat.Visibility = Visibility.Visible;
+                    this.jChatGrid.Visibility = Visibility.Hidden;
 
                     if (string.IsNullOrEmpty(this.config.TwitchPopoutCSS))
                         this.tbPopoutCSS.Text = CustomCSS_Defaults.TwitchPopoutChat;
@@ -310,11 +345,19 @@ namespace TransparentTwitchChatWPF
                     this.kapChatGrid.Visibility = Visibility.Hidden;
                     this.customURLGrid.Visibility = Visibility.Visible;
                     this.twitchPopoutChat.Visibility = Visibility.Hidden;
+                    this.jChatGrid.Visibility = Visibility.Hidden;
+                    break;
+                case (int)ChatTypes.jChat:
+                    this.kapChatGrid.Visibility = Visibility.Hidden;
+                    this.customURLGrid.Visibility = Visibility.Hidden;
+                    this.twitchPopoutChat.Visibility = Visibility.Hidden;
+                    this.jChatGrid.Visibility = Visibility.Visible;
                     break;
                 default:
                     this.kapChatGrid.Visibility = Visibility.Hidden;
                     this.customURLGrid.Visibility = Visibility.Hidden;
                     this.twitchPopoutChat.Visibility = Visibility.Hidden;
+                    this.jChatGrid.Visibility = Visibility.Hidden;
                     break;
             }
         }
@@ -337,6 +380,19 @@ namespace TransparentTwitchChatWPF
             }
         }
 
+        private void comboChatSound_DropDownClosed2(object sender, EventArgs e)
+        {
+            Uri startupPath = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
+            string file = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\assets\\";
+            file += this.comboChatSound2.SelectedValue.ToString() + ".wav";
+
+            if (System.IO.File.Exists(file))
+            {
+                SoundPlayer sp = new SoundPlayer(file);
+                sp.Play();
+            }
+        }
+
         private void btOpenChatFilterSettings_Click(object sender, RoutedEventArgs e)
         {
             ChatFilters chatFiltersWindow = new ChatFilters();
@@ -351,6 +407,7 @@ namespace TransparentTwitchChatWPF
             string _clientid = "gp762nuuoqcoxypju8c569th9wz7q5";
 
             btGetChannelID.IsEnabled = false;
+            btGetChannelID2.IsEnabled = false;
 
             _api = new TwitchAPI();
             _api.Settings.ClientId = _clientid;
@@ -364,6 +421,19 @@ namespace TransparentTwitchChatWPF
             }*/
         }
 
+        private void btGetChannelID_Click2(object sender, RoutedEventArgs e)
+        {
+            string _clientid = "gp762nuuoqcoxypju8c569th9wz7q5";
+
+            btGetChannelID.IsEnabled = false;
+            btGetChannelID2.IsEnabled = false;
+
+            _api = new TwitchAPI();
+            _api.Settings.ClientId = _clientid;
+
+            _getChannelID(tbUsername2.Text);
+        }
+
         private async void _getChannelID(string channel)
         {
             Users users = null;
@@ -375,6 +445,7 @@ namespace TransparentTwitchChatWPF
             catch (Exception e)
             {
                 tbChannelID.Text = "0";
+                tbChannelID2.Text = "0";
                 MessageBox.Show(e.Message);
             }
 
@@ -385,17 +456,23 @@ namespace TransparentTwitchChatWPF
                     SettingsSingleton.Instance.genSettings.ChannelID = users.Matches[0].Id;
                     tbChannelID.Text = users.Matches[0].Id;
                     btGetChannelID.IsEnabled = true;
+                    tbChannelID2.Text = users.Matches[0].Id;
+                    btGetChannelID2.IsEnabled = true;
                 }
                 else
                 {
                     tbChannelID.Text = "0";
                     btGetChannelID.IsEnabled = true;
+                    tbChannelID2.Text = "0";
+                    btGetChannelID2.IsEnabled = true;
                 }
             }
             else
             {
                 tbChannelID.Text = "0";
                 btGetChannelID.IsEnabled = true;
+                tbChannelID2.Text = "0";
+                btGetChannelID2.IsEnabled = true;
             }
         }
 
@@ -403,12 +480,18 @@ namespace TransparentTwitchChatWPF
         {
             this.tbChannelID.IsEnabled = true;
             this.btGetChannelID.IsEnabled = true;
+            this.tbChannelID2.IsEnabled = true;
+            this.btGetChannelID2.IsEnabled = true;
+            this.tbUsername2.IsEnabled = true;
         }
 
         private void cbRedemptions_Unchecked(object sender, RoutedEventArgs e)
         {
             this.tbChannelID.IsEnabled = false;
             this.btGetChannelID.IsEnabled = false;
+            this.tbChannelID2.IsEnabled = false;
+            this.btGetChannelID2.IsEnabled = false;
+            this.tbUsername2.IsEnabled = false;
         }
 
         private void cbTaskbar_Checked(object sender, RoutedEventArgs e)

@@ -26,7 +26,11 @@ using TwitchLib;
 using TwitchLib.PubSub;
 using TwitchLib.PubSub.Events;
 
-/*
+/* POST BUILD:
+ * 
+ * v0.92
+ * - jChat support (this allows BetterTTV, FrankerFaceZ and 7TV emotes)
+ * 
  * v0.91
  * - TwitchLib support for points redemption
  * - Filter settings will let you highlight certain usernames/mods/vip
@@ -97,6 +101,8 @@ using TwitchLib.PubSub.Events;
 
 namespace TransparentTwitchChatWPF
 {
+    using Chats;
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -114,6 +120,8 @@ namespace TransparentTwitchChatWPF
 
         private TwitchPubSub _pubSub;
 
+        private Chat currentChat;
+
         /*public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName]string propertyName = null)
         {
@@ -127,8 +135,19 @@ namespace TransparentTwitchChatWPF
 
         public MainWindow()
         {
+            CefSettings settings = new CefSettings()
+            {
+                PersistSessionCookies = true,
+                PersistUserPreferences = true,
+                RootCachePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF", "cef"),
+                CachePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF", "cef", "cache")
+            };
+            Cef.Initialize(settings);
+
             InitializeComponent();
             DataContext = this;
+
+            this.currentChat = new CustomURLChat(); // TODO: initializing here needed?
 
             Services.Tracker.Configure(this).IdentifyAs("State").Apply();
             this.genSettingsTrackingConfig = Services.Tracker.Configure(SettingsSingleton.Instance.genSettings);
@@ -136,10 +155,18 @@ namespace TransparentTwitchChatWPF
 
             var browserSettings = new BrowserSettings
             {
+                ApplicationCache = CefState.Enabled,
+                LocalStorage = CefState.Enabled,
                 FileAccessFromFileUrls = CefState.Enabled,
-                UniversalAccessFromFileUrls = CefState.Enabled
+                UniversalAccessFromFileUrls = CefState.Enabled,
             };
             Browser1.BrowserSettings = browserSettings;
+            Browser1.RequestContext = new RequestContext(new RequestContextSettings()
+            {
+                CachePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF", "cef", "cache"),
+                PersistSessionCookies = true,
+                PersistUserPreferences = true,
+            });
             CefSharpSettings.LegacyJavascriptBindingEnabled = true;
 
             //this.Browser1.RegisterAsyncJsObject("jsCallback", new JsCallbackFunctions());
@@ -372,11 +399,11 @@ namespace TransparentTwitchChatWPF
             //SystemCommands.CloseWindow(this);
         }
 
-        public void ToggleBotActivitySetting()
-        {
-            SettingsSingleton.Instance.genSettings.ShowBotActivity = !SettingsSingleton.Instance.genSettings.ShowBotActivity;
-            SetChatAddress(SettingsSingleton.Instance.genSettings.Username);
-        }
+        //public void ToggleBotActivitySetting()
+        //{
+        //    SettingsSingleton.Instance.genSettings.ShowBotActivity = !SettingsSingleton.Instance.genSettings.ShowBotActivity;
+        //    SetChatAddress(SettingsSingleton.Instance.genSettings.Username);
+        //}
 
         private void MenuItem_ToggleBorderVisible(object sender, RoutedEventArgs e)
         {
@@ -456,133 +483,29 @@ namespace TransparentTwitchChatWPF
             {
                 this.Browser1.Dispatcher.Invoke(new Action(() => { this.Browser1.ZoomLevel = SettingsSingleton.Instance.genSettings.ZoomLevel; }));
 
-                if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.KapChat)
-                {
-                    if (SettingsSingleton.Instance.genSettings.HighlightUsersChat)
-                    {
-                        string[] vipList = new string[SettingsSingleton.Instance.genSettings.AllowedUsersList.Count];
-                        SettingsSingleton.Instance.genSettings.AllowedUsersList.CopyTo(vipList, 0);
-
-                        string js = @"var oldChatInsert = Chat.insert;
-                            Chat.insert = function(nick, tags, message) {
-                                var nick = nick || 'Chat';
-                                var tags2 = tags ? Chat.parseTags(nick, tags) : {};
-
-                                var vips = ['";
-                        js += string.Join(",", vipList).Replace(",", "','").ToLower();
-                        js += @"'];
-                                var allowOther = false;";
-
-                        if (SettingsSingleton.Instance.genSettings.FilterAllowAllVIPs)
-                            js += CustomJS_Defaults.VIP_Check;
-
-                        if (SettingsSingleton.Instance.genSettings.FilterAllowAllMods)
-                            js += CustomJS_Defaults.Mod_Check;
-
-                        js += @"if (vips.includes(nick.toLowerCase()) || allowOther) {";
-
-                        if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() != "none")
-                            js += CustomJS_Defaults.Callback_PlaySound;
-
-                        js += @"
-                                Chat.vars.queue.push('<div class=""highlight"">');
-                                oldChatInsert.apply(oldChatInsert, arguments);
-                                Chat.vars.queue.push('</div>');
-                                return;
-                            }
-                            else
-                            {
-                                return oldChatInsert.apply(oldChatInsert, arguments);
-                            }
-                        }";
-                        e.Frame.ExecuteJavaScriptAsync(js, "", 0);
-                    }
-                    else if (SettingsSingleton.Instance.genSettings.AllowedUsersOnlyChat)
-                    {
-                        string[] vipList = new string[SettingsSingleton.Instance.genSettings.AllowedUsersList.Count];
-                        SettingsSingleton.Instance.genSettings.AllowedUsersList.CopyTo(vipList, 0);
-
-                        string js = @"var oldChatInsert = Chat.insert;
-                            Chat.insert = function(nick, tags, message) {
-                                var nick = nick || 'Chat';
-                                var tags2 = tags ? Chat.parseTags(nick, tags) : {};
-
-                                var vips = ['";
-                        js += string.Join(",", vipList).Replace(",", "','").ToLower();
-                        js += @"'];
-                                var allowOther = false;";
-
-                        if (SettingsSingleton.Instance.genSettings.FilterAllowAllVIPs)
-                            js += CustomJS_Defaults.VIP_Check;
-
-                        if (SettingsSingleton.Instance.genSettings.FilterAllowAllMods)
-                            js += CustomJS_Defaults.Mod_Check;
-
-                        js += @"if (vips.includes(nick.toLowerCase()) || (nick == 'Chat') || allowOther) {";
-
-                        if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() != "none")
-                            js += CustomJS_Defaults.Callback_PlaySound;
-
-                        js += @"
-                            return oldChatInsert.apply(oldChatInsert, arguments);
-                        }
-                    }";
-
-                        e.Frame.ExecuteJavaScriptAsync(js, "", 0);
-                    }
-                    else if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() != "none")
-                    {
-                        // Insert JS to play a sound on each chat message
-                        string js = @"var oldChatInsert = Chat.insert;
-                            Chat.insert = function() {
-                                (async function() {
-	                                await CefSharp.BindObjectAsync('jsCallback');
-                                    jsCallback.playSound();
-                                })();
-                                return oldChatInsert.apply(oldChatInsert, arguments);
-                            }";
-
-                        e.Frame.ExecuteJavaScriptAsync(js, "", 0);
-                    }
-                }
+                //if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.KapChat)
+                //{
+                
+                string js = this.currentChat.SetupJavascript();
+                if (!string.IsNullOrEmpty(js))
+                    e.Frame.ExecuteJavaScriptAsync(js, "", 0);
 
                 // Custom CSS
                 string script = string.Empty;
+                string css = this.currentChat.SetupCustomCSS();
 
-                if (string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.CustomCSS))
-                {
-                    // Fix for KapChat so a long chat message doesn't wrap to a new line
-                    if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.KapChat)
-                        script = InsertCustomCSS2(@".message { display: inline !important; } .highlight { background-color: rgba(255,255,0,0.5) !important; }");
-                }
-                else
-                    script = InsertCustomCSS2(SettingsSingleton.Instance.genSettings.CustomCSS);
+                if (!string.IsNullOrEmpty(css))
+                    script = InsertCustomCSS2(css);
 
                 if (!string.IsNullOrEmpty(script))
                     e.Frame.ExecuteJavaScriptAsync(script, "", 0);
             }
         }
-
+        
         private void Browser1_LoadingStateChanged(object sender, CefSharp.LoadingStateChangedEventArgs e)
         {
             if (!e.IsLoading)
             {
-                //string[] vipList = new string[] { "Chat", "Baffler", "test" };
-                /*string script = @"var oldChatInsert = Chat.insert;
-Chat.insert = function(nick, tags, message) {
-var nick = nick || 'Chat';
-var vips = ['";
-                script += string.Join(",", vipList).Replace(",", "','").ToLower();
-                script += @"'];
-if (vips.includes(nick.toLowerCase()))
-{
-    (async function() {
-        await CefSharp.BindObjectAsync('jsCallback');
-        jsCallback.playSound();
-    })();
-    return oldChatInsert.apply(oldChatInsert, arguments);
-}
-}";*/
                 if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.TwitchPopout)
                 {
                     if (SettingsSingleton.Instance.genSettings.BetterTtv)
@@ -621,20 +544,29 @@ if (vips.includes(nick.toLowerCase()))
             }
         }
 
-        private void InsertCustomCSS_old(string CSS)
+        private void Browser1_ConsoleMessage(object sender, ConsoleMessageEventArgs e)
         {
-            string base64CSS = Utilities.Base64Encode(CSS.Replace("\r\n", "").Replace("\t", ""));
-
-            string href = "data:text/css;charset=utf-8;base64," + base64CSS;
-
-            string script = "var link = document.createElement('link');";
-            script += "link.setAttribute('rel', 'stylesheet');";
-            script += "link.setAttribute('type', 'text/css');";
-            script += "link.setAttribute('href', '" + href + "');";
-            script += "document.getElementsByTagName('head')[0].appendChild(link);";
-
-            this.Browser1.ExecuteScriptAsync(script);
+            if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.jChat)
+            {
+                if (e.Level == LogSeverity.Info)
+                    PushNewMessage(e.Message);
+            }
         }
+
+        //private void InsertCustomCSS_old(string CSS)
+        //{
+        //    string base64CSS = Utilities.Base64Encode(CSS.Replace("\r\n", "").Replace("\t", ""));
+
+        //    string href = "data:text/css;charset=utf-8;base64," + base64CSS;
+
+        //    string script = "var link = document.createElement('link');";
+        //    script += "link.setAttribute('rel', 'stylesheet');";
+        //    script += "link.setAttribute('type', 'text/css');";
+        //    script += "link.setAttribute('href', '" + href + "');";
+        //    script += "document.getElementsByTagName('head')[0].appendChild(link);";
+
+        //    this.Browser1.ExecuteScriptAsync(script);
+        //}
 
         private string InsertCustomCSS2(string CSS)
         {
@@ -702,6 +634,7 @@ if (vips.includes(nick.toLowerCase()))
                 Title = "Main Window",
                 ChatType = SettingsSingleton.Instance.genSettings.ChatType,
                 URL = SettingsSingleton.Instance.genSettings.CustomURL,
+                jChatURL = SettingsSingleton.Instance.genSettings.jChatURL,
                 Username = SettingsSingleton.Instance.genSettings.Username,
                 ChatFade = SettingsSingleton.Instance.genSettings.FadeChat,
                 FadeTime = SettingsSingleton.Instance.genSettings.FadeTime,
@@ -728,6 +661,7 @@ if (vips.includes(nick.toLowerCase()))
 
                 if (config.ChatType == (int)ChatTypes.CustomURL)
                 {
+                    this.currentChat = new CustomURLChat();
                     SettingsSingleton.Instance.genSettings.CustomURL = config.URL;
                     SettingsSingleton.Instance.genSettings.CustomCSS = config.CustomCSS;
 
@@ -736,6 +670,7 @@ if (vips.includes(nick.toLowerCase()))
                 }
                 else if (config.ChatType == (int)ChatTypes.TwitchPopout)
                 {
+                    this.currentChat = new CustomURLChat();
                     SettingsSingleton.Instance.genSettings.Username = config.Username;
                     SettingsSingleton.Instance.genSettings.CustomCSS = config.TwitchPopoutCSS;
 
@@ -747,6 +682,7 @@ if (vips.includes(nick.toLowerCase()))
                 }
                 else if (config.ChatType == (int)ChatTypes.KapChat)
                 {
+                    this.currentChat = new Chats.KapChat();
                     SettingsSingleton.Instance.genSettings.Username = config.Username;
                     SettingsSingleton.Instance.genSettings.FadeChat = config.ChatFade;
                     SettingsSingleton.Instance.genSettings.FadeTime = config.FadeTime;
@@ -769,6 +705,38 @@ if (vips.includes(nick.toLowerCase()))
                         else
                             DisablePubSubRedemptions();
                     }
+
+
+                    if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() == "none")
+                        this.jsCallbackFunctions.MediaFile = string.Empty;
+                    else
+                    {
+                        Uri startupPath = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
+                        string file = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\assets\\" + SettingsSingleton.Instance.genSettings.ChatNotificationSound + ".wav";
+                        if (System.IO.File.Exists(file))
+                        {
+                            this.jsCallbackFunctions.MediaFile = file;
+                        }
+                    }
+                }
+
+                else if (config.ChatType == (int)ChatTypes.jChat)
+                {
+                    this.currentChat = new jChat();
+                    SettingsSingleton.Instance.genSettings.jChatURL = config.jChatURL;
+                    SettingsSingleton.Instance.genSettings.ChatNotificationSound = config.ChatNotificationSound;
+
+                    if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.Username))
+                    {
+                        SetCustomChatAddress(SettingsSingleton.Instance.genSettings.jChatURL);
+
+                        if (config.RedemptionsEnabled)
+                            SetupPubSubRedemptions();
+                        else
+                            DisablePubSubRedemptions();
+                    }
+                    else
+                        SetCustomChatAddress(SettingsSingleton.Instance.genSettings.jChatURL);
 
 
                     if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() == "none")
@@ -903,20 +871,42 @@ if (vips.includes(nick.toLowerCase()))
 
             if ((SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.CustomURL) && (!string.IsNullOrWhiteSpace(SettingsSingleton.Instance.genSettings.CustomURL)))
             {
+                this.currentChat = new CustomURLChat();
                 SetCustomChatAddress(SettingsSingleton.Instance.genSettings.CustomURL);
             }
             else if ((SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.TwitchPopout) && (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.Username)))
             {
+                this.currentChat = new CustomURLChat();
                 SetCustomChatAddress("https://www.twitch.tv/popout/" + SettingsSingleton.Instance.genSettings.Username + "/chat?popout=");
             }
             else if (!string.IsNullOrWhiteSpace(SettingsSingleton.Instance.genSettings.Username))
-            {
-                SetChatAddress(SettingsSingleton.Instance.genSettings.Username);
+            { // TODO: need to clean this up to determine which type of chat to load better
+                if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.KapChat)
+                {
+                    this.currentChat = new Chats.KapChat();
+                    SetChatAddress(SettingsSingleton.Instance.genSettings.Username);
+                }
+                else if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.jChat)
+                {
+                    this.currentChat = new jChat();
+                    SetCustomChatAddress(SettingsSingleton.Instance.genSettings.jChatURL);
+                }
+                else
+                {
+                    Uri startupPath = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
+                    string address = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\index.html";
+                    Browser1.Load(address);
+                }
 
                 if (SettingsSingleton.Instance.genSettings.RedemptionsEnabled)
                 {
                     SetupPubSubRedemptions();
                 }
+            }
+            else if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.jChat)
+            { // TODO: need to clean this up to determine which type of chat to load better
+                this.currentChat = new jChat();
+                SetCustomChatAddress(SettingsSingleton.Instance.genSettings.jChatURL);
             }
             else
             {
@@ -981,27 +971,39 @@ if (vips.includes(nick.toLowerCase()))
             this.bgColor.Color = Color.FromArgb(0, 0, 0, 0);
         }
 
+        private void PushNewMessage(string message = "")
+        {
+            string js = this.currentChat.PushNewMessage(message);
+
+            if (this.Browser1.CanExecuteJavascriptInMainFrame)
+            {
+                if (!string.IsNullOrEmpty(js))
+                    this.Browser1.ExecuteScriptAsync(js);
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(js))
+                    this.Browser1.ExecuteScriptAsyncWhenPageLoaded(js);
+            }
+        }
+
         private void PushNewChatMessage(string message = "", string nick = "", string color = "")
         {
             //this.Browser1.Dispatcher.Invoke(new Action(() => { });
 
-            if (string.IsNullOrEmpty(nick))
-                nick = "null";
-            else
-                nick = $"\"{nick}\"";
-
-            string js = $"Chat.insert({nick}, null, \"{message}\");";
-
-            if (!string.IsNullOrEmpty(color))
-            {
-                js = "var ttags = { color : \"" + color + "\", };\n";
-                js += $"Chat.insert({nick}, ttags, \"\\x01ACTION {message}\\x01\");";
-            }
+            string js = this.currentChat.PushNewChatMessage(message, nick, color);
 
             if (this.Browser1.CanExecuteJavascriptInMainFrame)
-                this.Browser1.ExecuteScriptAsync(js);
+            {
+                if (!string.IsNullOrEmpty(js))
+                    this.Browser1.ExecuteScriptAsync(js);
+            }
             else
-                this.Browser1.ExecuteScriptAsyncWhenPageLoaded($"Chat.insert(null, null, \"{message}\");");
+            {
+                js = this.currentChat.PushNewMessage(message);
+                if (!string.IsNullOrEmpty(js))
+                    this.Browser1.ExecuteScriptAsyncWhenPageLoaded(js);
+            }
         }
 
         public void SetupPubSubRedemptions()
@@ -1036,7 +1038,7 @@ if (vips.includes(nick.toLowerCase()))
         {
             if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.ChannelID))
             {
-                PushNewChatMessage("PubSub Service Connected");
+                PushNewMessage("PubSub Service Connected");
                 _pubSub.ListenToRewards(SettingsSingleton.Instance.genSettings.ChannelID);
                 _pubSub.SendTopics("");
             }
@@ -1046,10 +1048,10 @@ if (vips.includes(nick.toLowerCase()))
         {
             if (!e.Successful)
             {
-                PushNewChatMessage($"Failed to listen! Response: {e.Response.Error}");
+                PushNewMessage($"Failed to listen! Response: {e.Response.Error}");
             }
             else
-                PushNewChatMessage($"Success! Listening to topic: {e.Topic}");
+                PushNewMessage($"Success! Listening to topic: {e.Topic}");
         }
 
         private void _pubSub_OnRewardRedeemed(object sender, OnRewardRedeemedArgs e)
@@ -1154,5 +1156,7 @@ if (vips.includes(nick.toLowerCase()))
         public bool BetterTtv { get; set; }
         [Trackable]
         public bool FrankerFaceZ { get; set; }
+        [Trackable]
+        public string jChatURL { get; set; }
     }
 }

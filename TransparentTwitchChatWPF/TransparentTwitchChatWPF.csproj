@@ -21,6 +21,7 @@
     </NuGetPackageImportStamp>
     <TargetFrameworkProfile />
     <IsWebBootstrapper>false</IsWebBootstrapper>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -32,12 +33,11 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <AutorunEnabled>true</AutorunEnabled>
-    <ApplicationRevision>2</ApplicationRevision>
+    <ApplicationRevision>3</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-	<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -70,10 +70,11 @@
     </DefineConstants>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>3D87AB445242A3D2F841AAB0685B0E2155EA3054</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>553D0F03FE85462BF575FD77BA1FA5741F6B421A</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>TransparentTwitchChatWPF_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>
+    </ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
@@ -87,6 +88,9 @@
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
+  <PropertyGroup>
+    <ManifestTimestampUrl>http://timestamp.sectigo.com/</ManifestTimestampUrl>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Hardcodet.Wpf.TaskbarNotification">
       <HintPath>..\packages\Hardcodet.NotifyIcon.Wpf.1.0.8\lib\net451\Hardcodet.Wpf.TaskbarNotification.dll</HintPath>
@@ -98,7 +102,7 @@
     </Reference>
     <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=3.1.5.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.Logging.Abstractions.3.1.5\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
-      <Private>False</Private>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -193,6 +197,10 @@
     <Compile Include="ChatFilters.xaml.cs">
       <DependentUpon>ChatFilters.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Chats\AbstractChat.cs" />
+    <Compile Include="Chats\CustomURLChat.cs" />
+    <Compile Include="Chats\jChat.cs" />
+    <Compile Include="Chats\KapChat.cs" />
     <Compile Include="GetID_Window.xaml.cs">
       <DependentUpon>GetID_Window.xaml</DependentUpon>
     </Compile>
@@ -361,6 +369,10 @@
   <Import Project="..\packages\CefSharp.Common.86.0.241\build\CefSharp.Common.targets" Condition="Exists('..\packages\CefSharp.Common.86.0.241\build\CefSharp.Common.targets')" />
   <Import Project="..\packages\CefSharp.Wpf.86.0.241\build\CefSharp.Wpf.targets" Condition="Exists('..\packages\CefSharp.Wpf.86.0.241\build\CefSharp.Wpf.targets')" />
   <Import Project="..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets" Condition="Exists('..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
