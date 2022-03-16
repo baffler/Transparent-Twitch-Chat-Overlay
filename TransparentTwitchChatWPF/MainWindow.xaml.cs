@@ -30,6 +30,9 @@ using TwitchLib.PubSub.Events;
  * 
  * v0.92
  * - jChat support (this allows BetterTTV, FrankerFaceZ and 7TV emotes)
+ * - CefSharp (Chromium) updated to 99.2.9
+ * - Twitch popout with BTTV and FFZ emotes support - PR by: github.com/r-o-b-o-t-o
+ * - Twitch popout will keep your login session - PR by: github.com/r-o-b-o-t-o
  * 
  * v0.91
  * - TwitchLib support for points redemption
@@ -155,10 +158,10 @@ namespace TransparentTwitchChatWPF
 
             var browserSettings = new BrowserSettings
             {
-                ApplicationCache = CefState.Enabled,
+                //ApplicationCache = CefState.Enabled,
                 LocalStorage = CefState.Enabled,
-                FileAccessFromFileUrls = CefState.Enabled,
-                UniversalAccessFromFileUrls = CefState.Enabled,
+                //FileAccessFromFileUrls = CefState.Enabled,
+                //UniversalAccessFromFileUrls = CefState.Enabled,
             };
             Browser1.BrowserSettings = browserSettings;
             Browser1.RequestContext = new RequestContext(new RequestContextSettings()
@@ -167,7 +170,7 @@ namespace TransparentTwitchChatWPF
                 PersistSessionCookies = true,
                 PersistUserPreferences = true,
             });
-            CefSharpSettings.LegacyJavascriptBindingEnabled = true;
+            //this.Browser1.JavascriptObjectRepository.Settings.LegacyBindingEnabled = true;
 
             //this.Browser1.RegisterAsyncJsObject("jsCallback", new JsCallbackFunctions());
             this.jsCallbackFunctions = new JsCallbackFunctions();
