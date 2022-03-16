@@ -43,6 +43,8 @@ namespace TransparentTwitchChatWPF
                 AllowedUsersList = new StringCollection(),
                 RedemptionsEnabled = false,
                 ChannelID = string.Empty,
+                BetterTtv = false,
+                FrankerFaceZ = false,
                 jChatURL = string.Empty
             };
         }
