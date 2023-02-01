@@ -26,7 +26,14 @@ using TwitchLib;
 using TwitchLib.PubSub;
 using TwitchLib.PubSub.Events;
 
-/* POST BUILD:
+/*
+ * v0.93
+ * - Added a setting to allow multiple instances
+ * - Fix for crash when adding a widget with a long URL
+ * - Updated CEFsharp (Chromium) and Newtsonsoft.Json to latest versions
+ * ~ Known Issues:
+ * ~ Jump lists no longer work if you allow multiple instances (it just launches another instance)
+ * ~ Can't login to the popout Twitch, this is caused by Twitch blocking login for unsupported browsers
  * 
  * v0.92
  * - jChat support (this allows BetterTTV, FrankerFaceZ and 7TV emotes)
@@ -145,6 +152,7 @@ namespace TransparentTwitchChatWPF
                 RootCachePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF", "cef"),
                 CachePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF", "cef", "cache")
             };
+            //settings.CefCommandLineArgs.Add("enable-media-stream", "1"); //Enable WebRTC
             Cef.Initialize(settings);
 
             InitializeComponent();

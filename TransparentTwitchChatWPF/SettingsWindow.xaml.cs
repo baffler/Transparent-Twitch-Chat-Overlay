@@ -150,6 +150,7 @@ namespace TransparentTwitchChatWPF
             this.cbConfirmClose.IsChecked = this.config.ConfirmClose;
             this.cbTaskbar.IsChecked = this.config.HideTaskbarIcon;
             this.cbInteraction.IsChecked = this.config.AllowInteraction;
+            this.cbMultiInstance.IsChecked = TransparentTwitchChatWPF.Properties.Settings.Default.allowMultipleInstances;
 
             this.comboChatType.SelectedIndex = this.config.ChatType;
 
@@ -504,6 +505,18 @@ namespace TransparentTwitchChatWPF
         {
             //this.cbEnableTrayIcon.IsEnabled = true;
             //this.cbEnableTrayIcon.IsChecked = true;
+        }
+
+        private void cbMultiInstance_Checked(object sender, RoutedEventArgs e)
+        {
+            TransparentTwitchChatWPF.Properties.Settings.Default.allowMultipleInstances = true;
+            TransparentTwitchChatWPF.Properties.Settings.Default.Save();
+        }
+
+        private void cbMultiInstance_Unchecked(object sender, RoutedEventArgs e)
+        {
+            TransparentTwitchChatWPF.Properties.Settings.Default.allowMultipleInstances = false;
+            TransparentTwitchChatWPF.Properties.Settings.Default.Save();
         }
     }
 }

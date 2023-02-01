@@ -72,7 +72,7 @@
                          Margin="22,100,15,50" TextWrapping="Wrap" AcceptsReturn="true"
                          Text="body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }" />
             </Grid>
-            <Grid Name="kapChatGrid" Visibility="Hidden" Grid.Column="1">
+            <Grid Name="kapChatGrid" Visibility="Visible" Grid.Column="1">
                 <StackPanel HorizontalAlignment="Left" Orientation="Vertical" Width="127">
                     <Label Content="Username" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                     <Label Content="Redemptions" HorizontalAlignment="Left" Margin="20,5,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
@@ -90,7 +90,17 @@
                     <CheckBox Name="cbRedemptions" Content="Show community point redemptions" Margin="20,12,0,0" Checked="cbRedemptions_Checked" Unchecked="cbRedemptions_Unchecked" />
                     <StackPanel Orientation="Horizontal">
                         <TextBox Name="tbChannelID" HorizontalAlignment="Left" Height="23" Margin="20,12,0,0" TextWrapping="NoWrap" Text="0" VerticalAlignment="Top" Width="130" />
-                        <Button Name="btGetChannelID" Margin="10,12,0,0" Content="Get Channel ID" Height="23" Width="100" Click="btGetChannelID_Click" />
+                        <Button Visibility="Collapsed" Name="btGetChannelID" Margin="10,12,0,0" Content="Get Channel ID" Height="23" Width="100" Click="btGetChannelID_Click" />
+                        <Label 
+                            FontStyle="Italic"
+                            HorizontalAlignment="Left" 
+                            VerticalAlignment="Top"
+                            Margin="20,10,0,0">
+                            <Hyperlink NavigateUri = "https://www.streamweasels.com/tools/convert-twitch-username-to-user-id/"
+                           Hyperlink.RequestNavigate = "Hyperlink_RequestNavigate" >
+                                <TextBlock Text="Get Channel ID" />
+                            </Hyperlink>
+                        </Label>
                     </StackPanel>
 
                     <CheckBox Name="cbFade" Margin="20,12,0,0" Content="Fade out old chat lines" Checked="cbFade_Checked" Unchecked="cbFade_Unchecked" />
@@ -129,12 +139,12 @@
                 </StackPanel>
             </Grid>
             
-            <Grid Name="jChatGrid" Visibility="Visible"  Grid.Column="1">
+            <Grid Name="jChatGrid" Visibility="Hidden"  Grid.Column="1">
                 <StackPanel HorizontalAlignment="Left" Orientation="Vertical" Width="127">
                     <Label Content="jChat URL" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                     <Label Content="Redemptions" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                    <Label Content="Channel ID" HorizontalAlignment="Left" Margin="20,15,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                    <Label Content="Filter Settings" HorizontalAlignment="Left" Margin="20,30,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                    <Label Content="Channel ID" HorizontalAlignment="Left" Margin="20,5,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                    <Label Content="Filter Settings" HorizontalAlignment="Left" Margin="20,15,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                     <Label Content="Chat Sound" HorizontalAlignment="Left" Margin="20,18,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                 </StackPanel>
 
@@ -151,10 +161,20 @@
                         </Hyperlink>
                     </Label>
                     <CheckBox Name="cbRedemptions2" Content="Show community point redemptions" Margin="20,5,0,0" Checked="cbRedemptions_Checked" Unchecked="cbRedemptions_Unchecked" />
-                    <TextBox Name="tbUsername2" HorizontalAlignment="Left" Height="23" Margin="20,5,0,0" TextWrapping="NoWrap" Text="username" VerticalAlignment="Top" Width="240"/>
+                    <TextBox Visibility="Collapsed" Name="tbUsername2" HorizontalAlignment="Left" Height="23" Margin="20,5,0,0" TextWrapping="NoWrap" Text="username" VerticalAlignment="Top" Width="240"/>
                     <StackPanel Orientation="Horizontal">
                         <TextBox Name="tbChannelID2" HorizontalAlignment="Left" Height="23" Margin="20,12,0,0" TextWrapping="NoWrap" Text="0" VerticalAlignment="Top" Width="130" />
-                        <Button Name="btGetChannelID2" Margin="10,12,0,0" Content="Get Channel ID" Height="23" Width="100" Click="btGetChannelID_Click2" />
+                        <Button Visibility="Collapsed" Name="btGetChannelID2" Margin="10,12,0,0" Content="Get Channel ID" Height="23" Width="100" Click="btGetChannelID_Click2" />
+                        <Label 
+                            FontStyle="Italic"
+                            HorizontalAlignment="Left" 
+                            VerticalAlignment="Top"
+                            Margin="20,10,0,0">
+                            <Hyperlink NavigateUri = "https://www.streamweasels.com/tools/convert-twitch-username-to-user-id/"
+                           Hyperlink.RequestNavigate = "Hyperlink_RequestNavigate" >
+                                <TextBlock Text="Get Channel ID" />
+                            </Hyperlink>
+                        </Label>
                     </StackPanel>
                     <Button Name="btOpenChatFilterSettings2" Margin="20,18,14,0" Content="Open Chat Filter Settings" Height="23" Click="btOpenChatFilterSettings_Click" />
                     <ComboBox Name="comboChatSound2" SelectedValuePath="Content" Margin="20,20,14,0" DropDownClosed="comboChatSound_DropDownClosed2">
@@ -227,6 +247,17 @@
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top"
                 Margin="40,190,0,0"/>
+
+            <CheckBox 
+                Visibility="Visible"
+                Name="cbMultiInstance"
+                Content="Allow Mulitple Instances (beta)"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="20,240,0,0"
+                Checked="cbMultiInstance_Checked"
+                Unchecked="cbMultiInstance_Unchecked"
+                />
         </Grid>
 
         <Grid Name="widgetGrid" Visibility="Hidden" Grid.Column="1">
@@ -262,7 +293,7 @@
                 Content="Twitch Chat Overlay" />
             <Label 
                 Margin="0,30,0,0"
-                Content="Version 0.92" />
+                Content="Version 0.93" />
             <Label 
                 Margin="0,50,0,0"
                 Content="Created by Baffler" />

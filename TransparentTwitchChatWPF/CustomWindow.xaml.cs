@@ -42,8 +42,10 @@ namespace TransparentTwitchChatWPF
 
             InitializeComponent();
 
-            Regex rgx = new Regex("[^a-zA-Z0-9 -]");
-            Services.Tracker.Configure(this).IdentifyAs(rgx.Replace(this.customURL, "")).Apply();
+            //Regex rgx = new Regex("[^a-zA-Z0-9 -]");
+            //string hashCode = rgx.Replace(this.customURL, "");
+            string hashCode = String.Format("{0:X}", this.customURL.GetHashCode());
+            Services.Tracker.Configure(this).IdentifyAs(hashCode).Apply();
         }
 
         private void Browser2_LoadingStateChanged(object sender, CefSharp.LoadingStateChangedEventArgs e)

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Shell;
 using System.Reflection;
+using System.Resources;
 using Microsoft.Shell;
 
 namespace TransparentTwitchChatWPF
@@ -16,17 +17,30 @@ namespace TransparentTwitchChatWPF
     /// </summary>
     public partial class App : Application, ISingleInstanceApp
     {
+        static bool allowMultipleInstances = false;
+
         [STAThread]
         public static void Main()
         {
-            if (SingleInstance<App>.InitializeAsFirstInstance("AdvancedJumpList"))
+            allowMultipleInstances = TransparentTwitchChatWPF.Properties.Settings.Default.allowMultipleInstances;
+
+            if (allowMultipleInstances)
             {
                 var application = new App();
                 application.Init();
                 application.Run();
+            }
+            else
+            {
+                if (SingleInstance<App>.InitializeAsFirstInstance("AdvancedJumpList"))
+                {
+                    var application = new App();
+                    application.Init();
+                    application.Run();
 
-                // Allow single instance code to perform cleanup operations
-                SingleInstance<App>.Cleanup();
+                    // Allow single instance code to perform cleanup operations
+                    SingleInstance<App>.Cleanup();
+                }
             }
         }
 

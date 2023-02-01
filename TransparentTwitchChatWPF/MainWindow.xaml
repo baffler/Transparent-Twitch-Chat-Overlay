@@ -27,7 +27,7 @@
 
     <Window.Resources>
         <ContextMenu Background="White" x:Key="contextMenu">
-            <MenuItem Header="Twitch Chat Overlay v0.92" IsEnabled="False" />
+            <MenuItem Header="Twitch Chat Overlay v0.93" IsEnabled="False" />
             <MenuItem Header="Toggle Borders (F9)" Click="MenuItem_ToggleBorderVisible" />
             <MenuItem Header="New Widget" Click="MenuItem_ClickNewWindow" />
             <MenuItem Header="Zoom Level">
