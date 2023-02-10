@@ -14,6 +14,7 @@ namespace TransparentTwitchChatWPF
         public static SettingsSingleton Instance { get { return lazy.Value; } }
 
         public GeneralSettings genSettings;
+        //private GeneralSettings genDefaultSettings;
 
         private SettingsSingleton()
         {
@@ -23,7 +24,7 @@ namespace TransparentTwitchChatWPF
                 Username = string.Empty,
                 FadeChat = false,
                 FadeTime = "120",
-                ShowBotActivity = false,
+                BlockBotActivity = true,
                 ChatNotificationSound = "None",
                 ThemeIndex = 1,
                 ChatType = 0,
@@ -41,12 +42,50 @@ namespace TransparentTwitchChatWPF
                 FilterAllowAllMods = false,
                 FilterAllowAllVIPs = false,
                 AllowedUsersList = new StringCollection(),
+                BlockedUsersList = new StringCollection(),
                 RedemptionsEnabled = false,
                 ChannelID = string.Empty,
                 BetterTtv = false,
                 FrankerFaceZ = false,
-                jChatURL = string.Empty
+                jChatURL = string.Empty,
+                CustomCSS = string.Empty,
+                OAuthToken = string.Empty
             };
         }
+
+        //public void ResetGeneralSettingsToDefault()
+        //{
+        //    this.genSettings = new GeneralSettings
+        //    {
+        //        CustomWindows = new StringCollection(),
+        //        Username = string.Empty,
+        //        FadeChat = this.genDefaultSettings.FadeChat,
+        //        FadeTime = this.genDefaultSettings.FadeTime,
+        //        BlockBotActivity = this.genDefaultSettings.BlockBotActivity,
+        //        ChatNotificationSound = this.genDefaultSettings.ChatNotificationSound,
+        //        ThemeIndex = this.genDefaultSettings.ThemeIndex,
+        //        ChatType = this.genDefaultSettings.ChatType,
+        //        CustomURL = string.Empty,
+        //        ZoomLevel = this.genDefaultSettings.ZoomLevel,
+        //        OpacityLevel = this.genDefaultSettings.OpacityLevel,
+        //        AutoHideBorders = this.genDefaultSettings.AutoHideBorders,
+        //        EnableTrayIcon = this.genDefaultSettings.EnableTrayIcon,
+        //        ConfirmClose = this.genDefaultSettings.ConfirmClose,
+        //        HideTaskbarIcon = this.genDefaultSettings.HideTaskbarIcon,
+        //        AllowInteraction = this.genDefaultSettings.AllowInteraction,
+        //        VersionTracker = this.genDefaultSettings.VersionTracker,
+        //        HighlightUsersChat = this.genDefaultSettings.HighlightUsersChat,
+        //        AllowedUsersOnlyChat = this.genDefaultSettings.AllowedUsersOnlyChat,
+        //        FilterAllowAllMods = this.genDefaultSettings.FilterAllowAllMods,
+        //        FilterAllowAllVIPs = this.genDefaultSettings.FilterAllowAllVIPs,
+        //        AllowedUsersList = new StringCollection(),
+        //        BlockedUsersList = new StringCollection(),
+        //        RedemptionsEnabled = this.genDefaultSettings.RedemptionsEnabled,
+        //        ChannelID = string.Empty,
+        //        BetterTtv = this.genDefaultSettings.BetterTtv,
+        //        FrankerFaceZ = this.genDefaultSettings.FrankerFaceZ,
+        //        jChatURL = string.Empty
+        //    };
+        //}
     }
 }

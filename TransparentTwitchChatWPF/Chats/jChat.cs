@@ -35,6 +35,9 @@ namespace TransparentTwitchChatWPF.Chats
         {
             PushNewMessage("jChat: Loaded...");
 
+            string[] blockList = new string[SettingsSingleton.Instance.genSettings.BlockedUsersList.Count];
+            SettingsSingleton.Instance.genSettings.BlockedUsersList.CopyTo(blockList, 0);
+
             if (SettingsSingleton.Instance.genSettings.HighlightUsersChat)
             {
                 string[] vipList = new string[SettingsSingleton.Instance.genSettings.AllowedUsersList.Count];
@@ -46,6 +49,9 @@ namespace TransparentTwitchChatWPF.Chats
                                 var vips = ['";
                 js += string.Join(",", vipList).Replace(",", "','").ToLower();
                 js += @"'];
+                                var blockUsers = ['";
+                js += string.Join(",", blockList).Replace(",", "','").ToLower();
+                js += @"'];
                                 var allowOther = false;";
 
                 if (SettingsSingleton.Instance.genSettings.FilterAllowAllVIPs)
@@ -53,6 +59,10 @@ namespace TransparentTwitchChatWPF.Chats
 
                 if (SettingsSingleton.Instance.genSettings.FilterAllowAllMods)
                     js += CustomJS_Defaults.jChat_Mod_Check;
+
+                js += @"if (blockUsers.includes(nick.toLowerCase())) {
+                            return;
+                        }";
 
                 js += @"if (vips.includes(nick.toLowerCase()) || allowOther) {";
 
@@ -106,13 +116,38 @@ namespace TransparentTwitchChatWPF.Chats
             }
             else if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() != "none")
             {
-                // Insert JS to play a sound on each chat message
+                // Insert JS to play a sound on each chat message, and check the block list
+
                 string js = @"var oldChatWrite = Chat.write;
                             Chat.write = function(nick, info, message) {
+                                var blockUsers = ['";
+                js += string.Join(",", blockList).Replace(",", "','").ToLower();
+                js += @"'];
+                                if (blockUsers.includes(nick.toLowerCase())) {
+                                    return;
+                                }
                                 (async function() {
 	                                await CefSharp.BindObjectAsync('jsCallback');
                                     jsCallback.playSound();
                                 })();
+                                return oldChatWrite.apply(oldChatWrite, arguments);
+                            }";
+
+                return js;
+            }
+            else if ((SettingsSingleton.Instance.genSettings.BlockedUsersList != null) &&
+                    (SettingsSingleton.Instance.genSettings.BlockedUsersList.Count > 0))
+            {
+                // No other options were selected, we're just gonna check the block list only here
+
+                string js = @"var oldChatWrite = Chat.write;
+                            Chat.write = function(nick, info, message) {
+                                var blockUsers = ['";
+                js += string.Join(",", blockList).Replace(",", "','").ToLower();
+                js += @"'];
+                                if (blockUsers.includes(nick.toLowerCase())) {
+                                    return;
+                                }
                                 return oldChatWrite.apply(oldChatWrite, arguments);
                             }";
 

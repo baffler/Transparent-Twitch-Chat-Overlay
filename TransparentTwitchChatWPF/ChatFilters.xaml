@@ -8,11 +8,11 @@
         Title="ChatFilters" Height="450" Width="400" WindowStyle="ToolWindow" Topmost="True" WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="115"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid Grid.Column="0">
-            <ListView Name="lvFilters" FontSize="16">
+            <ListView Name="lvFilters" FontSize="16" SelectionChanged="lvFilters_SelectionChanged">
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
                         <Setter Property="BorderThickness" Value="1"/>
@@ -27,7 +27,12 @@
                 </ListViewItem>
                 <ListViewItem>
                     <StackPanel Orientation="Horizontal">
-                        <!-- <TextBlock Text="Words" VerticalAlignment="Center" /> -->
+                        <TextBlock Text="Block Names" VerticalAlignment="Center" />
+                    </StackPanel>
+                </ListViewItem>
+                <ListViewItem>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Words" VerticalAlignment="Center" />
                     </StackPanel>
                 </ListViewItem>
             </ListView>
@@ -40,21 +45,13 @@
             </Grid.ColumnDefinitions>
 
             <CheckBox 
-                Name="cbShowBotActivity"
-                Content="Show Bot Activity"
-                HorizontalAlignment="Left" 
-                VerticalAlignment="Top"
-                Margin="20,5,0,0" Grid.ColumnSpan="2"
-                />
-            
-            <CheckBox 
                 Name="cbAllowedUsers"
                 Content="Filter by Allowed Usernames Only"
                 Checked="cbAllowedUsers_Checked"
                 Unchecked="cbAllowedUsers_Unchecked"
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top"
-                Margin="20,35,0,0" Grid.ColumnSpan="2"
+                Margin="20,15,0,0" Grid.ColumnSpan="2"
                 />
 
             <CheckBox 
@@ -64,7 +61,7 @@
                 Unchecked="cbHighlightUsers_Unchecked"
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top"
-                Margin="20,55,0,0" Grid.ColumnSpan="2"
+                Margin="20,35,0,0" Grid.ColumnSpan="2"
                 />
 
             <CheckBox 
@@ -73,7 +70,7 @@
                 Content="Allow all mods"
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top"
-                Margin="20,80,0,0" Grid.ColumnSpan="2"
+                Margin="20,70,0,0" Grid.ColumnSpan="2"
                 />
 
             <CheckBox 
@@ -82,7 +79,7 @@
                 Content="Allow all VIPs"
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top"
-                Margin="20,100,0,0" Grid.ColumnSpan="2"
+                Margin="20,90,0,0" Grid.ColumnSpan="2"
                 />
 
             <ListBox Name="lvAllowedUsernames" 
@@ -99,7 +96,7 @@
                 HorizontalAlignment="Left" 
                 Margin="20,125,0,0"
                 VerticalAlignment="Top" 
-                Width="75" Grid.ColumnSpan="2" Click="Button_Click_1" />
+                Width="75" Grid.ColumnSpan="2" Click="OnClick_AddAllowedUsername" />
             <Button Name="btnRemoveUser"
                 IsEnabled="false"
                 Content="Remove" 
@@ -107,7 +104,55 @@
                 HorizontalAlignment="Left" 
                 Margin="80,125,0,0"
                 VerticalAlignment="Top" 
-                Width="75" Grid.Column="1" Click="Button_Click" />
+                Width="75" Grid.Column="1" Click="OnClick_RemoveAllowedUsername" />
+        </Grid>
+
+        <Grid Name="filterBotsGrid" Visibility="Hidden" Grid.Column="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="27*"/>
+                <ColumnDefinition Width="265*"/>
+            </Grid.ColumnDefinitions>
+
+            <CheckBox 
+                Name="cbBlockBotActivity"
+                Content="Block Bot Messages"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="20,15,0,0" Grid.ColumnSpan="2"
+                />
+
+            <TextBlock
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                TextWrapping="Wrap"
+                FontSize="11"
+                FontStyle="Italic"
+                Margin="20,35,0,0" Grid.ColumnSpan="2" Height="64" Width="255" 
+                >
+                This will attempt to automatically block bot messages, however it may not work with all bots.
+                If your bot is still showing up, then add their name to the list below.
+            </TextBlock>
+
+            <ListBox Name="lvBlockedUsernames" 
+                      FontSize="12"
+                      SelectionMode="Single"
+                      Margin="20,155,20,50" Grid.ColumnSpan="2">
+            </ListBox>
+
+            <Button Name="btnAddBlockedUser"
+                Content="Add" 
+                Height="23"
+                HorizontalAlignment="Left" 
+                Margin="20,125,0,0"
+                VerticalAlignment="Top" 
+                Width="75" Grid.ColumnSpan="2" Click="OnClick_AddBlockedUsername" />
+            <Button Name="btnRemoveBlockedUser"
+                Content="Remove" 
+                Height="23"
+                HorizontalAlignment="Left" 
+                Margin="80,125,0,0"
+                VerticalAlignment="Top" 
+                Width="75" Grid.Column="1" Click="OnClick_RemoveBlockedUsername" />
         </Grid>
 
         <Grid Grid.Column="1">

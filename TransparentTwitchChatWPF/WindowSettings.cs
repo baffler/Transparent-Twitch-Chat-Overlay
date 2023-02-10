@@ -114,8 +114,6 @@ if (mod) { allowOther = true; }";
                 jsCallback.playSound();
             })();";
 
-
-
         public static string jChat_VIP_Check = @"
 var vip = false;
 if (typeof(info.badges) === 'string')

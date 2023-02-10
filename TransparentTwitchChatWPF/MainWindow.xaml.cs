@@ -27,6 +27,9 @@ using TwitchLib.PubSub;
 using TwitchLib.PubSub.Events;
 
 /*
+ * v0.94
+ * - Filtering: can block users now
+ * 
  * v0.93
  * - Added a setting to allow multiple instances
  * - Fix for crash when adding a widget with a long URL
@@ -369,7 +372,7 @@ namespace TransparentTwitchChatWPF
             url += @"theme=" + theme;
             url += @"&channel=" + username;
             url += @"&fade=" + fade;
-            url += @"&bot_activity=" + SettingsSingleton.Instance.genSettings.ShowBotActivity.ToString();
+            url += @"&bot_activity=" + (!SettingsSingleton.Instance.genSettings.BlockBotActivity).ToString();
             url += @"&prevent_clipping=false";
             Browser1.Load(url);
         }
@@ -1116,7 +1119,7 @@ namespace TransparentTwitchChatWPF
         [Trackable]
         public string FadeTime { get; set; } // fade time in seconds or "false"
         [Trackable]
-        public bool ShowBotActivity { get; set; }
+        public bool BlockBotActivity { get; set; }
         [Trackable]
         public string ChatNotificationSound { get; set; }
         [Trackable]
@@ -1153,6 +1156,8 @@ namespace TransparentTwitchChatWPF
         public bool FilterAllowAllVIPs { get; set; }
         [Trackable]
         public StringCollection AllowedUsersList { get; set; }
+        [Trackable]
+        public StringCollection BlockedUsersList { get; set; }
         [Trackable]
         public bool RedemptionsEnabled { get; set; }
         [Trackable]

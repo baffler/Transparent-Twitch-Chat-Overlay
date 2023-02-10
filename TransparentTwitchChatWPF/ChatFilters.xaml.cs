@@ -20,54 +20,97 @@ namespace TransparentTwitchChatWPF
     /// </summary>
     public partial class ChatFilters : Window
     {
-        StringCollection sc = new StringCollection();
+        StringCollection scAllowedUsers = new StringCollection();
+        StringCollection scBlockedUsers = new StringCollection();
 
         public ChatFilters()
         {
             InitializeComponent();
-            foreach (string s in SettingsSingleton.Instance.genSettings.AllowedUsersList)
-                sc.Add(s);
 
-            refreshLB();
+            if (SettingsSingleton.Instance.genSettings.AllowedUsersList == null)
+                SettingsSingleton.Instance.genSettings.AllowedUsersList = new StringCollection();
+            if (SettingsSingleton.Instance.genSettings.BlockedUsersList == null)
+                SettingsSingleton.Instance.genSettings.BlockedUsersList = new StringCollection();
+
+            foreach (string s in SettingsSingleton.Instance.genSettings.AllowedUsersList)
+                scAllowedUsers.Add(s);
+
+            foreach (string s in SettingsSingleton.Instance.genSettings.BlockedUsersList)
+                scBlockedUsers.Add(s);
+
+            refreshListBoxAllowedUsers();
+            refreshListBoxBlockedUsers();
 
             this.cbHighlightUsers.IsChecked = SettingsSingleton.Instance.genSettings.HighlightUsersChat;
             this.cbAllowedUsers.IsChecked = SettingsSingleton.Instance.genSettings.AllowedUsersOnlyChat;
             this.cbAllMods.IsChecked = SettingsSingleton.Instance.genSettings.FilterAllowAllMods;
             this.cbAllVIPs.IsChecked = SettingsSingleton.Instance.genSettings.FilterAllowAllVIPs;
-            this.cbShowBotActivity.IsChecked = SettingsSingleton.Instance.genSettings.ShowBotActivity;
+            this.cbBlockBotActivity.IsChecked = SettingsSingleton.Instance.genSettings.BlockBotActivity;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void OnClick_RemoveAllowedUsername(object sender, RoutedEventArgs e)
         {
             if (this.lvAllowedUsernames.SelectedIndex >= 0)
             {
-                this.sc.Remove(this.lvAllowedUsernames.SelectedItem as string);
-                refreshLB();
+                this.scAllowedUsers.Remove(this.lvAllowedUsernames.SelectedItem as string);
+                refreshListBoxAllowedUsers();
             }
             //this.lvWhitelistUsernames.Items.Remove(this.lvWhitelistUsernames.SelectedItem);
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private void OnClick_AddAllowedUsername(object sender, RoutedEventArgs e)
         {
             Input_Username inputDialog = new Input_Username();
             if (inputDialog.ShowDialog() == true)
             {
-                this.sc.Add(inputDialog.Username);
-                refreshLB();
+                this.scAllowedUsers.Add(inputDialog.Username);
+                refreshListBoxAllowedUsers();
             }
         }
 
-        private void refreshLB()
+        private void OnClick_RemoveBlockedUsername(object sender, RoutedEventArgs e)
+        {
+            if (this.lvBlockedUsernames.SelectedIndex >= 0)
+            {
+                this.scBlockedUsers.Remove(this.lvBlockedUsernames.SelectedItem as string);
+                refreshListBoxBlockedUsers();
+            }
+        }
+
+        private void OnClick_AddBlockedUsername(object sender, RoutedEventArgs e)
+        {
+            Input_Username inputDialog = new Input_Username();
+            if (inputDialog.ShowDialog() == true)
+            {
+                this.scBlockedUsers.Add(inputDialog.Username);
+                refreshListBoxBlockedUsers();
+            }
+        }
+
+        private void refreshListBoxAllowedUsers()
         {
             this.lvAllowedUsernames.Focus();
             this.lvAllowedUsernames.UnselectAll();
             this.lvAllowedUsernames.Items.Clear();
 
-            foreach (string s in this.sc)
+            foreach (string s in this.scAllowedUsers)
                 this.lvAllowedUsernames.Items.Add(s);
             
             this.lvAllowedUsernames.UnselectAll();
             this.lvAllowedUsernames.Focus();
+        }
+
+        private void refreshListBoxBlockedUsers()
+        {
+            this.lvBlockedUsernames.Focus();
+            this.lvBlockedUsernames.UnselectAll();
+            this.lvBlockedUsernames.Items.Clear();
+
+            foreach (string s in this.scBlockedUsers)
+                this.lvBlockedUsernames.Items.Add(s);
+
+            this.lvBlockedUsernames.UnselectAll();
+            this.lvBlockedUsernames.Focus();
         }
 
         private void OKButton_Click(object sender, RoutedEventArgs e)
@@ -76,8 +119,9 @@ namespace TransparentTwitchChatWPF
             SettingsSingleton.Instance.genSettings.AllowedUsersOnlyChat = this.cbAllowedUsers.IsChecked ?? false;
             SettingsSingleton.Instance.genSettings.FilterAllowAllMods = this.cbAllMods.IsChecked ?? false;
             SettingsSingleton.Instance.genSettings.FilterAllowAllVIPs = this.cbAllVIPs.IsChecked ?? false;
-            SettingsSingleton.Instance.genSettings.AllowedUsersList = sc;
-            SettingsSingleton.Instance.genSettings.ShowBotActivity = this.cbShowBotActivity.IsChecked ?? false;
+            SettingsSingleton.Instance.genSettings.AllowedUsersList = scAllowedUsers;
+            SettingsSingleton.Instance.genSettings.BlockedUsersList = scBlockedUsers;
+            SettingsSingleton.Instance.genSettings.BlockBotActivity = this.cbBlockBotActivity.IsChecked ?? false;
             DialogResult = true;
         }
 
@@ -121,6 +165,24 @@ namespace TransparentTwitchChatWPF
             btnAddUser.IsEnabled = false;
             btnRemoveUser.IsEnabled = false;
             lvAllowedUsernames.IsEnabled = false;
+        }
+
+        private void lvFilters_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            switch (this.lvFilters.SelectedIndex)
+            {
+                case 0: // Allowed usernames/ Highlighting
+                    filterUsernamesGrid.Visibility = Visibility.Visible;
+                    filterBotsGrid.Visibility = Visibility.Hidden;
+                    break;
+                case 1: // Blocked usernames/ Bots
+                    filterUsernamesGrid.Visibility = Visibility.Hidden;
+                    filterBotsGrid.Visibility = Visibility.Visible;
+                    break;
+                case 2: // Blocked words
+                    break;
+
+            }
         }
     }
 }
