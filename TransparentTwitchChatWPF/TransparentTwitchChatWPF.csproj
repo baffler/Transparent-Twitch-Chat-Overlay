@@ -108,6 +108,9 @@
       <HintPath>..\packages\Jot.1.4.1\lib\net45\Jot.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Mayerch1.GithubUpdateCheck, Version=1.2.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Mayerch1.GithubUpdateCheck.1.2.1\lib\netstandard2.0\Mayerch1.GithubUpdateCheck.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=3.1.5.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.Logging.Abstractions.3.1.5\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
       <Private>True</Private>

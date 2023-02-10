@@ -25,10 +25,12 @@ using System.Media;
 using TwitchLib;
 using TwitchLib.PubSub;
 using TwitchLib.PubSub.Events;
+using Mayerch1.GithubUpdateCheck;
 
 /*
  * v0.94
  * - Filtering: can block users now
+ * - Automatically checks for updates on start (Can be disabled in settings)
  * 
  * v0.93
  * - Added a setting to allow multiple instances
@@ -834,6 +836,19 @@ namespace TransparentTwitchChatWPF
 
             if (!SettingsSingleton.Instance.genSettings.EnableTrayIcon)
                 this.taskbarControl.Visibility = Visibility.Hidden;
+
+            GithubUpdateCheck update = new GithubUpdateCheck("baffler", "Transparent-Twitch-Chat-Overlay");
+            bool isUpdate = update.IsUpdateAvailable(SettingsSingleton.Version, VersionChange.Build);
+
+            if (isUpdate)
+            {
+                if (MessageBox.Show($"Version {update.Version()} is available. Would you like to download it now? (Opens in your default browser)",
+                    "New Version Available", 
+                    MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes)
+                {
+                    System.Diagnostics.Process.Start("https://github.com/baffler/Transparent-Twitch-Chat-Overlay/releases");
+                }
+            }
         }
 
         private void Browser1_IsBrowserInitializedChanged(object sender, DependencyPropertyChangedEventArgs e)
