@@ -41,6 +41,7 @@
                 <MenuItem Header="Reset" Click="MenuItem_ResetOpacity" />
             </MenuItem>
             <MenuItem Header="Settings" Click="MenuItem_ShowSettings" />
+            <MenuItem Header="Dev Tools" Click="MenuItem_DevToolsClick" />
             <Separator />
             <MenuItem Header="GitHub latest release" Click="MenuItem_VisitWebsite" />
         </ContextMenu>
@@ -62,7 +63,8 @@
                     <MenuItem Header="Twitch Chat Overlay" IsEnabled="False" />
                     <MenuItem Header="Hide/Show Border (F9)" Click="MenuItem_ToggleBorderVisible" />
                     <MenuItem Header="Settings" Click="MenuItem_SettingsClick" />
-                    <MenuItem  Header="Reset Window" Click="MenuItem_ResetWindowClick" />
+                    <MenuItem Header="Reset Window" Click="MenuItem_ResetWindowClick" />
+                    <MenuItem Header="Dev Tools" Click="MenuItem_DevToolsClick" />
                     <Separator />
                     <MenuItem Header="GitHub latest release" Click="MenuItem_VisitWebsite" />
                     <MenuItem Header="Exit" Click="MenuItem_Exit" />

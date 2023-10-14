@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Collections.Specialized;
+using System.Diagnostics;
 
 namespace TransparentTwitchChatWPF
 {
@@ -46,6 +47,9 @@ namespace TransparentTwitchChatWPF
             this.cbAllMods.IsChecked = SettingsSingleton.Instance.genSettings.FilterAllowAllMods;
             this.cbAllVIPs.IsChecked = SettingsSingleton.Instance.genSettings.FilterAllowAllVIPs;
             this.cbBlockBotActivity.IsChecked = SettingsSingleton.Instance.genSettings.BlockBotActivity;
+            this.colorPicker.SelectedColor = SettingsSingleton.Instance.genSettings.ChatHighlightColor;
+            this.colorPickerMods.SelectedColor = SettingsSingleton.Instance.genSettings.ChatHighlightModsColor;
+            this.colorPickerVIPs.SelectedColor = SettingsSingleton.Instance.genSettings.ChatHighlightVIPsColor;
         }
 
         private void OnClick_RemoveAllowedUsername(object sender, RoutedEventArgs e)
@@ -122,6 +126,9 @@ namespace TransparentTwitchChatWPF
             SettingsSingleton.Instance.genSettings.AllowedUsersList = scAllowedUsers;
             SettingsSingleton.Instance.genSettings.BlockedUsersList = scBlockedUsers;
             SettingsSingleton.Instance.genSettings.BlockBotActivity = this.cbBlockBotActivity.IsChecked ?? false;
+            SettingsSingleton.Instance.genSettings.ChatHighlightColor = this.colorPicker.SelectedColor ?? SettingsSingleton.Instance.genSettings.ChatHighlightColor;
+            SettingsSingleton.Instance.genSettings.ChatHighlightModsColor = this.colorPickerMods.SelectedColor ?? SettingsSingleton.Instance.genSettings.ChatHighlightModsColor;
+            SettingsSingleton.Instance.genSettings.ChatHighlightVIPsColor = this.colorPickerVIPs.SelectedColor ?? SettingsSingleton.Instance.genSettings.ChatHighlightVIPsColor;
             DialogResult = true;
         }
 

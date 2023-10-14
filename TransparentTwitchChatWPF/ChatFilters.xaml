@@ -4,8 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TransparentTwitchChatWPF"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
         Title="ChatFilters" Height="450" Width="400" WindowStyle="ToolWindow" Topmost="True" WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        
+    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="115"/>
@@ -64,14 +68,37 @@
                 Margin="20,35,0,0" Grid.ColumnSpan="2"
                 />
 
+            
+            <xctk:ColorPicker
+                Name="colorPicker" 
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Grid.ColumnSpan="2" 
+                Width="200"
+                Margin="40,60,0,0" 
+                DisplayColorAndName="True" 
+                ShowStandardColors="False"
+                AvailableColorsSortingMode="HueSaturationBrightness" />
+
             <CheckBox 
                 Name="cbAllMods"
                 IsEnabled="false"
                 Content="Allow all mods"
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top"
-                Margin="20,70,0,0" Grid.ColumnSpan="2"
+                Margin="20,100,0,0" Grid.ColumnSpan="2"
                 />
+
+            <xctk:ColorPicker
+                Name="colorPickerMods" 
+                HorizontalAlignment="Right" 
+                VerticalAlignment="Top"
+                Grid.ColumnSpan="2" 
+                Width="50"
+                Margin="0,98,45,0" 
+                DisplayColorAndName="False" 
+                ShowStandardColors="False"
+                AvailableColorsSortingMode="HueSaturationBrightness" />
 
             <CheckBox 
                 Name="cbAllVIPs"
@@ -79,14 +106,25 @@
                 Content="Allow all VIPs"
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top"
-                Margin="20,90,0,0" Grid.ColumnSpan="2"
+                Margin="20,130,0,0" Grid.ColumnSpan="2"
                 />
+
+            <xctk:ColorPicker
+                Name="colorPickerVIPs" 
+                HorizontalAlignment="Right" 
+                VerticalAlignment="Top"
+                Grid.ColumnSpan="2" 
+                Width="50"
+                Margin="0,128,45,0" 
+                DisplayColorAndName="False" 
+                ShowStandardColors="False"
+                AvailableColorsSortingMode="HueSaturationBrightness" />
 
             <ListBox Name="lvAllowedUsernames" 
                      IsEnabled="false"
                       FontSize="12"
                       SelectionMode="Single"
-                      Margin="20,155,20,50" Grid.ColumnSpan="2">
+                      Margin="20,190,20,50" Grid.ColumnSpan="2">
             </ListBox>
 
             <Button Name="btnAddUser"
@@ -94,7 +132,7 @@
                 Content="Add" 
                 Height="23"
                 HorizontalAlignment="Left" 
-                Margin="20,125,0,0"
+                Margin="20,160,0,0"
                 VerticalAlignment="Top" 
                 Width="75" Grid.ColumnSpan="2" Click="OnClick_AddAllowedUsername" />
             <Button Name="btnRemoveUser"
@@ -102,7 +140,7 @@
                 Content="Remove" 
                 Height="23"
                 HorizontalAlignment="Left" 
-                Margin="80,125,0,0"
+                Margin="80,160,0,0"
                 VerticalAlignment="Top" 
                 Width="75" Grid.Column="1" Click="OnClick_RemoveAllowedUsername" />
         </Grid>

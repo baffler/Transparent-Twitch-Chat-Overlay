@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace TransparentTwitchChatWPF
 {
@@ -16,7 +17,7 @@ namespace TransparentTwitchChatWPF
         public GeneralSettings genSettings;
         //private GeneralSettings genDefaultSettings;
 
-        public static string Version { get { return "0.9.4"; } }
+        public static string Version { get { return "0.9.5"; } }
 
         private SettingsSingleton()
         {
@@ -51,7 +52,15 @@ namespace TransparentTwitchChatWPF
                 FrankerFaceZ = false,
                 jChatURL = string.Empty,
                 CustomCSS = string.Empty,
-                OAuthToken = string.Empty
+                OAuthToken = string.Empty,
+                CheckForUpdates = true,
+                ChatHighlightColor = Color.FromArgb(150, 245, 245, 0), // Yellow
+                ChatHighlightModsColor = Color.FromArgb(150, 0, 173, 3), // Green
+                ChatHighlightVIPsColor = Color.FromArgb(150, 219, 51, 179), // Purple
+                OutputVolume = 1.0f,
+                DeviceName = "",
+                DeviceID = -1,
+                SoundClipsFolder = "Default",
             };
         }
 

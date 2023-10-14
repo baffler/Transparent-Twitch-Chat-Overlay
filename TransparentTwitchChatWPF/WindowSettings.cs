@@ -122,6 +122,7 @@ if (typeof(info.badges) === 'string')
         badge = badge.split('/');
         if (badge[0].toLowerCase() == 'vip')
         {
+            highlightSuffix = 'VIP';
             vip = true;
             return;
         }
@@ -138,6 +139,7 @@ if (typeof(info.badges) === 'string')
         badge = badge.split('/');
         if (badge[0].toLowerCase() == 'moderator')
         {
+            highlightSuffix = 'Mod';
             mod = true;
             return;
         }

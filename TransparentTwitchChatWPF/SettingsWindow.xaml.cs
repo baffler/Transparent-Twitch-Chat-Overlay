@@ -13,7 +13,12 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Media;
 using TwitchLib.Api;
-using TwitchLib.Api.V5.Models.Users;
+using TwitchLib.Api.Helix.Models.Users.GetUsers;
+using TwitchLib.Api.Auth;
+using NAudio.Wave;
+using System.Windows.Forms;
+using System.IO;
+using System.Diagnostics;
 
 namespace TransparentTwitchChatWPF
 {
@@ -25,13 +30,176 @@ namespace TransparentTwitchChatWPF
         WindowSettings config;
         MainWindow _main;
         TwitchAPI _api;
+        TwitchConnection _twitchConnection;
 
         public SettingsWindow(MainWindow mainWindow, WindowSettings windowConfig)
         {
             this.config = windowConfig;
             this._main = mainWindow;
 
+            _api = new TwitchAPI();
+            _api.Settings.ClientId = "yv4bdnndvd4gwsfw7jnfixp0mnofn7";
+
+            this._twitchConnection = new TwitchConnection();
+            TwitchConnection.AccessTokenResponse += TwitchConnection_AccessTokenResponse;
+
+            ValidateTwitchConnection();
+
             InitializeComponent();
+        }
+
+        private void LoadDevices()
+        {
+            DevicesComboBox.Items.Add(new { Id = -1, Name = "Default" });
+
+            for (int deviceId = 0; deviceId < WaveOut.DeviceCount; deviceId++)
+            {
+                var capabilities = WaveOut.GetCapabilities(deviceId);
+                DevicesComboBox.Items.Add(new { Id = deviceId, Name = capabilities.ProductName });
+            }
+
+            DevicesComboBox.DisplayMemberPath = "Name";
+            DevicesComboBox.SelectedValuePath = "Id";
+
+            DevicesComboBox.SelectedValue = SettingsSingleton.Instance.genSettings.DeviceID;
+            if (!DevicesComboBox.Text.StartsWith(SettingsSingleton.Instance.genSettings.DeviceName))
+            {
+                DevicesComboBox.SelectedValue = -1;
+            }
+        }
+
+        private string GetSoundClipsFolder()
+        {
+            string path = tbSoundClipsFolder.Text;
+            if (path == "Default")
+            {
+                path = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\assets\\";
+            }
+            else if (!Directory.Exists(path))
+            {
+                path = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\assets\\";
+            }
+
+            if (!path.EndsWith("\\")) path += "\\";
+
+            return path;
+        }
+
+        private void LoadSoundClips()
+        {
+            comboChatSound.Items.Clear();
+            comboChatSound2.Items.Clear();
+
+            comboChatSound.Items.Add(new ComboBoxItem() { Content = "None" });
+            comboChatSound2.Items.Add(new ComboBoxItem() { Content = "None" });
+
+            string path = GetSoundClipsFolder();
+
+            string[] filesWav = System.IO.Directory.GetFiles(path, "*.wav");
+            string[] filesMp3 = System.IO.Directory.GetFiles(path, "*.mp3");
+
+            foreach (string file in filesWav)
+            {
+                string fileName = System.IO.Path.GetFileName(file);
+                comboChatSound.Items.Add(new ComboBoxItem() { Content = fileName });
+                comboChatSound2.Items.Add(new ComboBoxItem() { Content = fileName });
+            }
+
+            foreach (string file in filesMp3)
+            {
+                string fileName = System.IO.Path.GetFileName(file);
+                comboChatSound.Items.Add(new ComboBoxItem() { Content = fileName });
+                comboChatSound2.Items.Add(new ComboBoxItem() { Content = fileName });
+            }
+        }
+
+        private void TwitchConnection_AccessTokenResponse(object sender, string e)
+        {
+            SettingsSingleton.Instance.genSettings.OAuthToken = e;
+            _api.Settings.AccessToken = e;
+
+            _ = FetchUserDataAsync();
+            _ = ValidateAuthToken(e);
+        }
+
+        private async Task FetchUserDataAsync()
+        {
+            try
+            {
+                var getUser = await _api.Helix.Users.GetUsersAsync();
+                GetUsersResponseCallback(getUser);
+            }
+            catch (Exception e)
+            {
+                //MessageBox.Show(e.Message, "Fetch User Data Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void GetUsersResponseCallback(GetUsersResponse e)
+        {
+            string userName = e.Users[0].DisplayName;
+            string userID = e.Users[0].Id;
+            string profileImageUrl = e.Users[0].ProfileImageUrl;
+
+            lblTwitch.Content = $"{userName} ({userID})";
+
+            SettingsSingleton.Instance.genSettings.ChannelID = userID;
+
+            var bitmap = TwitchConnectionUtils.LoadImageFromUrl(profileImageUrl);
+            imgTwitch.Source = bitmap;
+        }
+
+        private async Task ValidateAuthToken(string accessToken)
+        {
+            try
+            {
+                var t = await _api.Auth.ValidateAccessTokenAsync(accessToken);
+                if (t == null)
+                {
+                    lblTwitchConnected.Foreground = Brushes.Red;
+                    lblTwitchConnected2.Foreground = Brushes.Red;
+                    lblTwitchConnected.Content = "Auth Token Error";
+                    lblTwitchConnected2.Content = "Auth Token Error";
+                }
+                else
+                    AuthTokenValidatedCallback(t);
+            }
+            catch (Exception e)
+            {
+                lblTwitchConnected.Foreground = Brushes.Red;
+                lblTwitchConnected2.Foreground = Brushes.Red;
+                lblTwitchConnected.Content = "Auth Token Error";
+                lblTwitchConnected2.Content = "Auth Token Error";
+
+                //MessageBox.Show(e.Message, "Validate Auth Token Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void AuthTokenValidatedCallback(ValidateAccessTokenResponse e)
+        {
+            TimeSpan timeSpan = TimeSpan.FromSeconds(e.ExpiresIn);
+            string expires = string.Format("{0} Days {1} Hours", timeSpan.Days, timeSpan.Hours);
+
+            string status = "Connected";
+            if (cbRedemptions.IsChecked ?? false)
+            {
+                lblTwitchConnected.Foreground = Brushes.Green;
+                lblTwitchConnected2.Foreground = Brushes.Green;
+                status += " (Active)";
+            }
+            else
+            {
+                lblTwitchConnected.Foreground = Brushes.Gray;
+                lblTwitchConnected2.Foreground = Brushes.Gray;
+                status += " (Inactive)";
+            }
+
+            lblTwitchConnected.Content = status;
+            lblTwitchConnected2.Content = status;
+            btGetChannelID.Visibility = Visibility.Hidden;
+            btGetChannelID2.Visibility = Visibility.Hidden;
+
+            lblTwitchStatus.Content = $"Expires: {expires}";
         }
 
         private void OKButton_Click(object sender, RoutedEventArgs e)
@@ -78,7 +246,6 @@ namespace TransparentTwitchChatWPF
                 this.config.URL = string.Empty;
                 this.config.Username = this.tbUsername.Text;
                 this.config.RedemptionsEnabled = this.cbRedemptions.IsChecked ?? false;
-                this.config.ChannelID = this.tbChannelID.Text;
                 this.config.ChatFade = this.cbFade.IsChecked ?? false;
                 this.config.FadeTime = this.tbFadeTime.Text;
                 //this.config.ShowBotActivity = this.cbBotActivity.IsChecked ?? false;
@@ -97,7 +264,6 @@ namespace TransparentTwitchChatWPF
                 this.config.RedemptionsEnabled = this.cbRedemptions2.IsChecked ?? false;
                 if (this.config.RedemptionsEnabled)
                     this.config.Username = this.tbUsername2.Text;
-                this.config.ChannelID = this.tbChannelID2.Text;
                 this.config.ChatNotificationSound = this.comboChatSound2.SelectedValue.ToString();
             }
 
@@ -107,23 +273,37 @@ namespace TransparentTwitchChatWPF
             this.config.HideTaskbarIcon  = this.cbTaskbar.IsChecked ?? false;
             this.config.AllowInteraction = this.cbInteraction.IsChecked ?? false;
 
+            SettingsSingleton.Instance.genSettings.CheckForUpdates = this.cbCheckForUpdates.IsChecked ?? false;
+
+            SettingsSingleton.Instance.genSettings.DeviceID = (int)DevicesComboBox.SelectedValue;
+            SettingsSingleton.Instance.genSettings.DeviceName = DevicesComboBox.Text;
+
+            double ClampBetween0And1(double value)
+            {
+                double s = Math.Round((value * 0.01), 2);
+                return Math.Max(0, Math.Min(1, s));
+            }
+
+            SettingsSingleton.Instance.genSettings.OutputVolume = (float)ClampBetween0And1(this.OutputVolumeSlider.Value);
+
+            SettingsSingleton.Instance.genSettings.SoundClipsFolder = this.tbSoundClipsFolder.Text;
+
             DialogResult = true;
         }
 
         private void SetupValues()
         {
+            // Load this first so GetSoundsClipsFolder() gets the correct value
+            this.tbSoundClipsFolder.Text = SettingsSingleton.Instance.genSettings.SoundClipsFolder;
+
             this.tbUsername.Text = this.config.Username;
             this.tb_jChatURL.Text = this.config.jChatURL;
             this.tbUsername2.Text = this.config.Username;
             this.tbTwitchPopoutUsername.Text = this.config.Username;
             this.cbRedemptions.IsChecked = this.config.RedemptionsEnabled;
             this.cbRedemptions2.IsChecked = this.config.RedemptionsEnabled;
-            this.tbChannelID.Text = this.config.ChannelID;
-            this.tbChannelID.IsEnabled = this.config.RedemptionsEnabled;
             this.btGetChannelID.IsEnabled = this.config.RedemptionsEnabled;
             
-            this.tbChannelID2.Text = this.config.ChannelID;
-            this.tbChannelID2.IsEnabled = this.config.RedemptionsEnabled;
             this.btGetChannelID2.IsEnabled = this.config.RedemptionsEnabled;
             this.tbUsername2.IsEnabled = this.config.RedemptionsEnabled;
 
@@ -135,6 +315,7 @@ namespace TransparentTwitchChatWPF
             //this.cbBotActivity.IsChecked = this.config.ShowBotActivity;
             this.comboTheme.SelectedIndex = this.config.Theme;
 
+            LoadSoundClips();
             var comboxBoxItem = this.comboChatSound.Items.OfType<ComboBoxItem>().FirstOrDefault(
                 x => x.Content.ToString() == this.config.ChatNotificationSound);
             if (comboxBoxItem == null)
@@ -150,7 +331,11 @@ namespace TransparentTwitchChatWPF
             this.cbConfirmClose.IsChecked = this.config.ConfirmClose;
             this.cbTaskbar.IsChecked = this.config.HideTaskbarIcon;
             this.cbInteraction.IsChecked = this.config.AllowInteraction;
+            this.cbCheckForUpdates.IsChecked = SettingsSingleton.Instance.genSettings.CheckForUpdates;
             this.cbMultiInstance.IsChecked = TransparentTwitchChatWPF.Properties.Settings.Default.allowMultipleInstances;
+
+            LoadDevices();
+            this.OutputVolumeSlider.Value = SettingsSingleton.Instance.genSettings.OutputVolume * 100;
 
             this.comboChatType.SelectedIndex = this.config.ChatType;
 
@@ -267,6 +452,16 @@ namespace TransparentTwitchChatWPF
             SetupValues();
         }
 
+        private void ValidateTwitchConnection()
+        {
+            if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.OAuthToken))
+            {
+                _api.Settings.AccessToken = SettingsSingleton.Instance.genSettings.OAuthToken;
+                _ = FetchUserDataAsync();
+                _ = ValidateAuthToken(SettingsSingleton.Instance.genSettings.OAuthToken);
+            }
+        }
+
         private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             switch (this.lvSettings.SelectedIndex)
@@ -274,6 +469,7 @@ namespace TransparentTwitchChatWPF
                 case 0: // Chat
                     this.chatGrid.Visibility = Visibility.Visible;
                     this.generalGrid.Visibility = Visibility.Hidden;
+                    this.connectionsGrid.Visibility = Visibility.Hidden;
                     this.widgetGrid.Visibility = Visibility.Hidden;
                     this.comboChatType.Visibility = Visibility.Visible;
                     this.aboutGrid.Visibility = Visibility.Hidden;
@@ -281,20 +477,32 @@ namespace TransparentTwitchChatWPF
                 case 1: // General
                     this.chatGrid.Visibility = Visibility.Hidden;
                     this.generalGrid.Visibility = Visibility.Visible;
+                    this.connectionsGrid.Visibility = Visibility.Hidden;
                     this.widgetGrid.Visibility = Visibility.Hidden;
                     this.comboChatType.Visibility = Visibility.Hidden;
                     this.aboutGrid.Visibility = Visibility.Hidden;
                     break;
-                case 2: // Widgets
+                case 2: // Connections
                     this.chatGrid.Visibility = Visibility.Hidden;
                     this.generalGrid.Visibility = Visibility.Hidden;
+                    this.connectionsGrid.Visibility = Visibility.Visible;
+                    this.widgetGrid.Visibility = Visibility.Hidden;
+                    this.comboChatType.Visibility = Visibility.Hidden;
+                    this.aboutGrid.Visibility = Visibility.Hidden;
+                    ValidateTwitchConnection();
+                    break;
+                case 3: // Widgets
+                    this.chatGrid.Visibility = Visibility.Hidden;
+                    this.generalGrid.Visibility = Visibility.Hidden;
+                    this.connectionsGrid.Visibility = Visibility.Hidden;
                     this.widgetGrid.Visibility = Visibility.Visible;
                     this.comboChatType.Visibility = Visibility.Hidden;
                     this.aboutGrid.Visibility = Visibility.Hidden;
                     break;
-                case 3: // About
+                case 4: // About
                     this.chatGrid.Visibility = Visibility.Hidden;
                     this.generalGrid.Visibility = Visibility.Hidden;
+                    this.connectionsGrid.Visibility = Visibility.Hidden;
                     this.widgetGrid.Visibility = Visibility.Hidden;
                     this.comboChatType.Visibility = Visibility.Hidden;
                     this.aboutGrid.Visibility = Visibility.Visible;
@@ -302,6 +510,7 @@ namespace TransparentTwitchChatWPF
                 default:
                     this.chatGrid.Visibility = Visibility.Hidden;
                     this.generalGrid.Visibility = Visibility.Hidden;
+                    this.connectionsGrid.Visibility = Visibility.Hidden;
                     this.widgetGrid.Visibility = Visibility.Hidden;
                     this.comboChatType.Visibility = Visibility.Hidden;
                     this.aboutGrid.Visibility = Visibility.Hidden;
@@ -363,35 +572,41 @@ namespace TransparentTwitchChatWPF
             }
         }
 
-        private void comboChatSound_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void PlayAudioFile(string file)
         {
-            
+            if (File.Exists(file))
+            {
+                var audioFileReader = new AudioFileReader(file);
+                {
+                    audioFileReader.Volume = (float)(this.OutputVolumeSlider.Value * 0.01);
+                    var waveOutDevice = new WaveOutEvent();
+                    {
+                        waveOutDevice.Init(audioFileReader);
+                        waveOutDevice.PlaybackStopped += (s, e) =>
+                        {
+                            audioFileReader.Dispose();
+                            waveOutDevice.Dispose();
+                        };
+                        waveOutDevice.Play();
+                    }
+                }
+            }
         }
 
         private void comboChatSound_DropDownClosed(object sender, EventArgs e)
         {
-            Uri startupPath = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
-            string file = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\assets\\";
-            file += this.comboChatSound.SelectedValue.ToString() + ".wav";
+            string file = GetSoundClipsFolder();
+            file += this.comboChatSound.SelectedValue.ToString();
 
-            if (System.IO.File.Exists(file))
-            {
-                SoundPlayer sp = new SoundPlayer(file);
-                sp.Play();
-            }
+            PlayAudioFile(file);
         }
 
         private void comboChatSound_DropDownClosed2(object sender, EventArgs e)
         {
-            Uri startupPath = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
-            string file = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\assets\\";
-            file += this.comboChatSound2.SelectedValue.ToString() + ".wav";
+            string file = GetSoundClipsFolder();
+            file += this.comboChatSound2.SelectedValue.ToString();
 
-            if (System.IO.File.Exists(file))
-            {
-                SoundPlayer sp = new SoundPlayer(file);
-                sp.Play();
-            }
+            PlayAudioFile(file);
         }
 
         private void btOpenChatFilterSettings_Click(object sender, RoutedEventArgs e)
@@ -405,94 +620,53 @@ namespace TransparentTwitchChatWPF
 
         private void btGetChannelID_Click(object sender, RoutedEventArgs e)
         {
-            string _clientid = "gp762nuuoqcoxypju8c569th9wz7q5";
-
-            btGetChannelID.IsEnabled = false;
-            btGetChannelID2.IsEnabled = false;
-
-            _api = new TwitchAPI();
-            _api.Settings.ClientId = _clientid;
-
-            _getChannelID(tbUsername.Text);
-
-            /*GetID_Window getidWindow = new GetID_Window(this.tbUsername.Text);
-            if (getidWindow.ShowDialog() == true)
-            {
-                this.tbChannelID.Text = SettingsSingleton.Instance.genSettings.ChannelID;
-            }*/
-        }
-
-        private void btGetChannelID_Click2(object sender, RoutedEventArgs e)
-        {
-            string _clientid = "gp762nuuoqcoxypju8c569th9wz7q5";
-
-            btGetChannelID.IsEnabled = false;
-            btGetChannelID2.IsEnabled = false;
-
-            _api = new TwitchAPI();
-            _api.Settings.ClientId = _clientid;
-
-            _getChannelID(tbUsername2.Text);
-        }
-
-        private async void _getChannelID(string channel)
-        {
-            Users users = null;
-
-            try
-            {
-                users = await _api.V5.Users.GetUserByNameAsync(channel);
-            }
-            catch (Exception e)
-            {
-                tbChannelID.Text = "0";
-                tbChannelID2.Text = "0";
-                MessageBox.Show(e.Message);
-            }
-
-            if (users != null)
-            {
-                if (users.Total > 0)
-                {
-                    SettingsSingleton.Instance.genSettings.ChannelID = users.Matches[0].Id;
-                    tbChannelID.Text = users.Matches[0].Id;
-                    btGetChannelID.IsEnabled = true;
-                    tbChannelID2.Text = users.Matches[0].Id;
-                    btGetChannelID2.IsEnabled = true;
-                }
-                else
-                {
-                    tbChannelID.Text = "0";
-                    btGetChannelID.IsEnabled = true;
-                    tbChannelID2.Text = "0";
-                    btGetChannelID2.IsEnabled = true;
-                }
-            }
-            else
-            {
-                tbChannelID.Text = "0";
-                btGetChannelID.IsEnabled = true;
-                tbChannelID2.Text = "0";
-                btGetChannelID2.IsEnabled = true;
-            }
+            this.lvSettings.SelectedIndex = 2;
         }
 
         private void cbRedemptions_Checked(object sender, RoutedEventArgs e)
         {
-            this.tbChannelID.IsEnabled = true;
-            this.btGetChannelID.IsEnabled = true;
-            this.tbChannelID2.IsEnabled = true;
-            this.btGetChannelID2.IsEnabled = true;
-            this.tbUsername2.IsEnabled = true;
+            bool isActive = false;
+
+            if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.ChannelID) &&
+                !string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.OAuthToken))
+            {
+                isActive = true;
+            }
+
+            string status = "Connected (Active)";
+            if (!isActive) status = "Not Connected";
+
+            this.lblTwitchConnected.Content = status;
+            this.lblTwitchConnected.Foreground = isActive ? Brushes.Green : Brushes.Gray;
+            this.btGetChannelID.Visibility = isActive ? Visibility.Hidden : Visibility.Visible;
+            this.btGetChannelID.IsEnabled = !isActive;
+
+            this.lblTwitchConnected2.Content = status;
+            this.lblTwitchConnected2.Foreground = isActive ? Brushes.Green : Brushes.Gray;
+            this.btGetChannelID2.Visibility = isActive ? Visibility.Hidden : Visibility.Visible;
+            this.btGetChannelID2.IsEnabled = !isActive;
         }
 
         private void cbRedemptions_Unchecked(object sender, RoutedEventArgs e)
         {
-            this.tbChannelID.IsEnabled = false;
-            this.btGetChannelID.IsEnabled = false;
-            this.tbChannelID2.IsEnabled = false;
-            this.btGetChannelID2.IsEnabled = false;
-            this.tbUsername2.IsEnabled = false;
+            bool isActive = false;
+
+            if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.ChannelID) &&
+                !string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.OAuthToken))
+            {
+                isActive = true;
+            }
+
+            string status = "Connected (Inactive)";
+            if (!isActive) status = "Not Connected";
+
+            this.lblTwitchConnected.Content = status;
+            this.lblTwitchConnected.Foreground = Brushes.Gray;
+            this.btGetChannelID.Visibility = Visibility.Hidden;
+
+            this.lblTwitchConnected2.Content = status;
+            this.lblTwitchConnected2.Foreground = Brushes.Gray;
+            this.btGetChannelID2.Visibility = Visibility.Hidden;
         }
 
         private void cbTaskbar_Checked(object sender, RoutedEventArgs e)
@@ -517,6 +691,53 @@ namespace TransparentTwitchChatWPF
         {
             TransparentTwitchChatWPF.Properties.Settings.Default.allowMultipleInstances = false;
             TransparentTwitchChatWPF.Properties.Settings.Default.Save();
+        }
+
+        private void btConnect_Click(object sender, RoutedEventArgs e)
+        {
+            this._twitchConnection.ConnectTwitchAccount();
+            System.Windows.MessageBox.Show("Please check your default browser. A new tab should have opened and you can authorize the app to be connected there.", "Twitch Connection", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        
+        private void btDisconnect_Click(object sender, RoutedEventArgs e)
+        {
+            lblTwitch.Content = "Not Connected";
+            lblTwitchStatus.Content = "";
+            imgTwitch.Source = null;
+
+            lblTwitchConnected.Foreground = Brushes.Gray;
+            lblTwitchConnected2.Foreground = Brushes.Gray;
+            lblTwitchConnected.Content = "Not Connected";
+            lblTwitchConnected2.Content = "Not Connected";
+            btGetChannelID.Visibility = Visibility.Visible;
+            btGetChannelID2.Visibility = Visibility.Visible;
+
+            SettingsSingleton.Instance.genSettings.ChannelID = string.Empty;
+            SettingsSingleton.Instance.genSettings.OAuthToken = string.Empty;
+            _api.Settings.AccessToken = string.Empty;
+        }
+
+        private void btChangeSoundClipsFolder_Click(object sender, RoutedEventArgs e)
+        {
+            using (var dialog = new FolderBrowserDialog())
+            {
+                DialogResult result = dialog.ShowDialog();
+
+                if (result == System.Windows.Forms.DialogResult.OK)
+                {
+                    string selectedPath = dialog.SelectedPath;
+                    this.tbSoundClipsFolder.Text = selectedPath;
+                    this.LoadSoundClips();
+                    this.comboChatSound.SelectedIndex = 0;
+                }
+            }
+        }
+
+        private void btDefaultSoundClipsFolder_Click(object sender, RoutedEventArgs e)
+        {
+            this.tbSoundClipsFolder.Text = "Default";
+            this.LoadSoundClips();
+            this.comboChatSound.SelectedIndex = 0;
         }
     }
 }

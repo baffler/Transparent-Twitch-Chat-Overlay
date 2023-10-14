@@ -1,33 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+
 using CefSharp;
 using CefSharp.Wpf;
-using System.Windows.Controls.Primitives;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+
 using System.Windows.Interop;
 using System.Collections.Specialized;
 using Jot;
 using Jot.DefaultInitializer;
-using System.Media;
-using TwitchLib;
 using TwitchLib.PubSub;
 using TwitchLib.PubSub.Events;
 using Mayerch1.GithubUpdateCheck;
 
 /*
+ * v0.96
+ * > Reset settings button
+ * > Tips and hints in the chat window, turn off in settings
+ * 
+ * v0.95
+ * - The uninstaller will now let you choose to remove stored settings/data
+ * - Audio for browser enabled by default
+ * - Audio device selection (for sound clips)
+ * - Volume control for sounds clips
+ * - Can now change the folder for sound clips
+ * - Added an entry in the context menu to open Dev Tools
+ * - CefSharp (Chromium) updated to 117.2.20
+ * 
  * v0.94
  * - Filtering: can block users now
  * - Automatically checks for updates on start (Can be disabled in settings)
@@ -116,7 +119,11 @@ using Mayerch1.GithubUpdateCheck;
 
 namespace TransparentTwitchChatWPF
 {
+    using CefSharp.DevTools.Emulation;
     using Chats;
+    using NAudio.Wave;
+    using System.Diagnostics;
+    using System.IO;
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -134,6 +141,7 @@ namespace TransparentTwitchChatWPF
         List<BrowserWindow> windows = new List<BrowserWindow>();
 
         private TwitchPubSub _pubSub;
+        private bool _isPubSubConnected = false;
 
         private Chat currentChat;
 
@@ -157,7 +165,9 @@ namespace TransparentTwitchChatWPF
                 RootCachePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF", "cef"),
                 CachePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF", "cef", "cache")
             };
-            //settings.CefCommandLineArgs.Add("enable-media-stream", "1"); //Enable WebRTC
+            settings.CefCommandLineArgs.Remove("mute-audio");
+            settings.CefCommandLineArgs.Add("enable-media-stream", "1"); //Enable WebRTC
+            settings.CefCommandLineArgs["autoplay-policy"] = "no-user-gesture-required";
             Cef.Initialize(settings);
 
             InitializeComponent();
@@ -183,9 +193,7 @@ namespace TransparentTwitchChatWPF
                 PersistSessionCookies = true,
                 PersistUserPreferences = true,
             });
-            //this.Browser1.JavascriptObjectRepository.Settings.LegacyBindingEnabled = true;
 
-            //this.Browser1.RegisterAsyncJsObject("jsCallback", new JsCallbackFunctions());
             this.jsCallbackFunctions = new JsCallbackFunctions();
             Browser1.JavascriptObjectRepository.Register("jsCallback", this.jsCallbackFunctions, isAsync: true, options: BindingOptions.DefaultBinder);
         }
@@ -443,7 +451,7 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItem_VisitWebsite(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://github.com/baffler/Transparent-Twitch-Chat-Overlay/releases");
+            System.Diagnostics.Process.Start("https://github.com/baffler/Transparent-Twitch-Chat-Overlay/releases/latest");
         }
 
         private void btnHide_Click(object sender, RoutedEventArgs e)
@@ -642,6 +650,23 @@ namespace TransparentTwitchChatWPF
             CreateNewWindowDialog();
         }
 
+        private string GetSoundClipsFolder()
+        {
+            string path = SettingsSingleton.Instance.genSettings.SoundClipsFolder;
+            if (path == "Default")
+            {
+                path = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\assets\\";
+            }
+            else if (!Directory.Exists(path))
+            {
+                path = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\assets\\";
+            }
+
+            if (!path.EndsWith("\\")) path += "\\";
+
+            return path;
+        }
+
         private void ShowSettingsWindow()
         {
             WindowSettings config = new WindowSettings
@@ -726,11 +751,14 @@ namespace TransparentTwitchChatWPF
                         this.jsCallbackFunctions.MediaFile = string.Empty;
                     else
                     {
-                        Uri startupPath = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
-                        string file = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\assets\\" + SettingsSingleton.Instance.genSettings.ChatNotificationSound + ".wav";
+                        string file = GetSoundClipsFolder() + SettingsSingleton.Instance.genSettings.ChatNotificationSound;
                         if (System.IO.File.Exists(file))
                         {
                             this.jsCallbackFunctions.MediaFile = file;
+                        }
+                        else
+                        {
+                            this.jsCallbackFunctions.MediaFile = string.Empty;
                         }
                     }
                 }
@@ -758,11 +786,14 @@ namespace TransparentTwitchChatWPF
                         this.jsCallbackFunctions.MediaFile = string.Empty;
                     else
                     {
-                        Uri startupPath = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
-                        string file = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\assets\\" + SettingsSingleton.Instance.genSettings.ChatNotificationSound + ".wav";
+                        string file = GetSoundClipsFolder() + SettingsSingleton.Instance.genSettings.ChatNotificationSound;
                         if (System.IO.File.Exists(file))
                         {
                             this.jsCallbackFunctions.MediaFile = file;
+                        }
+                        else
+                        {
+                            this.jsCallbackFunctions.MediaFile = string.Empty;
                         }
                     }
                 }
@@ -837,16 +868,25 @@ namespace TransparentTwitchChatWPF
             if (!SettingsSingleton.Instance.genSettings.EnableTrayIcon)
                 this.taskbarControl.Visibility = Visibility.Hidden;
 
+            if (SettingsSingleton.Instance.genSettings.CheckForUpdates)
+            {
+                Task.Run(() => CheckForUpdateAsync());
+            }
+        }
+
+        private async void CheckForUpdateAsync()
+        {
             GithubUpdateCheck update = new GithubUpdateCheck("baffler", "Transparent-Twitch-Chat-Overlay");
-            bool isUpdate = update.IsUpdateAvailable(SettingsSingleton.Version, VersionChange.Build);
+            //bool isUpdate = update.IsUpdateAvailable(SettingsSingleton.Version, VersionChange.Build);
+            bool isUpdate = await update.IsUpdateAvailableAsync(SettingsSingleton.Version, VersionChange.Build);
 
             if (isUpdate)
             {
-                if (MessageBox.Show($"Version {update.Version()} is available. Would you like to download it now? (Opens in your default browser)",
-                    "New Version Available", 
+                if (MessageBox.Show($"Transparent Twitch Chat Overlay\nVersion {update.Version()} is available. Would you like to download it now?\n(Opens in your default browser)",
+                    "New Version Available",
                     MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes)
                 {
-                    System.Diagnostics.Process.Start("https://github.com/baffler/Transparent-Twitch-Chat-Overlay/releases");
+                    System.Diagnostics.Process.Start("https://github.com/baffler/Transparent-Twitch-Chat-Overlay/releases/latest");
                 }
             }
         }
@@ -881,11 +921,14 @@ namespace TransparentTwitchChatWPF
 
             if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() != "none")
             {
-                Uri startupPath = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
-                string file = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\assets\\" + SettingsSingleton.Instance.genSettings.ChatNotificationSound + ".wav";
+                string file = GetSoundClipsFolder() + SettingsSingleton.Instance.genSettings.ChatNotificationSound;
                 if (System.IO.File.Exists(file))
                 {
                     this.jsCallbackFunctions.MediaFile = file;
+                }
+                else
+                {
+                    this.jsCallbackFunctions.MediaFile = string.Empty;
                 }
             }
 
@@ -1035,38 +1078,66 @@ namespace TransparentTwitchChatWPF
         {
             DisablePubSubRedemptions();
 
-            _pubSub = new TwitchPubSub();
-            _pubSub.OnPubSubServiceConnected += _pubSub_OnPubSubServiceConnected;
-            _pubSub.OnListenResponse += _pubSub_OnListenResponse;
-            _pubSub.OnRewardRedeemed += _pubSub_OnRewardRedeemed;
-            _pubSub.Connect();
+            if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.ChannelID)
+                && !string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.OAuthToken))
+            {
+                _pubSub = new TwitchPubSub();
+                _pubSub.OnPubSubServiceConnected += _pubSub_OnPubSubServiceConnected;
+                _pubSub.OnPubSubServiceClosed += _pubSub_OnPubSubServiceClosed;
+                _pubSub.OnPubSubServiceError += _pubSub_OnPubSubServiceError;
+                _pubSub.OnListenResponse += _pubSub_OnListenResponse;
+                _pubSub.OnChannelPointsRewardRedeemed += _pubSub_OnChannelPointsRewardRedeemed;
+
+                _pubSub.ListenToChannelPoints(SettingsSingleton.Instance.genSettings.ChannelID);
+                _pubSub.Connect();
+            }
         }
 
         public void DisablePubSubRedemptions()
         {
             if (_pubSub != null)
             {
-                try {  _pubSub.OnPubSubServiceConnected -= _pubSub_OnPubSubServiceConnected; }
+                try { _pubSub.OnPubSubServiceConnected -= _pubSub_OnPubSubServiceConnected; }
+                catch { }
+                try { _pubSub.OnPubSubServiceClosed -= _pubSub_OnPubSubServiceClosed; }
+                catch { }
+                try { _pubSub.OnPubSubServiceError -= _pubSub_OnPubSubServiceError; }
                 catch { }
                 try { _pubSub.OnListenResponse -= _pubSub_OnListenResponse; }
                 catch { }
-                try {  _pubSub.OnRewardRedeemed -= _pubSub_OnRewardRedeemed; }
-                catch { }
-                try { _pubSub.Disconnect(); }
+                try { _pubSub.OnChannelPointsRewardRedeemed -= _pubSub_OnChannelPointsRewardRedeemed; }
                 catch { }
 
-                _pubSub = null;
+                try {
+                    _isPubSubConnected = false;
+                    if (_isPubSubConnected)
+                        _pubSub.Disconnect();
+                }
+                catch (Exception e) {
+                    Debug.WriteLine(e.Message);
+                }
             }
         }
 
         private void _pubSub_OnPubSubServiceConnected(object sender, System.EventArgs e)
         {
-            if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.ChannelID))
+            _isPubSubConnected = true;
+            if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.OAuthToken))
             {
                 PushNewMessage("PubSub Service Connected");
-                _pubSub.ListenToRewards(SettingsSingleton.Instance.genSettings.ChannelID);
-                _pubSub.SendTopics("");
+                _pubSub.SendTopics(SettingsSingleton.Instance.genSettings.OAuthToken);
             }
+        }
+
+        private void _pubSub_OnPubSubServiceError(object sender, OnPubSubServiceErrorArgs e)
+        {
+            PushNewMessage($"PubSub Service Error: {e.Exception.Message}");
+        }
+
+        private void _pubSub_OnPubSubServiceClosed(object sender, EventArgs e)
+        {
+            _isPubSubConnected = false;
+            PushNewMessage("PubSub Service Closed");
         }
 
         private void _pubSub_OnListenResponse(object sender, OnListenResponseArgs e)
@@ -1079,39 +1150,115 @@ namespace TransparentTwitchChatWPF
                 PushNewMessage($"Success! Listening to topic: {e.Topic}");
         }
 
-        private void _pubSub_OnRewardRedeemed(object sender, OnRewardRedeemedArgs e)
+        private void _pubSub_OnChannelPointsRewardRedeemed(object sender, OnChannelPointsRewardRedeemedArgs e)
         {
             if (SettingsSingleton.Instance.genSettings.RedemptionsEnabled)
             {
+                var redeem = e.RewardRedeemed.Redemption;
+
                 PushNewChatMessage(
-                    $"redeemed '{e.RewardTitle}' ({e.RewardCost} points)", // ~ {e.ChannelId}",
-                    e.DisplayName, "#708090");
+                    $"redeemed '{redeem.Reward.Title}' ({redeem.Reward.Cost} points)", // ~ {e.ChannelId}",
+                    redeem.User.DisplayName, "#a1b3c4");
+
+                if (!string.IsNullOrEmpty(redeem.UserInput) && !string.IsNullOrWhiteSpace(redeem.UserInput))
+                {
+                    PushNewChatMessage($"\"{redeem.UserInput}\"", redeem.User.DisplayName, "#a1b3c4");
+                }
             }
+        }
+
+        private void MenuItem_DevToolsClick(object sender, RoutedEventArgs e)
+        {
+            this.Browser1.ShowDevTools();
         }
     }
 
     public class JsCallbackFunctions
     {
-        public string MediaFile;
+        private string _mediaFile;
+        private AudioFileReader _audioFileReader;
+        private WaveOutEvent _waveOutDevice;
+        
+        public string MediaFile
+        {
+            get { return _mediaFile; }
+            set
+            {
+                _mediaFile = value;
+                InitAudio();
+            }
+        }
 
         public JsCallbackFunctions()
         {
-            this.MediaFile = "";
+            this._mediaFile = "";
+        }
+
+        private void VerifyOutputDevice()
+        {
+            var deviceId = SettingsSingleton.Instance.genSettings.DeviceID;
+
+            if (deviceId < 0)
+            {
+                SettingsSingleton.Instance.genSettings.DeviceName = "Default";
+                return;
+            }
+
+            if (deviceId >= WaveOut.DeviceCount)
+            {
+                SettingsSingleton.Instance.genSettings.DeviceID = -1;
+                SettingsSingleton.Instance.genSettings.DeviceName = "Default";
+                return;
+            }
+
+            var capabilities = WaveOut.GetCapabilities(deviceId);
+            if (!SettingsSingleton.Instance.genSettings.DeviceName.StartsWith(capabilities.ProductName))
+            {
+                SettingsSingleton.Instance.genSettings.DeviceID = -1;
+                SettingsSingleton.Instance.genSettings.DeviceName = "Default";
+            }
+        }
+
+        private void InitAudio()
+        {
+            if (_waveOutDevice != null)
+            {
+                _waveOutDevice.Stop();
+                _waveOutDevice = null;
+            }
+
+            if (_audioFileReader != null)
+            {
+                _audioFileReader.Dispose();
+                _audioFileReader = null;
+            }
+
+            if (string.IsNullOrEmpty(_mediaFile) || string.Equals(_mediaFile.ToLower(), "none")) return;
+
+            _audioFileReader = new AudioFileReader(_mediaFile);
+            _audioFileReader.Volume = SettingsSingleton.Instance.genSettings.OutputVolume;
+            _waveOutDevice = new WaveOutEvent();
+
+            VerifyOutputDevice();
+            if (SettingsSingleton.Instance.genSettings.DeviceID >= 0)
+                _waveOutDevice.DeviceNumber = SettingsSingleton.Instance.genSettings.DeviceID;
+
+            _waveOutDevice.Init(_audioFileReader);
         }
 
         public void playSound()
         {
             try
             {
-                if (!string.IsNullOrEmpty(this.MediaFile))
+                if (!string.IsNullOrEmpty(_mediaFile))
                 {
-                    SoundPlayer sp = new SoundPlayer(this.MediaFile);
-                    //MediaPlayer mp = new MediaPlayer();
-                    //mp.Open(new Uri(mediaFile));
-                    //mp.Volume = 0.5f;
-                    sp.Play();
+                    if ((_waveOutDevice != null) && (_audioFileReader != null))
+                    {
+                        _audioFileReader.Position = 0;
+                        _waveOutDevice.Play();
+                    }
                 }
-            } catch { }
+            } catch (Exception ex) { MessageBox.Show(ex.Message); }
         }
 
         public void showMessageBox(string msg)
@@ -1185,5 +1332,21 @@ namespace TransparentTwitchChatWPF
         public bool FrankerFaceZ { get; set; }
         [Trackable]
         public string jChatURL { get; set; }
+        [Trackable]
+        public bool CheckForUpdates { get; set; }
+        [Trackable]
+        public Color ChatHighlightColor { get; set; }
+        [Trackable]
+        public Color ChatHighlightModsColor { get; set; }
+        [Trackable]
+        public Color ChatHighlightVIPsColor { get; set; }
+        [Trackable]
+        public float OutputVolume { get; set; }
+        [Trackable]
+        public string DeviceName { get; set; }
+        [Trackable]
+        public int DeviceID { get; set; }
+        [Trackable]
+        public string SoundClipsFolder { get; set; }
     }
 }

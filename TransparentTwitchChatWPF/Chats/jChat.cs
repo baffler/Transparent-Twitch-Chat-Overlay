@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media;
 
 namespace TransparentTwitchChatWPF.Chats
 {
@@ -28,7 +29,7 @@ namespace TransparentTwitchChatWPF.Chats
 
         public override string PushNewMessage(string message = "")
         {
-            return $"Chat.info.lines.push(\"<div>{message}</div>\");";
+            return $"Chat.info.lines.push(\"<div class=\\\"chat_line\\\" data-time=\\\"{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}\\\">{message}</div>\");";
         }
 
         public override string SetupJavascript()
@@ -52,7 +53,8 @@ namespace TransparentTwitchChatWPF.Chats
                                 var blockUsers = ['";
                 js += string.Join(",", blockList).Replace(",", "','").ToLower();
                 js += @"'];
-                                var allowOther = false;";
+                                var allowOther = false;
+                                var highlightSuffix = '';";
 
                 if (SettingsSingleton.Instance.genSettings.FilterAllowAllVIPs)
                     js += CustomJS_Defaults.jChat_VIP_Check;
@@ -70,7 +72,7 @@ namespace TransparentTwitchChatWPF.Chats
                     js += CustomJS_Defaults.Callback_PlaySound;
 
                 js += @"
-                                Chat.info.lines.push('<div class=""highlight"">');
+                                Chat.info.lines.push('<div class=""highlight' + highlightSuffix + '"">');
                                 oldChatWrite.apply(oldChatWrite, arguments);
                                 Chat.info.lines.push('</div>');
                                 return;
@@ -164,7 +166,25 @@ namespace TransparentTwitchChatWPF.Chats
             if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.CustomCSS))
                 css = SettingsSingleton.Instance.genSettings.CustomCSS;
             else
-                css = @".highlight { background-color: rgba(255,255,0,0.5) !important; }";
+            {
+                // Highlight
+                Color c = SettingsSingleton.Instance.genSettings.ChatHighlightColor;
+                float a = (c.A / 255f);
+                string rgba = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, a);
+                css = ".highlight { background-color: " + rgba + " !important; }";
+
+                // Mods Highlight
+                c = SettingsSingleton.Instance.genSettings.ChatHighlightModsColor;
+                a = (c.A / 255f);
+                rgba = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, a);
+                css += "\n .highlightMod { background-color: " + rgba + " !important; }";
+
+                // VIPs Highlight
+                c = SettingsSingleton.Instance.genSettings.ChatHighlightVIPsColor;
+                a = (c.A / 255f);
+                rgba = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, a);
+                css += "\n .highlightVIP { background-color: " + rgba + " !important; }";
+            }
 
             return css;
         }
