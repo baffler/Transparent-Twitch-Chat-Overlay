@@ -311,7 +311,6 @@
     <Compile Include="Input_Username.xaml.cs">
       <DependentUpon>Input_Username.xaml</DependentUpon>
     </Compile>
-    <Compile Include="LifeSpanHandlerTest.cs" />
     <Compile Include="SettingsSingleton.cs" />
     <Compile Include="TwitchConnection.cs" />
     <Compile Include="WindowSettings.cs" />

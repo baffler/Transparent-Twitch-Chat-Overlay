@@ -117,6 +117,8 @@ using Mayerch1.GithubUpdateCheck;
  * 
  */
 
+using System.Runtime.InteropServices;
+
 namespace TransparentTwitchChatWPF
 {
     using CefSharp.DevTools.Emulation;
@@ -130,6 +132,13 @@ namespace TransparentTwitchChatWPF
     /// </summary>
     public partial class MainWindow : Window, BrowserWindow
     {
+        private System.Timers.Timer _timer;
+
+        [DllImport("user32.dll")]
+        static extern IntPtr GetForegroundWindow();
+
+        /// 
+
         SolidColorBrush bgColor;
         int cOpacity = 0;
         bool hiddenBorders = false;
@@ -196,6 +205,24 @@ namespace TransparentTwitchChatWPF
 
             this.jsCallbackFunctions = new JsCallbackFunctions();
             Browser1.JavascriptObjectRepository.Register("jsCallback", this.jsCallbackFunctions, isAsync: true, options: BindingOptions.DefaultBinder);
+
+            _timer = new System.Timers.Timer(5000);
+            _timer.Elapsed += _timer_Elapsed;
+            _timer.Start();
+        }
+
+        private void _timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            this.Dispatcher.Invoke(new Action(CheckForegroundWindow));
+        }
+
+        private void CheckForegroundWindow()
+        {
+            IntPtr foregroundWindow = GetForegroundWindow();
+            var hwnd = new WindowInteropHelper(this).Handle;
+
+            if (foregroundWindow != hwnd)
+                WindowHelper.SetWindowPosTopMost(hwnd);
         }
 
         public bool ProcessCommandLineArgs(IList<string> args)
