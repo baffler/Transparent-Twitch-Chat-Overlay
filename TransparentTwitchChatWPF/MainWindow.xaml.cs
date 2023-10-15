@@ -5,10 +5,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-
-using CefSharp;
-using CefSharp.Wpf;
-
 using System.Windows.Interop;
 using System.Collections.Specialized;
 using Jot;
@@ -19,6 +15,7 @@ using Mayerch1.GithubUpdateCheck;
 
 /*
  * v0.96
+ * > Make sure audio works with WebView2
  * > BTTV and FFZ get unset when switching chats
  * > KapChat customCSS gets unset when switching chats
  * > Popout CSS Editors
@@ -171,18 +168,6 @@ namespace TransparentTwitchChatWPF
 
         public MainWindow()
         {
-            CefSettings settings = new CefSettings()
-            {
-                PersistSessionCookies = true,
-                PersistUserPreferences = true,
-                RootCachePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF", "cef"),
-                CachePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF", "cef", "cache")
-            };
-            settings.CefCommandLineArgs.Remove("mute-audio");
-            settings.CefCommandLineArgs.Add("enable-media-stream", "1"); //Enable WebRTC
-            settings.CefCommandLineArgs["autoplay-policy"] = "no-user-gesture-required";
-            Cef.Initialize(settings);
-
             InitializeComponent();
             DataContext = this;
 

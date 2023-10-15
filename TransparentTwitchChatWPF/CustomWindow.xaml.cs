@@ -4,7 +4,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Interop;
 using Jot.DefaultInitializer;
-using CefSharp;
 
 namespace TransparentTwitchChatWPF
 {
