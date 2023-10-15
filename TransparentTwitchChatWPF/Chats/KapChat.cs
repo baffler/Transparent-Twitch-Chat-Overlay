@@ -11,6 +11,10 @@ namespace TransparentTwitchChatWPF.Chats
 {
     public class KapChat : Chat
     {
+        public KapChat() : base(ChatTypes.KapChat)
+        {
+        }
+
         public override string PushNewChatMessage(string message = "", string nick = "", string color = "")
         {
             if (string.IsNullOrEmpty(nick))
@@ -39,12 +43,14 @@ namespace TransparentTwitchChatWPF.Chats
             string[] blockList = new string[SettingsSingleton.Instance.genSettings.BlockedUsersList.Count];
             SettingsSingleton.Instance.genSettings.BlockedUsersList.CopyTo(blockList, 0);
 
+            string js = @"const jsCallback = chrome.webview.hostObjects.jsCallbackFunctions;";
+
             if (SettingsSingleton.Instance.genSettings.HighlightUsersChat)
             {
                 string[] vipList = new string[SettingsSingleton.Instance.genSettings.AllowedUsersList.Count];
                 SettingsSingleton.Instance.genSettings.AllowedUsersList.CopyTo(vipList, 0);
 
-                string js = @"var oldChatInsert = Chat.insert;
+                js += @"var oldChatInsert = Chat.insert;
                             Chat.insert = function(nick, tags, message) {
                                 var nick = nick || 'Chat';
                                 var tags2 = tags ? Chat.parseTags(nick, tags) : {};
@@ -92,7 +98,7 @@ namespace TransparentTwitchChatWPF.Chats
                 string[] vipList = new string[SettingsSingleton.Instance.genSettings.AllowedUsersList.Count];
                 SettingsSingleton.Instance.genSettings.AllowedUsersList.CopyTo(vipList, 0);
 
-                string js = @"var oldChatInsert = Chat.insert;
+                js += @"var oldChatInsert = Chat.insert;
                             Chat.insert = function(nick, tags, message) {
                                 var nick = nick || 'Chat';
                                 var tags2 = tags ? Chat.parseTags(nick, tags) : {};
@@ -123,7 +129,7 @@ namespace TransparentTwitchChatWPF.Chats
             else if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() != "none")
             {
                 // Insert JS to play a sound on each chat message
-                string js = @"var oldChatInsert = Chat.insert;
+                js += @"var oldChatInsert = Chat.insert;
                             Chat.insert = function(nick, tags, message) {
                                 var nick = nick || 'Chat';
                                 var tags2 = tags ? Chat.parseTags(nick, tags) : {};
@@ -136,8 +142,7 @@ namespace TransparentTwitchChatWPF.Chats
                                 }
 
                                 (async function() {
-	                                await CefSharp.BindObjectAsync('jsCallback');
-                                    jsCallback.playSound();
+                                    await jsCallback.playSound();
                                 })();
                                 return oldChatInsert.apply(oldChatInsert, arguments);
                             }";
@@ -149,7 +154,7 @@ namespace TransparentTwitchChatWPF.Chats
             {
                 // No other options were selected, we're just gonna check the block list only here
 
-                string js = @"var oldChatInsert = Chat.insert;
+                js += @"var oldChatInsert = Chat.insert;
                             Chat.insert = function(nick, tags, message) {
                                 var nick = nick || 'Chat';
                                 var tags2 = tags ? Chat.parseTags(nick, tags) : {};

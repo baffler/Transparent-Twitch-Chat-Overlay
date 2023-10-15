@@ -9,6 +9,10 @@ namespace TransparentTwitchChatWPF.Chats
 {
     public class jChat : Chat
     {
+        public jChat() : base(ChatTypes.jChat)
+        {
+        }
+
         public override string PushNewChatMessage(string message = "", string nick = "", string color = "")
         {
             if (string.IsNullOrEmpty(nick))
@@ -39,12 +43,22 @@ namespace TransparentTwitchChatWPF.Chats
             string[] blockList = new string[SettingsSingleton.Instance.genSettings.BlockedUsersList.Count];
             SettingsSingleton.Instance.genSettings.BlockedUsersList.CopyTo(blockList, 0);
 
+            string js = @"const jsCallback = chrome.webview.hostObjects.jsCallbackFunctions;";
+            js += @"(function() {
+                    var oldLog = console.log;
+                    console.log = function(message) {
+                        window.chrome.webview.postMessage(message);
+                        oldLog.apply(console, arguments);
+                    };
+                })();
+                ";
+
             if (SettingsSingleton.Instance.genSettings.HighlightUsersChat)
             {
                 string[] vipList = new string[SettingsSingleton.Instance.genSettings.AllowedUsersList.Count];
                 SettingsSingleton.Instance.genSettings.AllowedUsersList.CopyTo(vipList, 0);
 
-                string js = @"var oldChatWrite = Chat.write;
+                js += @"var oldChatWrite = Chat.write;
                             Chat.write = function(nick, info, message) {
 
                                 var vips = ['";
@@ -90,7 +104,7 @@ namespace TransparentTwitchChatWPF.Chats
                 string[] vipList = new string[SettingsSingleton.Instance.genSettings.AllowedUsersList.Count];
                 SettingsSingleton.Instance.genSettings.AllowedUsersList.CopyTo(vipList, 0);
 
-                string js = @"var oldChatWrite = Chat.write;
+                js += @"var oldChatWrite = Chat.write;
                             Chat.write = function(nick, info, message) {
 
                                 var vips = ['";
@@ -120,7 +134,7 @@ namespace TransparentTwitchChatWPF.Chats
             {
                 // Insert JS to play a sound on each chat message, and check the block list
 
-                string js = @"var oldChatWrite = Chat.write;
+                js += @"var oldChatWrite = Chat.write;
                             Chat.write = function(nick, info, message) {
                                 var blockUsers = ['";
                 js += string.Join(",", blockList).Replace(",", "','").ToLower();
@@ -129,8 +143,7 @@ namespace TransparentTwitchChatWPF.Chats
                                     return;
                                 }
                                 (async function() {
-	                                await CefSharp.BindObjectAsync('jsCallback');
-                                    jsCallback.playSound();
+                                    await jsCallback.playSound();
                                 })();
                                 return oldChatWrite.apply(oldChatWrite, arguments);
                             }";
@@ -142,7 +155,7 @@ namespace TransparentTwitchChatWPF.Chats
             {
                 // No other options were selected, we're just gonna check the block list only here
 
-                string js = @"var oldChatWrite = Chat.write;
+                js += @"var oldChatWrite = Chat.write;
                             Chat.write = function(nick, info, message) {
                                 var blockUsers = ['";
                 js += string.Join(",", blockList).Replace(",", "','").ToLower();

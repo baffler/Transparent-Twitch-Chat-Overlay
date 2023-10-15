@@ -8,6 +8,18 @@ namespace TransparentTwitchChatWPF.Chats
 {
     public abstract class Chat
     {
+        private ChatTypes _chatType = ChatTypes.CustomURL;
+        public ChatTypes ChatType 
+        {
+            get { return _chatType; }
+            private set { _chatType = value; }
+        }
+
+        public Chat(ChatTypes chatType)
+        {
+            _chatType = chatType;
+        }
+
         public virtual string PushNewChatMessage(string message = "", string nick = "", string color = "")
         {
             return String.Empty;

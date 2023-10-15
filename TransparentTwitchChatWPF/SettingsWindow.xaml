@@ -1,5 +1,6 @@
 ﻿<Window x:Class="TransparentTwitchChatWPF.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -64,11 +65,14 @@
                     <CheckBox Name="cbBetterTtv" Content="Enable BetterTTV" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20,100,0,0" />
                     <CheckBox Name="cbFfz" Content="Enable FrankerFaceZ" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20,120,0,0" />
                     <Label Content="Custom CSS" HorizontalAlignment="Left" Margin="12,140,0,0" FontWeight="Bold" />
-                    <TextBox Name="tbPopoutCSS" 
+                    <avalonedit:TextEditor Name="tbPopoutCSS" 
+                            BorderBrush="LightSlateGray"
+                            BorderThickness="1"
+                            Padding="5,5,0,0"
                              HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                              Width="Auto" Height="Auto"
-                             HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" 
-                             Margin="22,170,15,50" TextWrapping="Wrap" AcceptsReturn="true"
+                             HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" 
+                             Margin="22,170,15,50" WordWrap="False"
                              Text="" />
                 </Grid>
                 <Grid Name="customURLGrid" Visibility="Hidden" Grid.Column="1">

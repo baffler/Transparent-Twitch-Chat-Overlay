@@ -46,6 +46,8 @@ namespace TransparentTwitchChatWPF
             ValidateTwitchConnection();
 
             InitializeComponent();
+
+            tbPopoutCSS.SyntaxHighlighting = ICSharpCode.AvalonEdit.Highlighting.HighlightingManager.Instance.GetDefinition("CSS");
         }
 
         private void LoadDevices()
@@ -231,11 +233,11 @@ namespace TransparentTwitchChatWPF
                 if (!string.IsNullOrWhiteSpace(this.tbPopoutCSS.Text) && !string.IsNullOrEmpty(this.tbPopoutCSS.Text)
                     && (this.tbPopoutCSS.Text.ToLower() != "css"))
                 {
-                    this.config.TwitchPopoutCSS = this.tbPopoutCSS.Text;
+                    SettingsSingleton.Instance.genSettings.TwitchPopoutCSS = this.tbPopoutCSS.Text;
                 }
                 else
                 {
-                    this.config.TwitchPopoutCSS = CustomCSS_Defaults.TwitchPopoutChat;
+                    SettingsSingleton.Instance.genSettings.TwitchPopoutCSS = CustomCSS_Defaults.TwitchPopoutChat;
                 }
 
                 this.config.BetterTtv = this.cbBetterTtv.IsChecked ?? false;
@@ -359,10 +361,10 @@ namespace TransparentTwitchChatWPF
                 this.customURLGrid.Visibility = Visibility.Hidden;
                 this.jChatGrid.Visibility = Visibility.Hidden;
 
-                if (string.IsNullOrEmpty(this.config.TwitchPopoutCSS))
+                if (string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.TwitchPopoutCSS))
                     this.tbPopoutCSS.Text = CustomCSS_Defaults.TwitchPopoutChat;
                 else
-                    this.tbPopoutCSS.Text = this.config.TwitchPopoutCSS;
+                    this.tbPopoutCSS.Text = SettingsSingleton.Instance.genSettings.TwitchPopoutCSS;
 
                 this.cbBetterTtv.IsChecked = this.config.BetterTtv;
                 this.cbFfz.IsChecked = this.config.FrankerFaceZ;
@@ -546,10 +548,10 @@ namespace TransparentTwitchChatWPF
                     this.twitchPopoutChat.Visibility = Visibility.Visible;
                     this.jChatGrid.Visibility = Visibility.Hidden;
 
-                    if (string.IsNullOrEmpty(this.config.TwitchPopoutCSS))
+                    if (string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.TwitchPopoutCSS))
                         this.tbPopoutCSS.Text = CustomCSS_Defaults.TwitchPopoutChat;
                     else 
-                        this.tbPopoutCSS.Text = this.config.TwitchPopoutCSS;
+                        this.tbPopoutCSS.Text = SettingsSingleton.Instance.genSettings.TwitchPopoutCSS;
                     break;
                 case (int)ChatTypes.CustomURL:
                     this.kapChatGrid.Visibility = Visibility.Hidden;

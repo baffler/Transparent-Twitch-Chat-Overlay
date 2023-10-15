@@ -19,6 +19,13 @@ using Mayerch1.GithubUpdateCheck;
 
 /*
  * v0.96
+ * > BTTV and FFZ get unset when switching chats
+ * > KapChat customCSS gets unset when switching chats
+ * > Popout CSS Editors
+ * > Custom Javascript
+ * > Global hotkey to force app to be topmost
+ * > Update Zoom level values to match with webView2
+ * > Deal with popup windows
  * > Reset settings button
  * > Tips and hints in the chat window, turn off in settings
  * 
@@ -112,17 +119,14 @@ using Mayerch1.GithubUpdateCheck;
  * Custom javascript
  *
  * 
- * Done:
- x Notification sound for new chat messages
- * 
  */
 
 using System.Runtime.InteropServices;
 
 namespace TransparentTwitchChatWPF
 {
-    using CefSharp.DevTools.Emulation;
     using Chats;
+    using Microsoft.Web.WebView2.Core;
     using NAudio.Wave;
     using System.Diagnostics;
     using System.IO;
@@ -182,38 +186,40 @@ namespace TransparentTwitchChatWPF
             InitializeComponent();
             DataContext = this;
 
-            this.currentChat = new CustomURLChat(); // TODO: initializing here needed?
+            this.currentChat = new CustomURLChat(ChatTypes.CustomURL); // TODO: initializing here needed?
 
             Services.Tracker.Configure(this).IdentifyAs("State").Apply();
             this.genSettingsTrackingConfig = Services.Tracker.Configure(SettingsSingleton.Instance.genSettings);
             this.genSettingsTrackingConfig.IdentifyAs("MainWindow").Apply();
 
-            var browserSettings = new BrowserSettings
-            {
-                //ApplicationCache = CefState.Enabled,
-                LocalStorage = CefState.Enabled,
-                //FileAccessFromFileUrls = CefState.Enabled,
-                //UniversalAccessFromFileUrls = CefState.Enabled,
-            };
-            Browser1.BrowserSettings = browserSettings;
-            Browser1.RequestContext = new RequestContext(new RequestContextSettings()
-            {
-                CachePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF", "cef", "cache"),
-                PersistSessionCookies = true,
-                PersistUserPreferences = true,
-            });
+            //_timer = new System.Timers.Timer(5000);
+            //_timer.Elapsed += _timer_Elapsed;
+            //_timer.Start();
 
+            InitializeWebViewAsync();
+        }
+
+        async void InitializeWebViewAsync()
+        {
+            await webView.EnsureCoreWebView2Async(null);
+            
             this.jsCallbackFunctions = new JsCallbackFunctions();
-            Browser1.JavascriptObjectRepository.Register("jsCallback", this.jsCallbackFunctions, isAsync: true, options: BindingOptions.DefaultBinder);
+            webView.CoreWebView2.AddHostObjectToScript("jsCallbackFunctions", this.jsCallbackFunctions);
 
-            _timer = new System.Timers.Timer(5000);
-            _timer.Elapsed += _timer_Elapsed;
-            _timer.Start();
+            SetupBrowser();
+        }
+
+        private void webView_CoreWebView2InitializationCompleted(object sender, CoreWebView2InitializationCompletedEventArgs e)
+        {
+            if (!e.IsSuccess)
+            {
+                MessageBox.Show(GetWindow(this), "Failed to initialize WebView2:\n" + e.InitializationException.ToString(), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void _timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            this.Dispatcher.Invoke(new Action(CheckForegroundWindow));
+            //this.Dispatcher.Invoke(new Action(CheckForegroundWindow));
         }
 
         private void CheckForegroundWindow()
@@ -278,7 +284,7 @@ namespace TransparentTwitchChatWPF
             this.Activate();
             this.Topmost = true;
 
-            this.Browser1.IsEnabled = SettingsSingleton.Instance.genSettings.AllowInteraction;
+            this.webView.IsEnabled = SettingsSingleton.Instance.genSettings.AllowInteraction;
         }
 
         public void hideBorders()
@@ -305,7 +311,7 @@ namespace TransparentTwitchChatWPF
             this.Activate();
             this.Topmost = true;
 
-            this.Browser1.IsEnabled = false;
+            this.webView.IsEnabled = false;
         }
 
         public void ToggleBorderVisibility()
@@ -389,7 +395,7 @@ namespace TransparentTwitchChatWPF
 
         private void SetCustomChatAddress(string url)
         {
-            Browser1.Load(url);
+            this.webView.CoreWebView2.Navigate(url);
         }
 
         private void SetChatAddress(string chatChannel)
@@ -411,7 +417,7 @@ namespace TransparentTwitchChatWPF
             url += @"&fade=" + fade;
             url += @"&bot_activity=" + (!SettingsSingleton.Instance.genSettings.BlockBotActivity).ToString();
             url += @"&prevent_clipping=false";
-            Browser1.Load(url);
+            this.webView.CoreWebView2.Navigate(url);
         }
 
         public void ShowInputFadeDialogBox()
@@ -497,76 +503,77 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItem_ZoomIn(object sender, RoutedEventArgs e)
         {
-            if (this.Browser1.ZoomInCommand.CanExecute(null))
+
+            if (SettingsSingleton.Instance.genSettings.ZoomLevel < 4.0)
             {
-                if (SettingsSingleton.Instance.genSettings.ZoomLevel < 4.0)
-                {
-                    this.Browser1.ZoomInCommand.Execute(null);
-                    SettingsSingleton.Instance.genSettings.ZoomLevel = this.Browser1.ZoomLevel;
-                }
+                this.webView.ZoomFactor = SettingsSingleton.Instance.genSettings.ZoomLevel + 0.1;
+                SettingsSingleton.Instance.genSettings.ZoomLevel = this.webView.ZoomFactor;
             }
         }
 
         private void MenuItem_ZoomOut(object sender, RoutedEventArgs e)
         {
-            if (this.Browser1.ZoomOutCommand.CanExecute(null))
+            if (SettingsSingleton.Instance.genSettings.ZoomLevel > 0.1)
             {
-                if (SettingsSingleton.Instance.genSettings.ZoomLevel > -4.0)
-                {
-                    this.Browser1.ZoomOutCommand.Execute(null);
-                    SettingsSingleton.Instance.genSettings.ZoomLevel = this.Browser1.ZoomLevel;
-                }
+                this.webView.ZoomFactor = SettingsSingleton.Instance.genSettings.ZoomLevel - 0.1;
+                SettingsSingleton.Instance.genSettings.ZoomLevel = this.webView.ZoomFactor;
             }
         }
 
         private void MenuItem_ZoomReset(object sender, RoutedEventArgs e)
         {
-            if (this.Browser1.ZoomResetCommand.CanExecute(null))
-            {
-                this.Browser1.ZoomResetCommand.Execute(null);
-                SettingsSingleton.Instance.genSettings.ZoomLevel = this.Browser1.ZoomLevel;
-            }
+            this.webView.ZoomFactor = 1.0;
+            SettingsSingleton.Instance.genSettings.ZoomLevel = 1.0;
         }
 
-        private void Browser1_FrameLoadEnd(object sender, FrameLoadEndEventArgs e)
+        private void webView_NavigationStarting(object sender, CoreWebView2NavigationStartingEventArgs e)
         {
-            if (e.Frame.IsMain)
-            {
-                this.Browser1.Dispatcher.Invoke(new Action(() => { this.Browser1.ZoomLevel = SettingsSingleton.Instance.genSettings.ZoomLevel; }));
-                
-                string js = this.currentChat.SetupJavascript();
-                if (!string.IsNullOrEmpty(js))
-                    e.Frame.ExecuteJavaScriptAsync(js, "", 0);
-
-                // Custom CSS
-                string script = string.Empty;
-                string css = this.currentChat.SetupCustomCSS();
-
-                if (!string.IsNullOrEmpty(css))
-                    script = InsertCustomCSS2(css);
-
-                if (!string.IsNullOrEmpty(script))
-                    e.Frame.ExecuteJavaScriptAsync(script, "", 0);
-
-                this.PushNewMessage("Loading...");
-            }
+            
         }
-        
-        private void Browser1_LoadingStateChanged(object sender, CefSharp.LoadingStateChangedEventArgs e)
+
+        private async void webView_NavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
         {
-            if (!e.IsLoading)
+            if (!e.IsSuccess)
             {
-                if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.TwitchPopout)
-                {
-                    if (SettingsSingleton.Instance.genSettings.BetterTtv)
-                    {
-                        InsertCustomJavaScriptFromUrl("https://cdn.betterttv.net/betterttv.js");
-                    }
-                    if (SettingsSingleton.Instance.genSettings.FrankerFaceZ)
-                    {
-                        // Observe for FrankerFaceZ's reskin stylesheet
-                        // that breaks the transparency and remove it
-                        InsertCustomJavaScript(@"
+                return;
+            }
+
+            this.webView.Dispatcher.Invoke(new Action(() => {
+                if (SettingsSingleton.Instance.genSettings.ZoomLevel > 0)
+                    this.webView.ZoomFactor = SettingsSingleton.Instance.genSettings.ZoomLevel; 
+            }));
+
+            if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.TwitchPopout)
+                TwitchPopoutSetup();
+
+            string js = this.currentChat.SetupJavascript();
+            if (!string.IsNullOrEmpty(js))
+                await this.webView.ExecuteScriptAsync(js);
+
+            // Custom CSS
+            string script = string.Empty;
+            string css = this.currentChat.SetupCustomCSS();
+
+            if (!string.IsNullOrEmpty(css))
+                script = InsertCustomCSS2(css);
+
+            if (!string.IsNullOrEmpty(script))
+                await this.webView.ExecuteScriptAsync(script);
+
+            this.PushNewMessage("Loading...");
+        }
+
+        private void TwitchPopoutSetup()
+        {
+            if (SettingsSingleton.Instance.genSettings.BetterTtv)
+            {
+                InsertCustomJavaScriptFromUrl("https://cdn.betterttv.net/betterttv.js");
+            }
+            if (SettingsSingleton.Instance.genSettings.FrankerFaceZ)
+            {
+                // Observe for FrankerFaceZ's reskin stylesheet
+                // that breaks the transparency and remove it
+                InsertCustomJavaScript(@"
 (function() {
     const head = document.getElementsByTagName(""head"")[0];
     const observer = new MutationObserver((mutations, observer) => {
@@ -588,18 +595,35 @@ namespace TransparentTwitchChatWPF
 })();
                         ");
 
-                        InsertCustomJavaScriptFromUrl("https://cdn.frankerfacez.com/static/script.min.js");
-                    }
-                }
+                InsertCustomJavaScriptFromUrl("https://cdn.frankerfacez.com/static/script.min.js");
             }
         }
 
-        private void Browser1_ConsoleMessage(object sender, ConsoleMessageEventArgs e)
+        private void webView_WebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
         {
+            if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.TwitchPopout)
+            {
+                try
+                {
+                    var message = e.TryGetWebMessageAsString();
+                    Debug.WriteLine(message);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
+            }
             if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.jChat)
             {
-                if (e.Level == LogSeverity.Info)
-                    PushNewMessage(e.Message);
+                try
+                {
+                    var message = e.TryGetWebMessageAsString();
+                    PushNewMessage(message);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
             }
         }
 
@@ -627,11 +651,11 @@ namespace TransparentTwitchChatWPF
             return script;
         }
 
-        private void InsertCustomJavaScript(string JS)
+        private async void InsertCustomJavaScript(string JS)
         {
             try
             {
-                this.Browser1.ExecuteScriptAsync(JS);
+                await this.webView.ExecuteScriptAsync(JS);
             }
             catch (Exception e)
             {
@@ -728,7 +752,7 @@ namespace TransparentTwitchChatWPF
 
                 if (config.ChatType == (int)ChatTypes.CustomURL)
                 {
-                    this.currentChat = new CustomURLChat();
+                    this.currentChat = new CustomURLChat(ChatTypes.CustomURL);
                     SettingsSingleton.Instance.genSettings.CustomURL = config.URL;
                     SettingsSingleton.Instance.genSettings.CustomCSS = config.CustomCSS;
 
@@ -737,9 +761,8 @@ namespace TransparentTwitchChatWPF
                 }
                 else if (config.ChatType == (int)ChatTypes.TwitchPopout)
                 {
-                    this.currentChat = new CustomURLChat();
+                    this.currentChat = new CustomURLChat(ChatTypes.TwitchPopout);
                     SettingsSingleton.Instance.genSettings.Username = config.Username;
-                    SettingsSingleton.Instance.genSettings.CustomCSS = config.TwitchPopoutCSS;
 
                     if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.Username))
                         SetCustomChatAddress("https://www.twitch.tv/popout/" + SettingsSingleton.Instance.genSettings.Username + "/chat?popout=");
@@ -836,7 +859,7 @@ namespace TransparentTwitchChatWPF
                 this.taskbarControl.Visibility = config.EnableTrayIcon ? Visibility.Visible : Visibility.Hidden;
                 this.ShowInTaskbar = !config.HideTaskbarIcon;
 
-                if (!this.hiddenBorders) this.Browser1.IsEnabled = config.AllowInteraction;
+                if (!this.hiddenBorders) this.webView.IsEnabled = config.AllowInteraction;
 
                 // Save the new changes for settings
                 this.genSettingsTrackingConfig.Persist();
@@ -884,16 +907,13 @@ namespace TransparentTwitchChatWPF
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // fix to reset setting for HideTaskbarIcon
-            if (SettingsSingleton.Instance.genSettings.VersionTracker <= 0.8)
+            if (SettingsSingleton.Instance.genSettings.VersionTracker <= 0.95)
             {
-                SettingsSingleton.Instance.genSettings.HideTaskbarIcon = false;
-                SettingsSingleton.Instance.genSettings.EnableTrayIcon = true;
-                SettingsSingleton.Instance.genSettings.VersionTracker = 0.9;
+                SettingsSingleton.Instance.genSettings.ZoomLevel = 1;
+                SettingsSingleton.Instance.genSettings.VersionTracker = 0.96;
             }
 
-            if (!SettingsSingleton.Instance.genSettings.EnableTrayIcon)
-                this.taskbarControl.Visibility = Visibility.Hidden;
+            this.taskbarControl.Visibility = Visibility.Visible;
 
             if (SettingsSingleton.Instance.genSettings.CheckForUpdates)
             {
@@ -917,26 +937,14 @@ namespace TransparentTwitchChatWPF
                 }
             }
         }
-
-        private void Browser1_IsBrowserInitializedChanged(object sender, DependencyPropertyChangedEventArgs e)
+        private void webView_ContentLoading(object sender, Microsoft.Web.WebView2.Core.CoreWebView2ContentLoadingEventArgs e)
         {
-            if (this.Browser1.IsBrowserInitialized)
-            {
-                SetupBrowser();
-            }
+            
         }
 
         private void SetupBrowser()
         {
-            if (!this.Browser1.IsInitialized)
-            {
-                MessageBox.Show(
-                  "Error setting up source. The component was not initialized",
-                  "Error", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK
-                );
-                return;
-            }
-
+            webView.DefaultBackgroundColor = System.Drawing.Color.Transparent;
             this.bgColor = new SolidColorBrush(Color.FromArgb(SettingsSingleton.Instance.genSettings.OpacityLevel, 0, 0, 0));
             this.Background = this.bgColor;
             this.cOpacity = SettingsSingleton.Instance.genSettings.OpacityLevel;
@@ -965,16 +973,14 @@ namespace TransparentTwitchChatWPF
                     OpenNewCustomWindow(url, SettingsSingleton.Instance.genSettings.AutoHideBorders);
             }
 
-            this.Browser1.ZoomLevelIncrement = 0.25;
-
             if ((SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.CustomURL) && (!string.IsNullOrWhiteSpace(SettingsSingleton.Instance.genSettings.CustomURL)))
             {
-                this.currentChat = new CustomURLChat();
+                this.currentChat = new CustomURLChat(ChatTypes.CustomURL);
                 SetCustomChatAddress(SettingsSingleton.Instance.genSettings.CustomURL);
             }
             else if ((SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.TwitchPopout) && (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.Username)))
             {
-                this.currentChat = new CustomURLChat();
+                this.currentChat = new CustomURLChat(ChatTypes.TwitchPopout);
                 SetCustomChatAddress("https://www.twitch.tv/popout/" + SettingsSingleton.Instance.genSettings.Username + "/chat?popout=");
             }
             else if (!string.IsNullOrWhiteSpace(SettingsSingleton.Instance.genSettings.Username))
@@ -993,7 +999,7 @@ namespace TransparentTwitchChatWPF
                 {
                     Uri startupPath = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
                     string address = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\index.html";
-                    Browser1.Load(address);
+                    webView.CoreWebView2.Navigate(address);
                 }
 
                 if (SettingsSingleton.Instance.genSettings.RedemptionsEnabled)
@@ -1010,7 +1016,7 @@ namespace TransparentTwitchChatWPF
             {
                 Uri startupPath = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
                 string address = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\index.html";
-                Browser1.Load(address);
+                webView.CoreWebView2.Navigate(address);
 
                 //CefSharp.WebBrowserExtensions.LoadHtml(Browser1,
                 //"<html><body style=\"font-size: x-large; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; \">Load a channel to connect to by right-clicking the tray icon.<br /><br />You can move and resize the window, then press the [o] button to hide borders, or use the tray icon menu.</body></html>");
@@ -1075,10 +1081,7 @@ namespace TransparentTwitchChatWPF
 
             if (!string.IsNullOrEmpty(js))
             {
-                if (this.Browser1.CanExecuteJavascriptInMainFrame)
-                    this.Browser1.ExecuteScriptAsync(js);
-                else
-                    this.Browser1.ExecuteScriptAsyncWhenPageLoaded(js);
+                this.webView.ExecuteScriptAsync(js);
             }
         }
 
@@ -1087,18 +1090,8 @@ namespace TransparentTwitchChatWPF
             //this.Browser1.Dispatcher.Invoke(new Action(() => { });
 
             string js = this.currentChat.PushNewChatMessage(message, nick, color);
-
-            if (this.Browser1.CanExecuteJavascriptInMainFrame)
-            {
-                if (!string.IsNullOrEmpty(js))
-                    this.Browser1.ExecuteScriptAsync(js);
-            }
-            else
-            {
-                js = this.currentChat.PushNewMessage(message);
-                if (!string.IsNullOrEmpty(js))
-                    this.Browser1.ExecuteScriptAsyncWhenPageLoaded(js);
-            }
+            if (!string.IsNullOrEmpty(js))
+                this.webView.ExecuteScriptAsync(js);
         }
 
         public void SetupPubSubRedemptions()
@@ -1196,10 +1189,12 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItem_DevToolsClick(object sender, RoutedEventArgs e)
         {
-            this.Browser1.ShowDevTools();
+            this.webView.CoreWebView2.OpenDevToolsWindow();
         }
     }
 
+    [ClassInterface(ClassInterfaceType.AutoDual)]
+    [ComVisible(true)]
     public class JsCallbackFunctions
     {
         private string _mediaFile;
@@ -1315,6 +1310,8 @@ namespace TransparentTwitchChatWPF
         public int ThemeIndex { get; set; }
         [Trackable]
         public string CustomCSS { get; set; }
+        [Trackable]
+        public string TwitchPopoutCSS { get; set; }
         [Trackable]
         public int ChatType { get; set; }
         [Trackable]
