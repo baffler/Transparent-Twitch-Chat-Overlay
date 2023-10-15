@@ -25,7 +25,7 @@ namespace TransparentTwitchChatWPF
         {
             this.mainWindow = main;
             this.customURL = Url;
-            ZoomLevel = 0;
+            ZoomLevel = 1;
 
             InitializeComponent();
 
@@ -33,31 +33,18 @@ namespace TransparentTwitchChatWPF
             //string hashCode = rgx.Replace(this.customURL, "");
             string hashCode = String.Format("{0:X}", this.customURL.GetHashCode());
             Services.Tracker.Configure(this).IdentifyAs(hashCode).Apply();
+
+            InitializeWebViewAsync();
         }
 
-        private void Browser2_LoadingStateChanged(object sender, CefSharp.LoadingStateChangedEventArgs e)
+        async void InitializeWebViewAsync()
         {
-            if (!e.IsLoading)
-            {
-                //if ((ZoomLevel >= -4.0) && (ZoomLevel <= 4.0))
-                this.Browser2.Dispatcher.Invoke(new Action(() => { this.Browser2.ZoomLevel = ZoomLevel; }));
+            await webView.EnsureCoreWebView2Async(null);
 
-                // Insert some custom CSS for webcaptioner.com domain
-                if (this.customURL.ToLower().Contains("webcaptioner.com"))
-                {
-                    string base64CSS = Utilities.Base64Encode(CustomCSS_Defaults.WebCaptioner.Replace("\r\n", "").Replace("\t", ""));
+            //this.jsCallbackFunctions = new JsCallbackFunctions();
+            //webView.CoreWebView2.AddHostObjectToScript("jsCallbackFunctions", this.jsCallbackFunctions);
 
-                    string href = "data:text/css;charset=utf-8;base64," + base64CSS;
-
-                    string script = "var link = document.createElement('link');";
-                    script += "link.setAttribute('rel', 'stylesheet');";
-                    script += "link.setAttribute('type', 'text/css');";
-                    script += "link.setAttribute('href', '" + href + "');";
-                    script += "document.getElementsByTagName('head')[0].appendChild(link);";
-
-                    this.Browser2.ExecuteScriptAsync(script);
-                }
-            }
+            SetupBrowser();
         }
 
         private void headerBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -99,7 +86,7 @@ namespace TransparentTwitchChatWPF
             this.Activate();
             this.Topmost = true;
 
-            this.Browser2.IsEnabled = true;
+            this.webView.IsEnabled = true;
         }
 
         public void hideBorders()
@@ -123,7 +110,7 @@ namespace TransparentTwitchChatWPF
             this.Activate();
             this.Topmost = true;
 
-            this.Browser2.IsEnabled = false;
+            this.webView.IsEnabled = false;
         }
 
         public void ToggleBorderVisibility()
@@ -166,17 +153,6 @@ namespace TransparentTwitchChatWPF
 
         private void SetupBrowser()
         {
-            if (!this.Browser2.IsInitialized)
-            {
-                MessageBox.Show(
-                  "Error setting up source for custom window. The component was not initialized",
-                  "Error", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK
-                );
-                return;
-            }
-
-            this.Browser2.ZoomLevelIncrement = 0.25;
-
             if (!string.IsNullOrWhiteSpace(this.customURL))
             {
                 SetCustomAddress(this.customURL);
@@ -185,7 +161,7 @@ namespace TransparentTwitchChatWPF
 
         private void SetCustomAddress(string url)
         {
-            Browser2.Load(url);
+            webView.CoreWebView2.Navigate(url);
         }
 
         private void ShowSettingsWindow(WindowSettings config)
@@ -212,35 +188,26 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItem_ZoomIn(object sender, RoutedEventArgs e)
         {
-            if (this.Browser2.ZoomInCommand.CanExecute(null))
+            if (ZoomLevel < 4.0)
             {
-                if (ZoomLevel < 4.0)
-                {
-                    this.Browser2.ZoomInCommand.Execute(null);
-                    ZoomLevel = this.Browser2.ZoomLevel;
-                }
+                this.webView.ZoomFactor = ZoomLevel + 0.1;
+                ZoomLevel = this.webView.ZoomFactor;
             }
         }
 
         private void MenuItem_ZoomOut(object sender, RoutedEventArgs e)
         {
-            if (this.Browser2.ZoomOutCommand.CanExecute(null))
+            if (ZoomLevel > 0.1)
             {
-                if (ZoomLevel > -4.0)
-                {
-                    this.Browser2.ZoomOutCommand.Execute(null);
-                    ZoomLevel = this.Browser2.ZoomLevel;
-                }
+                this.webView.ZoomFactor = ZoomLevel - 0.1;
+                ZoomLevel = this.webView.ZoomFactor;
             }
         }
 
         private void MenuItem_ZoomReset(object sender, RoutedEventArgs e)
         {
-            if (this.Browser2.ZoomResetCommand.CanExecute(null))
-            {
-                this.Browser2.ZoomResetCommand.Execute(null);
-                ZoomLevel = this.Browser2.ZoomLevel;
-            }
+            this.webView.ZoomFactor = 1;
+            ZoomLevel = 1;
         }
 
         private void Window_SourceInitialized(object sender, EventArgs e)
@@ -261,12 +228,30 @@ namespace TransparentTwitchChatWPF
                 this.WindowState = WindowState.Maximized;
         }
 
-        private void Browser2_IsBrowserInitializedChanged(object sender, DependencyPropertyChangedEventArgs e)
+        private async void webView_NavigationCompleted(object sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs e)
         {
-            if (this.Browser2.IsBrowserInitialized)
+            this.webView.Dispatcher.Invoke(new Action(() => { this.webView.ZoomFactor = ZoomLevel; }));
+
+            // Insert some custom CSS for webcaptioner.com domain
+            if (this.customURL.ToLower().Contains("webcaptioner.com"))
             {
-                SetupBrowser();
+                string base64CSS = Utilities.Base64Encode(CustomCSS_Defaults.WebCaptioner.Replace("\r\n", "").Replace("\t", ""));
+
+                string href = "data:text/css;charset=utf-8;base64," + base64CSS;
+
+                string script = "var link = document.createElement('link');";
+                script += "link.setAttribute('rel', 'stylesheet');";
+                script += "link.setAttribute('type', 'text/css');";
+                script += "link.setAttribute('href', '" + href + "');";
+                script += "document.getElementsByTagName('head')[0].appendChild(link);";
+
+                await this.webView.ExecuteScriptAsync(script);
             }
+        }
+
+        private void MenuItem_DevToolsClick(object sender, RoutedEventArgs e)
+        {
+            this.webView.CoreWebView2.OpenDevToolsWindow();
         }
     }
 }

@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TransparentTwitchChatWPF"
-        xmlns:wpf="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         AllowsTransparency="True"
         WindowStyle="None"
         Background="Transparent"
@@ -36,6 +36,7 @@
                 <MenuItem Header="- Zoom Out" Click="MenuItem_ZoomOut" StaysOpenOnClick="True" />
                 <MenuItem Header="Reset" Click="MenuItem_ZoomReset" />
             </MenuItem>
+            <MenuItem Header="Show Dev Tools" Click="MenuItem_DevToolsClick" />
             <Separator />
             <MenuItem Header="GitHub latest release" Click="MenuItem_VisitWebsite" />
         </ContextMenu>
@@ -82,9 +83,10 @@
                 </StackPanel>
             </Grid>
         </Border>
-        <wpf:ChromiumWebBrowser IsEnabled="true" Grid.Row="1"
-                            Background="Transparent"
-                            x:Name="Browser2"
-                            Margin="0,0,0,0" LoadingStateChanged="Browser2_LoadingStateChanged" IsBrowserInitializedChanged="Browser2_IsBrowserInitializedChanged" />
+        <wv2:WebView2
+            Grid.Row="1"
+            Name="webView" 
+            DefaultBackgroundColor="Transparent"
+            NavigationCompleted="webView_NavigationCompleted" />
     </Grid>
 </Window>

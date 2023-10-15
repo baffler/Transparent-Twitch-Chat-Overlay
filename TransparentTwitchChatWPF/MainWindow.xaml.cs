@@ -30,7 +30,7 @@ using Mayerch1.GithubUpdateCheck;
  * > Tips and hints in the chat window, turn off in settings
  * 
  * v0.95
- * - The uninstaller will now let you choose to remove stored settings/data
+ * - The uninstaller will now remove stored settings/data
  * - Audio for browser enabled by default
  * - Audio device selection (for sound clips)
  * - Volume control for sounds clips
