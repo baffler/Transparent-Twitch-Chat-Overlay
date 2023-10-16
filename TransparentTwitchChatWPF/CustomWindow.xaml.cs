@@ -289,7 +289,16 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItem_EditCSSClick(object sender, RoutedEventArgs e)
         {
+            TextEditorWindow textEditorWindow = new TextEditorWindow(TextEditorType.CSS, this.customCSS);
+            textEditorWindow.TextEdited += TextEditorWindow_TextEdited;
+            textEditorWindow.Show();
+        }
 
+        private void TextEditorWindow_TextEdited(object sender, TextEditedEventArgs e)
+        {
+            this.customCSS = e.EditedText;
+            this.trackingConfig.Persist(); // Save the changes
+            this.webView.Reload();
         }
     }
 }

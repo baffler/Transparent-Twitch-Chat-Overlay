@@ -322,6 +322,9 @@
       <DependentUpon>Input_Username.xaml</DependentUpon>
     </Compile>
     <Compile Include="SettingsSingleton.cs" />
+    <Compile Include="TextEditorWindow.xaml.cs">
+      <DependentUpon>TextEditorWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="TwitchConnection.cs" />
     <Compile Include="WindowSettings.cs" />
     <Page Include="App.xaml">
@@ -388,6 +391,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="SettingsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="TextEditorWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

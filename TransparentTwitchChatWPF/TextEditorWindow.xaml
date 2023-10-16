@@ -1,0 +1,30 @@
+﻿<Window x:Class="TransparentTwitchChatWPF.TextEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TransparentTwitchChatWPF"
+        xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
+        Title="TextEditorWindow" Height="450" Width="800">
+    <Grid>
+        <Menu>
+            <MenuItem Header="File">
+                <MenuItem Name="SaveMenuItem" Header="Save" Click="SaveMenuItem_Click" />
+                <MenuItem Name="ExitMenuItem" Header="Save and Exit" Click="ExitMenuItem_Click" />
+                <MenuItem Name="CancelMenuItem" Header="Cancel Changes and Exit" Click="CancelMenuItem_Click" />
+            </MenuItem>
+        </Menu>
+        
+        <avalonedit:TextEditor Name="textEditor" 
+        BorderBrush="LightSlateGray"
+        BorderThickness="1"
+        Padding="5,5,0,0"
+         HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+         Width="Auto" Height="Auto"
+         HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" 
+         Margin="0,20,0,0" WordWrap="False"
+         Text="" />
+    </Grid>
+</Window>
