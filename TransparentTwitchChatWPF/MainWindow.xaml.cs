@@ -186,7 +186,11 @@ namespace TransparentTwitchChatWPF
 
         async void InitializeWebViewAsync()
         {
-            await webView.EnsureCoreWebView2Async(null);
+            var options = new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required");
+            string userDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF");
+
+            CoreWebView2Environment cwv2Environment = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
+            await webView.EnsureCoreWebView2Async(cwv2Environment);
             
             this.jsCallbackFunctions = new JsCallbackFunctions();
             webView.CoreWebView2.AddHostObjectToScript("jsCallbackFunctions", this.jsCallbackFunctions);
@@ -659,7 +663,7 @@ namespace TransparentTwitchChatWPF
             ");
         }
 
-        public void CreateNewWindow(string URL)
+        public void CreateNewWindow(string URL, string CustomCSS)
         {
             if (SettingsSingleton.Instance.genSettings.CustomWindows.Contains(URL))
             {
@@ -668,7 +672,7 @@ namespace TransparentTwitchChatWPF
             else
             {
                 SettingsSingleton.Instance.genSettings.CustomWindows.Add(URL);
-                OpenNewCustomWindow(URL);
+                OpenNewCustomWindow(URL, CustomCSS);
             }
         }
 
@@ -677,7 +681,7 @@ namespace TransparentTwitchChatWPF
             Input_Custom inputDialog = new Input_Custom();
             if (inputDialog.ShowDialog() == true)
             {
-                CreateNewWindow(inputDialog.Url);
+                CreateNewWindow(inputDialog.Url, inputDialog.CustomCSS);
             }
         }
 
@@ -851,9 +855,9 @@ namespace TransparentTwitchChatWPF
             }
         }
 
-        private void OpenNewCustomWindow(string url, bool hideBorder = false)
+        private void OpenNewCustomWindow(string url, string CustomCSS, bool hideBorder = false)
         {
-            CustomWindow newWindow = new CustomWindow(this, url);
+            CustomWindow newWindow = new CustomWindow(this, url, CustomCSS);
             windows.Add(newWindow);
             newWindow.Show();
 
@@ -955,7 +959,7 @@ namespace TransparentTwitchChatWPF
             if (SettingsSingleton.Instance.genSettings.CustomWindows != null)
             {
                 foreach (string url in SettingsSingleton.Instance.genSettings.CustomWindows)
-                    OpenNewCustomWindow(url, SettingsSingleton.Instance.genSettings.AutoHideBorders);
+                    OpenNewCustomWindow(url, "", SettingsSingleton.Instance.genSettings.AutoHideBorders);
             }
 
             if ((SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.CustomURL) && (!string.IsNullOrWhiteSpace(SettingsSingleton.Instance.genSettings.CustomURL)))

@@ -22,6 +22,7 @@ namespace TransparentTwitchChatWPF
         public Input_Custom(string defaultAnswer = "")
         {
             InitializeComponent();
+            tbCustomCSS.SyntaxHighlighting = ICSharpCode.AvalonEdit.Highlighting.HighlightingManager.Instance.GetDefinition("CSS");
             txtAnswer.Text = defaultAnswer;
         }
 
@@ -39,6 +40,11 @@ namespace TransparentTwitchChatWPF
         public string Url
         {
             get { return txtAnswer.Text; }
+        }
+
+        public string CustomCSS
+        {
+            get { return tbCustomCSS.Text; }
         }
     }
 }

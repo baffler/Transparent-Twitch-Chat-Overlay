@@ -48,6 +48,7 @@ namespace TransparentTwitchChatWPF
             InitializeComponent();
 
             tbPopoutCSS.SyntaxHighlighting = ICSharpCode.AvalonEdit.Highlighting.HighlightingManager.Instance.GetDefinition("CSS");
+            tbWidgetCustomCSS.SyntaxHighlighting = ICSharpCode.AvalonEdit.Highlighting.HighlightingManager.Instance.GetDefinition("CSS");
         }
 
         private void LoadDevices()
@@ -522,7 +523,7 @@ namespace TransparentTwitchChatWPF
 
         private void NewWidgetButton_Click(object sender, RoutedEventArgs e)
         {
-            this._main.CreateNewWindow(this.tbUrlForWidget.Text);
+            this._main.CreateNewWindow(this.tbUrlForWidget.Text, this.tbWidgetCustomCSS.Text);
             this.tbUrlForWidget.Text = string.Empty;
         }
 

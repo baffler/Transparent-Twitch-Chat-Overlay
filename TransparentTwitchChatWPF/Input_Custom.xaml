@@ -3,28 +3,44 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
         xmlns:local="clr-namespace:TransparentTwitchChatWPF"
         mc:Ignorable="d"
         WindowStyle="ToolWindow"
         Topmost="True"
-        Title="Enter Custom URL" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" ContentRendered="Window_ContentRendered">
-    <Grid Margin="15">
+        Width="300"
+        Height="300"
+        Title="Enter Custom URL" SizeToContent="Manual" WindowStartupLocation="CenterScreen" ContentRendered="Window_ContentRendered">
+    <Grid Margin="10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- <Image Source="/WpfTutorialSamples;component/Images/question32.png" Width="32" Height="32" Grid.RowSpan="2" Margin="20,0" /> -->
 
-        <Label Name="lblQuestion" Grid.Column="1">Custom URL:</Label>
-        <TextBox Name="txtAnswer" Grid.Column="1" Grid.Row="1" MinWidth="250"></TextBox>
+        <StackPanel Orientation="Vertical" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch">
+            <Label Name="lblQuestion">Custom URL:</Label>
+            <TextBox Name="txtAnswer" MinWidth="250"></TextBox>
+            <Label Margin="0,15,0,0">Custom CSS:</Label>
+        </StackPanel>
 
-        <WrapPanel Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="0,15,0,0">
+        <avalonedit:TextEditor Name="tbCustomCSS"
+            Grid.Row="1" Grid.Column="1"
+            BorderBrush="LightSlateGray"
+            BorderThickness="1"
+            HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+            MinHeight="100"
+            HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" 
+            Margin="0" WordWrap="False"
+            Text="body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }" />
+
+        <WrapPanel Grid.Row="2" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,15,0,0">
             <Button IsDefault="True" Name="btnDialogOk" Click="btnDialogOk_Click" MinWidth="60" Margin="0,0,10,0">_Ok</Button>
             <Button IsCancel="True" MinWidth="60">_Cancel</Button>
         </WrapPanel>

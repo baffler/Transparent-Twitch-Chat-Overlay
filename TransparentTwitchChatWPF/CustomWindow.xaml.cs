@@ -4,6 +4,10 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Interop;
 using Jot.DefaultInitializer;
+using Microsoft.Web.WebView2.Core;
+using Jot;
+using System.IO;
+using System.Diagnostics;
 
 namespace TransparentTwitchChatWPF
 {
@@ -16,29 +20,41 @@ namespace TransparentTwitchChatWPF
 
         bool hiddenBorders = false;
         string customURL = "";
+        string hashCode = "";
+
+        TrackingConfiguration trackingConfig;
 
         [Trackable]
         public double ZoomLevel { get; set; }
+        [Trackable]
+        public string customCSS { get; set; }
+        [Trackable]
+        public string customJS { get; set; }
 
-        public CustomWindow(MainWindow main, string Url = "")
+        public CustomWindow(MainWindow main, string Url, string CustomCSS)
         {
             this.mainWindow = main;
             this.customURL = Url;
             ZoomLevel = 1;
+            customCSS = CustomCSS;
+            customJS = "";
 
             InitializeComponent();
 
-            //Regex rgx = new Regex("[^a-zA-Z0-9 -]");
-            //string hashCode = rgx.Replace(this.customURL, "");
-            string hashCode = String.Format("{0:X}", this.customURL.GetHashCode());
-            Services.Tracker.Configure(this).IdentifyAs(hashCode).Apply();
+            hashCode = String.Format("{0:X}", this.customURL.GetHashCode());
+            trackingConfig = Services.Tracker.Configure(this).IdentifyAs(hashCode);
+            trackingConfig.Apply();
 
             InitializeWebViewAsync();
         }
 
         async void InitializeWebViewAsync()
         {
-            await webView.EnsureCoreWebView2Async(null);
+            var options = new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required");
+            string userDataFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF");
+
+            CoreWebView2Environment cwv2Environment = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
+            await webView.EnsureCoreWebView2Async(cwv2Environment);
 
             //this.jsCallbackFunctions = new JsCallbackFunctions();
             //webView.CoreWebView2.AddHostObjectToScript("jsCallbackFunctions", this.jsCallbackFunctions);
@@ -140,7 +156,21 @@ namespace TransparentTwitchChatWPF
             if (MessageBox.Show("This will delete the settings for this window. Are you sure?", "Remove Window", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
             {
                 this.mainWindow.RemoveCustomWindow(this.customURL);
-                // TODO: delete window Jot settings
+                
+                string path = (Services.Tracker.StoreFactory as Jot.Storage.JsonFileStoreFactory).StoreFolderPath;
+                string jsonFile = Path.Combine(path, "CustomWindow_" + this.hashCode + ".json");
+                Debug.WriteLine(jsonFile);
+
+                trackingConfig.AutoPersistEnabled = false;
+                
+                if (File.Exists(jsonFile))
+                {
+                    try
+                    {
+                        File.Delete(jsonFile);
+                    } catch { }
+                }
+
                 SystemCommands.CloseWindow(this);
             }
         }
@@ -182,7 +212,7 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItem_VisitWebsite(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://github.com/baffler/Transparent-Twitch-Chat-Overlay/releases");
+            Process.Start("https://github.com/baffler/Transparent-Twitch-Chat-Overlay/releases");
         }
 
         private void MenuItem_ZoomIn(object sender, RoutedEventArgs e)
@@ -234,23 +264,32 @@ namespace TransparentTwitchChatWPF
             // Insert some custom CSS for webcaptioner.com domain
             if (this.customURL.ToLower().Contains("webcaptioner.com"))
             {
-                string base64CSS = Utilities.Base64Encode(CustomCSS_Defaults.WebCaptioner.Replace("\r\n", "").Replace("\t", ""));
-
-                string href = "data:text/css;charset=utf-8;base64," + base64CSS;
-
-                string script = "var link = document.createElement('link');";
-                script += "link.setAttribute('rel', 'stylesheet');";
-                script += "link.setAttribute('type', 'text/css');";
-                script += "link.setAttribute('href', '" + href + "');";
-                script += "document.getElementsByTagName('head')[0].appendChild(link);";
-
-                await this.webView.ExecuteScriptAsync(script);
+                await this.webView.ExecuteScriptAsync(InsertCustomCSS(CustomCSS_Defaults.WebCaptioner));
             }
+
+            if (!string.IsNullOrEmpty(this.customCSS))
+            {
+                await this.webView.ExecuteScriptAsync(InsertCustomCSS(this.customCSS));
+            }
+        }
+
+        private string InsertCustomCSS(string CSS)
+        {
+            string uriEncodedCSS = Uri.EscapeDataString(CSS);
+            string script = "const ttcCSS = document.createElement('style');";
+            script += "ttcCSS.innerHTML = decodeURIComponent(\"" + uriEncodedCSS + "\");";
+            script += "document.querySelector('head').appendChild(ttcCSS);";
+            return script;
         }
 
         private void MenuItem_DevToolsClick(object sender, RoutedEventArgs e)
         {
             this.webView.CoreWebView2.OpenDevToolsWindow();
+        }
+
+        private void MenuItem_EditCSSClick(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

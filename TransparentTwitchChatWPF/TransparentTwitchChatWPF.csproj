@@ -85,10 +85,13 @@
     <ApplicationIcon>twitch_chat2.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ManifestTimestampUrl>http://timestamp.sectigo.com/</ManifestTimestampUrl>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestTimestampUrl>http://timestamp.sectigo.com/</ManifestTimestampUrl>
+    <TargetZone>LocalIntranet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>TransparentTwitchChatWPF.exe.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Costura, Version=5.7.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -407,9 +410,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="app.manifest">
+    <None Include="app.config" />
+    <Content Include="TransparentTwitchChatWPF.exe.manifest">
       <SubType>Designer</SubType>
-    </None>
+    </Content>
     <None Include="FodyWeavers.xsd">
       <SubType>Designer</SubType>
     </None>
@@ -419,10 +423,6 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
-    <None Include="TransparentTwitchChatWPF_TemporaryKey.pfx" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Icons\twitch_chat.ico" />
@@ -465,6 +465,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Resource Include="FodyWeavers.xml" />
+    <EmbeddedResource Include="Costura32\Microsoft.Web.WebView2.Core.dll" />
+    <EmbeddedResource Include="Costura32\WebView2Loader.dll" />
     <Content Include="index.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -482,7 +484,10 @@
   </Target>
   <Import Project="..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets" Condition="Exists('..\packages\NETStandard.Library.2.0.3\build\netstandard2.0\NETStandard.Library.targets')" />
   <PropertyGroup>
-    <PostBuildEvent>del "$(TargetDir)*.xml", "$(TargetDir)*.pdb"</PostBuildEvent>
+    <PostBuildEvent>del "$(TargetDir)*.xml", "$(TargetDir)*.pdb"
+del "$(TargetDir)*.application"
+RD /S /Q "$(TargetDir)runtimes\"
+RD /S /Q "$(TargetDir)app.publish\"</PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\Microsoft.Web.WebView2.1.0.2045.28\build\Microsoft.Web.WebView2.targets" Condition="Exists('..\packages\Microsoft.Web.WebView2.1.0.2045.28\build\Microsoft.Web.WebView2.targets')" />
   <Import Project="..\packages\Fody.6.5.5\build\Fody.targets" Condition="Exists('..\packages\Fody.6.5.5\build\Fody.targets')" />

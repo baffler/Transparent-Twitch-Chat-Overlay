@@ -30,12 +30,13 @@
 
     <Window.Resources>
         <ContextMenu Background="White" x:Key="contextMenu">
-            <MenuItem Header="Twitch Chat Overlay v0.6" IsEnabled="False" />
+            <MenuItem Header="Twitch Chat Overlay" IsEnabled="False" />
             <MenuItem Header="Zoom Level">
                 <MenuItem Header="+ Zoom In" Click="MenuItem_ZoomIn" StaysOpenOnClick="True" />
                 <MenuItem Header="- Zoom Out" Click="MenuItem_ZoomOut" StaysOpenOnClick="True" />
                 <MenuItem Header="Reset" Click="MenuItem_ZoomReset" />
             </MenuItem>
+            <MenuItem Header="Edit Custom CSS" Click="MenuItem_EditCSSClick" />
             <MenuItem Header="Show Dev Tools" Click="MenuItem_DevToolsClick" />
             <Separator />
             <MenuItem Header="GitHub latest release" Click="MenuItem_VisitWebsite" />
@@ -88,5 +89,6 @@
             Name="webView" 
             DefaultBackgroundColor="Transparent"
             NavigationCompleted="webView_NavigationCompleted" />
+        <Border Grid.Row="1" Name="overlay" Background="black" Opacity="0.01" Panel.ZIndex="1"/>
     </Grid>
 </Window>
