@@ -272,7 +272,7 @@ namespace TransparentTwitchChatWPF
 
             this.config.AutoHideBorders  = this.cbAutoHideBorders.IsChecked ?? false;
             this.config.EnableTrayIcon   = this.cbEnableTrayIcon.IsChecked ?? false;
-            this.config.ConfirmClose     = this.cbConfirmClose.IsChecked ?? false;
+            //this.config.ConfirmClose     = this.cbConfirmClose.IsChecked ?? false;
             this.config.HideTaskbarIcon  = this.cbTaskbar.IsChecked ?? false;
             this.config.AllowInteraction = this.cbInteraction.IsChecked ?? false;
 
@@ -331,7 +331,7 @@ namespace TransparentTwitchChatWPF
             // General
             this.cbAutoHideBorders.IsChecked = this.config.AutoHideBorders;
             this.cbEnableTrayIcon.IsChecked = true; //TODO: Temp fix for a bug ~ this.config.EnableTrayIcon;
-            this.cbConfirmClose.IsChecked = this.config.ConfirmClose;
+            //this.cbConfirmClose.IsChecked = this.config.ConfirmClose;
             this.cbTaskbar.IsChecked = this.config.HideTaskbarIcon;
             this.cbInteraction.IsChecked = this.config.AllowInteraction;
             this.cbCheckForUpdates.IsChecked = SettingsSingleton.Instance.genSettings.CheckForUpdates;

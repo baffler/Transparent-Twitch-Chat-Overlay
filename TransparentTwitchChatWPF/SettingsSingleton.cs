@@ -17,7 +17,7 @@ namespace TransparentTwitchChatWPF
         public GeneralSettings genSettings;
         //private GeneralSettings genDefaultSettings;
 
-        public static string Version { get { return "0.9.5"; } }
+        public static string Version { get { return "0.10.0"; } }
 
         private SettingsSingleton()
         {

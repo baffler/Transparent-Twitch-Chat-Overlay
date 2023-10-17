@@ -179,13 +179,6 @@
                             Margin="20,5"
                             />
                         <CheckBox 
-                            Name="cbConfirmClose"
-                            Content="Confirm When Closing"
-                            HorizontalAlignment="Left" 
-                            VerticalAlignment="Top"
-                            Margin="20,5"
-                            />
-                        <CheckBox 
                             Name="cbInteraction"
                             Content="Allow Interaction (When Borders Shown)"
                             HorizontalAlignment="Left" 
@@ -283,7 +276,7 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <StackPanel Grid.Row="0">
-                    <Label Content="URL For Widget" Height="25" VerticalAlignment="Top" FontWeight="Bold" />
+                    <Label Content="URL For Widget" Height="28" VerticalAlignment="Top" FontWeight="Bold" />
                     <TextBox Name="tbUrlForWidget" HorizontalAlignment="Left" Height="23" Margin="20,3,15,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" MinWidth="200"/>
                     <Button
                         Name="NewWidgetButton"

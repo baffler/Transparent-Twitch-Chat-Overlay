@@ -15,7 +15,7 @@ using Mayerch1.GithubUpdateCheck;
 
 /*
  * v0.96
- * > Make sure audio works with WebView2
+ * > Redo the startup image (for first time launch)
  * > BTTV and FFZ get unset when switching chats
  * > KapChat customCSS gets unset when switching chats
  * > Popout CSS Editors
@@ -426,7 +426,10 @@ namespace TransparentTwitchChatWPF
 
         public void ExitApplication()
         {
-            if (SettingsSingleton.Instance.genSettings.ConfirmClose)
+            Application.Current.Shutdown();
+
+            // Removing the 'are you sure' for now
+            /*if (SettingsSingleton.Instance.genSettings.ConfirmClose)
             {
                 var msgBoxResult = MessageBox.Show("Sure you want to exit the application?", "Exit",
                                                     MessageBoxButton.YesNo,
@@ -441,15 +444,9 @@ namespace TransparentTwitchChatWPF
             else
             {
                 System.Windows.Application.Current.Shutdown();
-            }
+            }*/
             //SystemCommands.CloseWindow(this);
         }
-
-        //public void ToggleBotActivitySetting()
-        //{
-        //    SettingsSingleton.Instance.genSettings.ShowBotActivity = !SettingsSingleton.Instance.genSettings.ShowBotActivity;
-        //    SetChatAddress(SettingsSingleton.Instance.genSettings.Username);
-        //}
 
         private void MenuItem_ToggleBorderVisible(object sender, RoutedEventArgs e)
         {
@@ -845,7 +842,7 @@ namespace TransparentTwitchChatWPF
                 SettingsSingleton.Instance.genSettings.RedemptionsEnabled = config.RedemptionsEnabled;
                 SettingsSingleton.Instance.genSettings.ChannelID = config.ChannelID;
 
-                this.taskbarControl.Visibility = config.EnableTrayIcon ? Visibility.Visible : Visibility.Hidden;
+                this.taskbarControl.Visibility = Visibility.Visible; //config.EnableTrayIcon ? Visibility.Visible : Visibility.Hidden;
                 this.ShowInTaskbar = !config.HideTaskbarIcon;
 
                 if (!this.hiddenBorders) this.webView.IsEnabled = config.AllowInteraction;
