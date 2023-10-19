@@ -6,10 +6,14 @@
         xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
         xmlns:local="clr-namespace:TransparentTwitchChatWPF"
         mc:Ignorable="d"
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        ui:WindowHelper.UseModernWindowStyle="True"
+        ui:ThemeManager.RequestedTheme="Dark"
         WindowStyle="ToolWindow"
         Topmost="True"
-        Width="300"
-        Height="300"
+        Width="400"
+        Height="350"
+        Background="#1A1A1A"
         Title="Enter Custom URL" SizeToContent="Manual" WindowStartupLocation="CenterScreen" ContentRendered="Window_ContentRendered">
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
@@ -32,6 +36,7 @@
 
         <avalonedit:TextEditor Name="tbCustomCSS"
             Grid.Row="1" Grid.Column="1"
+            Background="#AAA"
             BorderBrush="LightSlateGray"
             BorderThickness="1"
             HorizontalAlignment="Stretch" VerticalAlignment="Stretch"

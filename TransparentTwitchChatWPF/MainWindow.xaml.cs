@@ -15,6 +15,7 @@ using Mayerch1.GithubUpdateCheck;
 
 /*
  * v0.10.0
+ * > Allow interaction fix (when off)
  * > Redo the startup image (for first time launch)
  * > BTTV and FFZ get unset when switching chats
  * > KapChat customCSS gets unset when switching chats
@@ -363,6 +364,7 @@ namespace TransparentTwitchChatWPF
 
         public void ExitApplication()
         {
+            App.IsShuttingDown = true;
             Application.Current.Shutdown();
 
             // Removing the 'are you sure' for now
@@ -1107,7 +1109,8 @@ namespace TransparentTwitchChatWPF
 
         private void Window_Closed(object sender, EventArgs e)
         {
-            Application.Current.Shutdown();
+            if (!App.IsShuttingDown)
+                ExitApplication();
         }
     }
 

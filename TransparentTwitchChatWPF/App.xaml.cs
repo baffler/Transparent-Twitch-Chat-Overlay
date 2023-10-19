@@ -17,6 +17,7 @@ namespace TransparentTwitchChatWPF
     /// </summary>
     public partial class App : Application, ISingleInstanceApp
     {
+        public static bool IsShuttingDown { get; set; } = false;
         static bool allowMultipleInstances = false;
 
         [STAThread]

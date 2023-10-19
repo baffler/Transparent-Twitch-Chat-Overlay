@@ -143,7 +143,14 @@ namespace TransparentTwitchChatWPF
 
         private void SetCustomAddress(string url)
         {
-            webView.CoreWebView2.Navigate(url);
+            try
+            {
+                webView.CoreWebView2.Navigate(url);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message + "\n\nThis likely means the URL is invalid.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void btnSettings_Click(object sender, RoutedEventArgs e)
@@ -235,11 +242,14 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItemExitApp_Click(object sender, RoutedEventArgs e)
         {
+            App.IsShuttingDown = true;
             Application.Current.Shutdown();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            if (App.IsShuttingDown) return;
+
             if (MessageBox.Show("This will delete the settings for this window. Are you sure?", "Remove Window", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
             {
                 this.mainWindow.RemoveCustomWindow(this.customURL);

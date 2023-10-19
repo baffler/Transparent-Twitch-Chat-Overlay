@@ -6,15 +6,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TransparentTwitchChatWPF"
         mc:Ignorable="d"
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        ui:WindowHelper.UseModernWindowStyle="True"
+        ui:ThemeManager.RequestedTheme="Dark"
+        ui:TitleBar.ExtendViewIntoTitleBar="False"
         Title="Settings"
         WindowStyle="ToolWindow"
-        Height="400" Width="506.219" Topmost="True" WindowStartupLocation="CenterScreen" Loaded="Window_Loaded" SourceInitialized="Window_SourceInitialized">
+        Height="500" Width="550" Topmost="True" WindowStartupLocation="CenterScreen" Loaded="Window_Loaded" SourceInitialized="Window_SourceInitialized">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="110"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <Grid Grid.Column="0">
+        <Grid Grid.Column="0" Background="#121212">
             <ListView Name="lvSettings" FontSize="16" SelectionChanged="ListView_SelectionChanged">
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
@@ -51,7 +55,7 @@
             </ListView>
         </Grid>
 
-        <Grid Name="settingsContent" Grid.Column="1">
+        <Grid Name="settingsContent" Grid.Column="1" Background="#222">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
@@ -59,59 +63,63 @@
 
             <Grid Name="chatGrid" Grid.Row="0">
                 <Grid Name ="twitchPopoutChat" Visibility="Hidden">
-                    <Label Content="Username" HorizontalAlignment="Left" Margin="12,22,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                    <TextBox Name="tbTwitchPopoutUsername" HorizontalAlignment="Left" Height="23" Width="240" Margin="20,52,0,0" TextWrapping="NoWrap" Text="username" VerticalAlignment="Top" />
-                    <Label Content="Extensions" HorizontalAlignment="Left" Margin="12,75,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                    <Label Content="Username" HorizontalAlignment="Left" Margin="12,15,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                    <TextBox Name="tbTwitchPopoutUsername" HorizontalAlignment="Left" Height="23" Width="240" Margin="20,40,0,0" TextWrapping="NoWrap" Text="username" VerticalAlignment="Top" />
+                    <Label Content="Extensions" HorizontalAlignment="Left" Margin="12,80,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                     <CheckBox Name="cbBetterTtv" Content="Enable BetterTTV" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20,100,0,0" />
-                    <CheckBox Name="cbFfz" Content="Enable FrankerFaceZ" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20,120,0,0" />
-                    <Label Content="Custom CSS" HorizontalAlignment="Left" Margin="12,140,0,0" FontWeight="Bold" />
+                    <CheckBox Name="cbFfz" Content="Enable FrankerFaceZ" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20,125,0,0" />
+                    <Label Content="Custom CSS" HorizontalAlignment="Left" Margin="12,160,0,0" FontWeight="Bold" />
                     <avalonedit:TextEditor Name="tbPopoutCSS" 
                             BorderBrush="LightSlateGray"
                             BorderThickness="1"
+                            Background="#AAA"
                             Padding="5,5,0,0"
                              HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                              Width="Auto" Height="Auto"
                              HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" 
-                             Margin="22,170,15,50" WordWrap="False"
+                             Margin="22,185,15,50" WordWrap="False"
                              Text="" />
                 </Grid>
                 <Grid Name="customURLGrid" Visibility="Hidden" Grid.Column="1">
-                <Label Content="URL" HorizontalAlignment="Left" Margin="12,22,0,0" FontWeight="Bold" />
-                <TextBox Name="tbURL" HorizontalAlignment="Stretch" Height="23" Width="Auto" Margin="20,52,15,0" TextWrapping="NoWrap" Text="url" VerticalAlignment="Top" />
+                    <Label Content="URL" HorizontalAlignment="Left" Margin="12,15,0,0" FontWeight="Bold" />
+                    <TextBox Name="tbURL" HorizontalAlignment="Stretch" Height="23" Width="Auto" Margin="20,40,15,0" TextWrapping="NoWrap" Text="url" VerticalAlignment="Top" />
 
-                <Label Content="Custom CSS" HorizontalAlignment="Left" Margin="12,75,0,0" FontWeight="Bold" />
-                <TextBox Name="tbCSS2" 
-                         HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                         Width="Auto" Height="Auto"
-                         HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" 
-                         Margin="22,100,15,50" TextWrapping="Wrap" AcceptsReturn="true"
-                         Text="body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }" />
-            </Grid>
+                    <Label Content="Custom CSS" HorizontalAlignment="Left" Margin="12,80,0,0" FontWeight="Bold" />
+                    <avalonedit:TextEditor Name="tbCSS2" 
+                             BorderBrush="LightSlateGray"
+                             BorderThickness="1"
+                             Background="#AAA"
+                             HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                             Width="Auto" Height="Auto"
+                             HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" 
+                             Margin="22,100,15,50" WordWrap="False"
+                             Text="body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }" />
+                </Grid>
                 <Grid Name="kapChatGrid" Visibility="Visible" Grid.Column="1">
                     <StackPanel HorizontalAlignment="Left" Orientation="Vertical" Width="127">
-                        <Label Content="Username" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                        <Label Content="Redemptions" HorizontalAlignment="Left" Margin="20,5,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                        <Label Content="Twitch" HorizontalAlignment="Left" Margin="20,5,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                        <Label Content="Chat Fade" HorizontalAlignment="Left" Margin="20,5,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                        <Label Content="Chat Fade Time" HorizontalAlignment="Left" Margin="20,15,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                        <Label Content="Filter Settings" HorizontalAlignment="Left" Margin="20,15,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                        <Label Content="Chat Sound" HorizontalAlignment="Left" Margin="20,15,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                        <Label Content="Theme" HorizontalAlignment="Left" Margin="20,18,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                        <Label Content="Username" HorizontalAlignment="Left" Margin="20,33,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                        <Label Content="Redemptions" HorizontalAlignment="Left" Margin="20,20,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                        <Label Content="Twitch" HorizontalAlignment="Left" Margin="20,20,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                        <Label Content="Chat Fade" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                        <Label Content="Chat Fade Time" HorizontalAlignment="Left" Margin="20,35,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                        <Label Content="Filter Settings" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                        <Label Content="Chat Sound" HorizontalAlignment="Left" Margin="20,35,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                        <Label Content="Theme" HorizontalAlignment="Left" Margin="20,35,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                         <Label Name="lblCSS" Content="Custom CSS" Visibility="Hidden" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                     </StackPanel>
 
                     <StackPanel HorizontalAlignment="Right" Orientation="Vertical" Width="274">
                         <TextBox Name="tbUsername" HorizontalAlignment="Left" Height="23" Margin="20,27,0,0" TextWrapping="NoWrap" Text="username" VerticalAlignment="Top" Width="240"/>
-                        <CheckBox Name="cbRedemptions" Content="Show community point redemptions" Margin="20,12,0,0" Checked="cbRedemptions_Checked" Unchecked="cbRedemptions_Unchecked" />
+                        <CheckBox Name="cbRedemptions" Content="Community point redemptions" Margin="20,12,0,0" Checked="cbRedemptions_Checked" Unchecked="cbRedemptions_Unchecked" />
                         <StackPanel Orientation="Horizontal">
-                            <Label Name="lblTwitchConnected" Margin="15,10,0,0" Content="..." Foreground="Gray" FontWeight="Bold" />
-                            <Button Visibility="Hidden" Name="btGetChannelID" Margin="5,10,0,0" Content="Connect Twitch" Height="23" Width="100" Click="btGetChannelID_Click" />
+                            <Label Name="lblTwitchConnected" Margin="20,10,0,0" Content="..." Foreground="Gray" FontWeight="Bold" />
+                            <Button Visibility="Hidden" Name="btGetChannelID" Margin="5,10,0,0" Content="Connect Twitch" Height="26" Width="100" FontSize="12" Click="btGetChannelID_Click" />
                         </StackPanel>
 
                         <CheckBox Name="cbFade" Margin="20,12,0,0" Content="Fade out old chat lines" Checked="cbFade_Checked" Unchecked="cbFade_Unchecked" />
                         <TextBox Name="tbFadeTime" IsEnabled="False" HorizontalAlignment="Left" Height="23" Margin="20,22,0,0" TextWrapping="NoWrap" Text="120" VerticalAlignment="Top" Width="240"/>
                         <!--<CheckBox Name="cbBotActivity" Margin="20,22,0,0" Content="Enable to show bot activity in your chat" />-->
-                        <Button Name="btOpenChatFilterSettings" Margin="20,18,14,0" Content="Open Chat Filter Settings" Height="23" Click="btOpenChatFilterSettings_Click" />
+                        <Button Name="btOpenChatFilterSettings" Margin="20,18,14,0" Content="Open Chat Filter Settings" Height="32" Click="btOpenChatFilterSettings_Click" />
                         <ComboBox Name="comboChatSound" SelectedValuePath="Content" Margin="20,20,14,0" DropDownClosed="comboChatSound_DropDownClosed" />
 
                         <ComboBox Name="comboTheme" Margin="20,20,14,0" SelectionChanged="comboTheme_SelectionChanged">
@@ -137,11 +145,11 @@
                 </Grid>
                 <Grid Name="jChatGrid" Visibility="Hidden"  Grid.Column="1">
                     <StackPanel HorizontalAlignment="Left" Orientation="Vertical" Width="127">
-                        <Label Content="jChat URL" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                        <Label Content="Redemptions" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                        <Label Content="Twitch" HorizontalAlignment="Left" Margin="20,5,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                        <Label Content="Filter Settings" HorizontalAlignment="Left" Margin="20,15,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                        <Label Content="Chat Sound" HorizontalAlignment="Left" Margin="20,18,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                        <Label Content="jChat URL" HorizontalAlignment="Left" Margin="20,33,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                        <Label Content="Redemptions" HorizontalAlignment="Left" Margin="20,35,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                        <Label Content="Twitch" HorizontalAlignment="Left" Margin="20,20,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                        <Label Content="Filter Settings" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                        <Label Content="Chat Sound" HorizontalAlignment="Left" Margin="20,35,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                     </StackPanel>
 
                     <StackPanel HorizontalAlignment="Right" Orientation="Vertical" Width="274">
@@ -156,13 +164,13 @@
                                 <TextBlock Text="Click this link to generate the URL" />
                             </Hyperlink>
                         </Label>
-                        <CheckBox Name="cbRedemptions2" Content="Show community point redemptions" Margin="20,5,0,0" Checked="cbRedemptions_Checked" Unchecked="cbRedemptions_Unchecked" />
+                        <CheckBox Name="cbRedemptions2" Content="Community point redemptions" Margin="20,5,0,0" Checked="cbRedemptions_Checked" Unchecked="cbRedemptions_Unchecked" />
                         <TextBox Visibility="Collapsed" Name="tbUsername2" HorizontalAlignment="Left" Height="23" Margin="20,5,0,0" TextWrapping="NoWrap" Text="username" VerticalAlignment="Top" Width="240"/>
                         <StackPanel Orientation="Horizontal">
-                            <Label Name="lblTwitchConnected2" Margin="15,10,0,0" Content="..." Foreground="Gray" FontWeight="Bold" />
-                            <Button Visibility="Hidden" Name="btGetChannelID2" Margin="5,10,0,0" Content="Connect Twitch" Height="23" Width="100" Click="btGetChannelID_Click" />
+                            <Label Name="lblTwitchConnected2" Margin="20,10,0,0" Content="..." Foreground="Gray" FontWeight="Bold" />
+                            <Button Visibility="Hidden" Name="btGetChannelID2" Margin="5,10,0,0" Content="Connect Twitch" Height="26" Width="100" FontSize="12" Click="btGetChannelID_Click" />
                         </StackPanel>
-                        <Button Name="btOpenChatFilterSettings2" Margin="20,18,14,0" Content="Open Chat Filter Settings" Height="23" Click="btOpenChatFilterSettings_Click" />
+                        <Button Name="btOpenChatFilterSettings2" Margin="20,18,14,0" Content="Open Chat Filter Settings" Height="32" Click="btOpenChatFilterSettings_Click" />
                         <ComboBox Name="comboChatSound2" SelectedValuePath="Content" Margin="20,20,14,0" DropDownClosed="comboChatSound_DropDownClosed2" />
                     </StackPanel>
                 </Grid>
@@ -252,7 +260,7 @@
                 </ScrollViewer>
             </Grid>
 
-            <Grid Name="connectionsGrid" Visibility="Hidden" Grid.Row="0">
+            <Grid Name="connectionsGrid" Visibility="Hidden" Margin="0,10,0,0" Grid.Row="0">
                 <Border Background="#772CE8" Width="320" Height="60" Margin="20,5,5,5" CornerRadius="5" VerticalAlignment="Top" HorizontalAlignment="Left">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -267,10 +275,10 @@
                 </Border>
 
                 <Button Name="btConnect" Content="Connect" HorizontalAlignment="Left" Margin="20,80,0,0" VerticalAlignment="Top" Width="75" Click="btConnect_Click" />
-                <Button Name="btDisconnect" Content="Disconnect" HorizontalAlignment="Left" Margin="100,80,0,0" VerticalAlignment="Top" Width="75" Click="btDisconnect_Click" />
+                <Button Name="btDisconnect" Content="Disconnect" HorizontalAlignment="Left" Margin="100,80,0,0" VerticalAlignment="Top" Width="90" Click="btDisconnect_Click" />
             </Grid>
 
-            <Grid Name="widgetGrid" Visibility="Hidden" Grid.Row="0">
+            <Grid Name="widgetGrid" Visibility="Hidden" Margin="5,5,0,0" Grid.Row="0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -281,7 +289,8 @@
                     <Button
                         Name="NewWidgetButton"
                         Content="Create"
-                        Height="23"
+                        Height="32"
+                        FontWeight="Bold"
                         HorizontalAlignment="Left" 
                         Margin="20,10,0,0"
                         VerticalAlignment="Top" 
@@ -303,11 +312,12 @@
                         </Hyperlink>
                     </Label>
 
-                    <Label Content="Custom CSS" Margin="5,0,0,0" Height="25" FontWeight="Bold" />
+                    <Label Content="Custom CSS" Margin="5,10,0,0" Height="25" FontWeight="Bold" />
                 </StackPanel>
                 
                 <avalonedit:TextEditor Name="tbWidgetCustomCSS"
                     Grid.Row="1"
+                    Background="#AAA"
                     BorderBrush="LightSlateGray"
                     BorderThickness="1"
                     Margin="10,5,10,5"
@@ -318,7 +328,7 @@
                     Text="body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }" />
             </Grid>
 
-            <Grid Name="aboutGrid" Visibility="Hidden" Grid.Row="0">
+            <Grid Name="aboutGrid" Visibility="Hidden" Margin="10,0,0,0" Grid.Row="0">
                 <Label 
                     Margin="0,10,0,0"
                     Content="Twitch Chat Overlay" />
@@ -380,7 +390,7 @@
                             SelectionChanged="comboChatType_SelectionChanged"
                             HorizontalAlignment="Left" 
                             VerticalAlignment="Bottom" 
-                            Width="150"
+                            Width="170"
                             Margin="0,0,0,5">
                         <ComboBoxItem Content="KapChat (Default)" />
                         <ComboBoxItem Content="Twitch Popout" />
@@ -392,7 +402,7 @@
                         Name="OKButton"
                         Grid.Column="1"
                         Content="Save"
-                        Height="23"
+                        Height="32"
                         HorizontalAlignment="Right" 
                         Margin="0,0,5,5"
                         VerticalAlignment="Bottom" 
@@ -404,7 +414,7 @@
                         Name="CancelButton"
                         Grid.Column="2"
                         Content="Cancel" 
-                        Height="23" 
+                        Height="32" 
                         HorizontalAlignment="Right" 
                         Margin="0,0,5,5"
                         VerticalAlignment="Bottom"

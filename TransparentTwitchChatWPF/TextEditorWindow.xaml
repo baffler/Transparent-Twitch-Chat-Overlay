@@ -6,11 +6,19 @@
         xmlns:local="clr-namespace:TransparentTwitchChatWPF"
         xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
         mc:Ignorable="d"
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        ui:WindowHelper.UseModernWindowStyle="True"
+        ui:ThemeManager.RequestedTheme="Dark"
         WindowStartupLocation="CenterScreen"
         Title="TextEditorWindow" Height="450" Width="800">
-    <Grid>
-        <Menu>
-            <MenuItem Header="File">
+    <Grid Background="#222">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="22"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <Menu Grid.Row="0">
+            <MenuItem Header="File" Height="20">
                 <MenuItem Name="SaveMenuItem" Header="Save" Click="SaveMenuItem_Click" />
                 <MenuItem Name="ExitMenuItem" Header="Save and Exit" Click="ExitMenuItem_Click" />
                 <MenuItem Name="CancelMenuItem" Header="Cancel Changes and Exit" Click="CancelMenuItem_Click" />
@@ -18,13 +26,15 @@
         </Menu>
         
         <avalonedit:TextEditor Name="textEditor" 
+        Grid.Row="1"
         BorderBrush="LightSlateGray"
         BorderThickness="1"
+        Background="#AAA"
         Padding="5,5,0,0"
          HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
          Width="Auto" Height="Auto"
          HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" 
-         Margin="0,20,0,0" WordWrap="False"
+         Margin="0" WordWrap="False"
          Text="" />
     </Grid>
 </Window>

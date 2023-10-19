@@ -49,6 +49,7 @@ namespace TransparentTwitchChatWPF
 
             tbPopoutCSS.SyntaxHighlighting = ICSharpCode.AvalonEdit.Highlighting.HighlightingManager.Instance.GetDefinition("CSS");
             tbWidgetCustomCSS.SyntaxHighlighting = ICSharpCode.AvalonEdit.Highlighting.HighlightingManager.Instance.GetDefinition("CSS");
+            tbCSS2.SyntaxHighlighting = ICSharpCode.AvalonEdit.Highlighting.HighlightingManager.Instance.GetDefinition("CSS");
         }
 
         private void LoadDevices()
@@ -420,21 +421,17 @@ namespace TransparentTwitchChatWPF
             {
                 tbCSS.Visibility = Visibility.Visible;
                 lblCSS.Visibility = Visibility.Visible;
-                this.Height = 510;
             }
             else
             {
                 tbCSS.Visibility = Visibility.Hidden;
                 lblCSS.Visibility = Visibility.Hidden;
-                this.Height = 405;
             }
         }
 
         private void CheckBox_Checked(object sender, RoutedEventArgs e)
         {
             this.kapChatGrid.Visibility = Visibility.Hidden;
-            this.Height = 405;
-
             this.customURLGrid.Visibility = Visibility.Visible;
         }
 
@@ -442,11 +439,6 @@ namespace TransparentTwitchChatWPF
         {
             this.customURLGrid.Visibility = Visibility.Hidden;
             this.kapChatGrid.Visibility = Visibility.Visible;
-
-            if (comboTheme.SelectedIndex == 0)
-                this.Height = 510;
-            else
-                this.Height = 405;
         }
 
 

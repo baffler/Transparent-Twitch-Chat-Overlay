@@ -10,7 +10,6 @@
         ui:ThemeManager.RequestedTheme="Dark"
         ui:TitleBar.ExtendViewIntoTitleBar="True"
         ui:TitleBar.Style="{DynamicResource AppTitleBarStyle}"
-        ui:TitleBar.ButtonStyle="{DynamicResource AppTitleBarButtonStyle}"
         AllowsTransparency="True"
         WindowStyle="None"
         Background="Transparent"
@@ -26,19 +25,7 @@
         <Style x:Key="AppTitleBarStyle" TargetType="ui:TitleBarControl">
             <Setter Property="ui:ThemeManager.RequestedTheme" Value="Dark" />
         </Style>
-        <Style x:Key="AppTitleBarButtonStyle" TargetType="ui:TitleBarButton">
-            <Setter Property="IsActive" Value="{Binding IsActive, ElementName=Window}" />
-        </Style>
-        <!--<Style x:Key="AppTitleBarBackButtonStyle" TargetType="ui:TitleBarButton" BasedOn="{StaticResource TitleBarBackButtonStyle}">
-            <Setter Property="IsActive" Value="{Binding IsActive, ElementName=Window}" />
-        </Style>-->
     </Window.Resources>
-
-    <!--<Window.Resources>
-        <ContextMenu Background="White" x:Key="contextMenu">
-            
-        </ContextMenu>
-    </Window.Resources>-->
 
     <Grid>
         <Grid.RowDefinitions>
@@ -51,7 +38,6 @@
             <Grid
                 x:Name="AppTitleBar"
                 Background="#5D077F"
-                Height="{Binding ElementName=Window, Path=(ui:TitleBar.Height)}"
                 ui:ThemeManager.RequestedTheme="Dark">
 
                 <Grid.ColumnDefinitions>
@@ -64,7 +50,6 @@
                     Orientation="Horizontal">
                     <ui:TitleBarButton
                         x:Name="btnSettings"
-                        Style="{StaticResource AppTitleBarButtonStyle}"
                         Click="btnSettings_Click">
                         
                         <ui:TitleBarButton.ContextMenu>
@@ -89,19 +74,16 @@
                             <Line X1="1" Y1="13" X2="18" Y2="13" Stroke="White" StrokeThickness="2" />
                         </Grid>
                     </ui:TitleBarButton>
-                    <ui:TitleBarButton
-            x:Name="btnHide"
-            Style="{StaticResource AppTitleBarButtonStyle}"
-            Click="btnHide_Click">
+                    <ui:TitleBarButton x:Name="btnHide" Click="btnHide_Click">
                         <Grid>
                             <Ellipse
-                    Margin="0"
-                    Width="16"
-                    Height="16"
-                    Fill="Transparent"
-                    Stroke="White"
-                    StrokeThickness="2" />
-                            <Line X1="1" Y1="1" X2="17" Y2="17" Stroke="White" StrokeThickness="2" />
+                                Margin="0"
+                                Width="16"
+                                Height="16"
+                                Fill="Transparent"
+                                Stroke="White"
+                                StrokeThickness="2" />
+                                <Line X1="1" Y1="1" X2="17" Y2="17" Stroke="White" StrokeThickness="2" />
                         </Grid>
                     </ui:TitleBarButton>
                 </ui:SimpleStackPanel>

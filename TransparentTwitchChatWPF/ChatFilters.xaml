@@ -6,16 +6,17 @@
         xmlns:local="clr-namespace:TransparentTwitchChatWPF"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        ui:WindowHelper.UseModernWindowStyle="True"
+        ui:ThemeManager.RequestedTheme="Dark"
         Title="ChatFilters" Height="450" Width="400" WindowStyle="ToolWindow" Topmost="True" WindowStartupLocation="CenterScreen">
-    <Window.Resources>
-        
-    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="115"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <Grid Grid.Column="0">
+        
+        <Grid Grid.Column="0" Background="#121212">
             <ListView Name="lvFilters" FontSize="16" SelectionChanged="lvFilters_SelectionChanged">
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
@@ -42,7 +43,7 @@
             </ListView>
         </Grid>
 
-        <Grid Name="filterUsernamesGrid" Visibility="Visible"  Grid.Column="1">
+        <Grid Name="filterUsernamesGrid" Visibility="Visible" Background="#222" Grid.Column="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="27*"/>
                 <ColumnDefinition Width="265*"/>
@@ -55,7 +56,7 @@
                 Unchecked="cbAllowedUsers_Unchecked"
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top"
-                Margin="20,15,0,0" Grid.ColumnSpan="2"
+                Margin="20,10,0,0" Grid.ColumnSpan="2"
                 />
 
             <CheckBox 
@@ -65,17 +66,18 @@
                 Unchecked="cbHighlightUsers_Unchecked"
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top"
-                Margin="20,35,0,0" Grid.ColumnSpan="2"
+                Margin="20,37,0,0" Grid.ColumnSpan="2"
                 />
 
             
             <xctk:ColorPicker
                 Name="colorPicker" 
+                ui:ThemeManager.RequestedTheme="Dark"
                 HorizontalAlignment="Left" 
                 VerticalAlignment="Top"
                 Grid.ColumnSpan="2" 
                 Width="200"
-                Margin="40,60,0,0" 
+                Margin="50,70,0,0" 
                 DisplayColorAndName="True" 
                 ShowStandardColors="False"
                 AvailableColorsSortingMode="HueSaturationBrightness" />
@@ -91,11 +93,12 @@
 
             <xctk:ColorPicker
                 Name="colorPickerMods" 
+                ui:ThemeManager.RequestedTheme="Dark"
                 HorizontalAlignment="Right" 
                 VerticalAlignment="Top"
                 Grid.ColumnSpan="2" 
                 Width="50"
-                Margin="0,98,45,0" 
+                Margin="0,105,45,0" 
                 DisplayColorAndName="False" 
                 ShowStandardColors="False"
                 AvailableColorsSortingMode="HueSaturationBrightness" />
@@ -111,11 +114,12 @@
 
             <xctk:ColorPicker
                 Name="colorPickerVIPs" 
+                ui:ThemeManager.RequestedTheme="Dark"
                 HorizontalAlignment="Right" 
                 VerticalAlignment="Top"
                 Grid.ColumnSpan="2" 
                 Width="50"
-                Margin="0,128,45,0" 
+                Margin="0,135,45,0" 
                 DisplayColorAndName="False" 
                 ShowStandardColors="False"
                 AvailableColorsSortingMode="HueSaturationBrightness" />
@@ -124,28 +128,28 @@
                      IsEnabled="false"
                       FontSize="12"
                       SelectionMode="Single"
-                      Margin="20,190,20,50" Grid.ColumnSpan="2">
+                      Margin="20,205,20,50" Grid.ColumnSpan="2">
             </ListBox>
 
             <Button Name="btnAddUser"
                 IsEnabled="false"
                 Content="Add" 
-                Height="23"
+                Height="32"
                 HorizontalAlignment="Left" 
-                Margin="20,160,0,0"
+                Margin="20,165,0,0"
                 VerticalAlignment="Top" 
                 Width="75" Grid.ColumnSpan="2" Click="OnClick_AddAllowedUsername" />
             <Button Name="btnRemoveUser"
                 IsEnabled="false"
                 Content="Remove" 
-                Height="23"
+                Height="32"
                 HorizontalAlignment="Left" 
-                Margin="80,160,0,0"
+                Margin="80,165,0,0"
                 VerticalAlignment="Top" 
                 Width="75" Grid.Column="1" Click="OnClick_RemoveAllowedUsername" />
         </Grid>
 
-        <Grid Name="filterBotsGrid" Visibility="Hidden" Grid.Column="1">
+        <Grid Name="filterBotsGrid" Visibility="Hidden" Background="#222" Grid.Column="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="27*"/>
                 <ColumnDefinition Width="265*"/>
@@ -165,7 +169,7 @@
                 TextWrapping="Wrap"
                 FontSize="11"
                 FontStyle="Italic"
-                Margin="20,35,0,0" Grid.ColumnSpan="2" Height="64" Width="255" 
+                Margin="20,45,0,0" Grid.ColumnSpan="2" Height="64" Width="255" 
                 >
                 This will attempt to automatically block bot messages, however it may not work with all bots.
                 If your bot is still showing up, then add their name to the list below.
@@ -174,22 +178,22 @@
             <ListBox Name="lvBlockedUsernames" 
                       FontSize="12"
                       SelectionMode="Single"
-                      Margin="20,155,20,50" Grid.ColumnSpan="2">
+                      Margin="20,165,20,50" Grid.ColumnSpan="2">
             </ListBox>
 
             <Button Name="btnAddBlockedUser"
                 Content="Add" 
-                Height="23"
                 HorizontalAlignment="Left" 
                 Margin="20,125,0,0"
-                VerticalAlignment="Top" 
+                VerticalAlignment="Top"
+                Height="32"
                 Width="75" Grid.ColumnSpan="2" Click="OnClick_AddBlockedUsername" />
             <Button Name="btnRemoveBlockedUser"
                 Content="Remove" 
-                Height="23"
                 HorizontalAlignment="Left" 
                 Margin="80,125,0,0"
                 VerticalAlignment="Top" 
+                Height="32"
                 Width="75" Grid.Column="1" Click="OnClick_RemoveBlockedUsername" />
         </Grid>
 
@@ -197,7 +201,7 @@
             <Button
                 Name="OKButton"
                 Content="Save"
-                Height="23"
+                Height="32"
                 HorizontalAlignment="Right" 
                 Margin="0,0,93,12"
                 VerticalAlignment="Bottom" 
@@ -208,7 +212,7 @@
             <Button
                 Name="CancelButton"
                 Content="Cancel" 
-                Height="23" 
+                Height="32" 
                 HorizontalAlignment="Right" 
                 Margin="0,0,12,12"
                 VerticalAlignment="Bottom"

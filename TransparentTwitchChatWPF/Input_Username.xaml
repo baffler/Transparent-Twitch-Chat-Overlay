@@ -5,11 +5,17 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TransparentTwitchChatWPF"
         mc:Ignorable="d"
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        ui:WindowHelper.UseModernWindowStyle="True"
+        ui:ThemeManager.RequestedTheme="Dark"
         WindowStyle="ToolWindow"
         Topmost="True"
-        SizeToContent="WidthAndHeight" 
+        SizeToContent="Manual" 
         WindowStartupLocation="CenterScreen"
         ContentRendered="Window_ContentRendered"
+        Background="#222"
+        Width="300"
+        Height="180"
         Title="Username">
     <Grid Margin="15">
         <Grid.ColumnDefinitions>
@@ -23,7 +29,7 @@
         </Grid.RowDefinitions>
 
         <Label Name="lblQuestion" Grid.Column="1">Add Allowed Username:</Label>
-        <TextBox Name="txtAnswer" Grid.Column="1" Grid.Row="1" MinWidth="250"></TextBox>
+        <TextBox Name="txtAnswer" Grid.Column="1" Grid.Row="1" MinWidth="250" Margin="5"></TextBox>
 
         <WrapPanel Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="0,15,0,0">
             <Button IsDefault="True" Name="btnDialogOk" Click="btnDialogOk_Click" MinWidth="60" Margin="0,0,10,0">_Ok</Button>

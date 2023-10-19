@@ -9,7 +9,6 @@
         ui:ThemeManager.RequestedTheme="Dark"
         ui:TitleBar.ExtendViewIntoTitleBar="True"
         ui:TitleBar.Style="{DynamicResource AppTitleBarStyle}"
-        ui:TitleBar.ButtonStyle="{DynamicResource AppTitleBarButtonStyle}"
         AllowsTransparency="True"
         WindowStyle="None"
         Background="Transparent"
@@ -22,12 +21,6 @@
     <Window.Resources>
         <Style x:Key="AppTitleBarStyle" TargetType="ui:TitleBarControl">
             <Setter Property="ui:ThemeManager.RequestedTheme" Value="Dark" />
-        </Style>
-        <Style x:Key="AppTitleBarButtonStyle" TargetType="ui:TitleBarButton">
-            <Setter Property="IsActive" Value="{Binding IsActive, ElementName=Window}" />
-        </Style>
-        <Style x:Key="AppTitleBarBackButtonStyle" TargetType="ui:TitleBarButton" BasedOn="{StaticResource TitleBarBackButtonStyle}">
-            <Setter Property="IsActive" Value="{Binding IsActive, ElementName=Window}" />
         </Style>
     </Window.Resources>
 
@@ -60,7 +53,6 @@
         <Grid
             x:Name="AppTitleBar"
             Background="#000"
-            Height="{Binding ElementName=Window, Path=(ui:TitleBar.Height)}"
             ui:ThemeManager.RequestedTheme="Dark">
 
             <Grid.ColumnDefinitions>
@@ -73,7 +65,6 @@
                 Orientation="Horizontal">
                 <ui:TitleBarButton
                     x:Name="btnSettings"
-                    Style="{StaticResource AppTitleBarButtonStyle}"
                     MouseRightButtonUp="btnSettings_MouseRightButtonUp"
                     Click="btnSettings_Click">
                     <ui:TitleBarButton.ContextMenu>
@@ -105,7 +96,6 @@
                 </ui:TitleBarButton>
                 <ui:TitleBarButton
                     x:Name="btnHide"
-                    Style="{StaticResource AppTitleBarButtonStyle}"
                     Click="btnHide_Click">
                     <Grid>
                         <Ellipse
