@@ -14,7 +14,7 @@ using TwitchLib.PubSub.Events;
 using Mayerch1.GithubUpdateCheck;
 
 /*
- * v0.96
+ * v0.10.0
  * > Redo the startup image (for first time launch)
  * > BTTV and FFZ get unset when switching chats
  * > KapChat customCSS gets unset when switching chats
@@ -26,7 +26,7 @@ using Mayerch1.GithubUpdateCheck;
  * > Reset settings button
  * > Tips and hints in the chat window, turn off in settings
  * 
- * v0.95
+ * v0.9.5
  * - The uninstaller will now remove stored settings/data
  * - Audio for browser enabled by default
  * - Audio device selection (for sound clips)
@@ -35,11 +35,11 @@ using Mayerch1.GithubUpdateCheck;
  * - Added an entry in the context menu to open Dev Tools
  * - CefSharp (Chromium) updated to 117.2.20
  * 
- * v0.94
+ * v0.9.4
  * - Filtering: can block users now
  * - Automatically checks for updates on start (Can be disabled in settings)
  * 
- * v0.93
+ * v0.9.3
  * - Added a setting to allow multiple instances
  * - Fix for crash when adding a widget with a long URL
  * - Updated CEFsharp (Chromium) and Newtsonsoft.Json to latest versions
@@ -47,61 +47,23 @@ using Mayerch1.GithubUpdateCheck;
  * ~ Jump lists no longer work if you allow multiple instances (it just launches another instance)
  * ~ Can't login to the popout Twitch, this is caused by Twitch blocking login for unsupported browsers
  * 
- * v0.92
+ * v0.9.2
  * - jChat support (this allows BetterTTV, FrankerFaceZ and 7TV emotes)
  * - CefSharp (Chromium) updated to 99.2.9
  * - Twitch popout with BTTV and FFZ emotes support - PR by: github.com/r-o-b-o-t-o
  * - Twitch popout will keep your login session - PR by: github.com/r-o-b-o-t-o
  * 
- * v0.91
+ * v0.9.1
  * - TwitchLib support for points redemption
  * - Filter settings will let you highlight certain usernames/mods/vip
  * - Possible bug fix for startup crash Load() issue.
  * - System tray icon will always be enabled for now (to prevent no interaction with app)
  * 
- * v0.9
+ * v0.9.0
  * - Chat filter settings for KapChat version
  * - Filter by allowed usernames, all mods, or all VIPs
  * - You can configure the filter settings under Chat settings and click the Open Chat Filter Settings button
  *
- * 
- * v0.81
- * - Updated CefSharp to 86.0.241
- * - Fix for how custom CSS was added
- * 
- * v0.8
- * 
- * - More chat sound alerts. Also a lower volume option for each, volume slider soon.
- * - New setting to let you add the Twitch Popout chat
- * - Fixed issue with settings not being saved if app was forcibly closed
- * - New setting to allow interaction with the main window source
- * - Can change opacity by right-clicking on the top border
- * - New setting in General to hide the taskbar icon
- * - When loading a webcaptioner link as a new widget, it will load default custom css
- * 
- * v0.7
- * - Added a setting to show/hide the system tray icon control
- * - Added a setting to auto-hide borders when the application launches
- * - Added a setting to enable/disable the confirmation box when closing the application
- * - Added a setting to allow for a notification sound for a new chat message
- * - Can now resize the window on any part of the border
- * - Added a maximize button
- * - Widget windows are a different color from the main window
- * - Updated Chromium Embedded Framework (CEF)
- * - (will require you to install Microsoft Visual C++ 2015-2019 Redistributable x86)
- * - (available at https://aka.ms/vs/16/release/vc_redist.x86.exe)
- * 
- * v0.6
- * - Removed the system tray icon control
- * - Settings reworked under the hood (you'll lose settings from previous versions, sorry!)
- * - You can right-click the icon in the taskbar now to toggle borders/show settings
- * - Context menu added to the border (right-click on the black border at top)
- * - Settings window added (click cogwheel button on border, right click border and choose "Settings", or
- *      right-click on the application in the taskbar and choose "Show Settings" from there)
- * - Can change themes for chat now
- * - Also custom css (for theme "None" or use Custom URL)
- * - Zoom increase/decrease buttons won't close menu now
- * - Added "New Window" under context menu. You can add alerts widgets now (like from streamlabs)
  * 
  * TODO:
  * > Custom CSS for widgets
@@ -118,8 +80,6 @@ using Mayerch1.GithubUpdateCheck;
  * 
  */
 
-using System.Runtime.InteropServices;
-
 namespace TransparentTwitchChatWPF
 {
     using Chats;
@@ -127,6 +87,8 @@ namespace TransparentTwitchChatWPF
     using NAudio.Wave;
     using System.Diagnostics;
     using System.IO;
+    using System.Windows.Controls;
+    using System.Runtime.InteropServices;
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -141,6 +103,8 @@ namespace TransparentTwitchChatWPF
         /// 
 
         SolidColorBrush bgColor;
+        Thickness noBorderThickness = new Thickness(0);
+        Thickness borderThickness = new Thickness(4);
         int cOpacity = 0;
         bool hiddenBorders = false;
         //GeneralSettings genSettings;
@@ -188,7 +152,6 @@ namespace TransparentTwitchChatWPF
         {
             var options = new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required");
             string userDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF");
-
             CoreWebView2Environment cwv2Environment = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
             await webView.EnsureCoreWebView2Async(cwv2Environment);
             
@@ -257,14 +220,15 @@ namespace TransparentTwitchChatWPF
             var hwnd = new WindowInteropHelper(this).Handle;
             WindowHelper.SetWindowExDefault(hwnd);
 
-            btnClose.Visibility = Visibility.Visible;
-            btnMin.Visibility = Visibility.Visible;
-            btnMax.Visibility = Visibility.Visible;
-            btnHide.Visibility = Visibility.Visible;
-            btnSettings.Visibility = Visibility.Visible;
+            // show minimize, maximize, and close buttons
+            //btnHide.Visibility = Visibility.Visible;
+            //btnSettings.Visibility = Visibility.Visible;
 
-            headerBorder.Background = Brushes.Black;
+            this.AppTitleBar.Visibility = Visibility.Visible;
+            this.FooterBar.Visibility = Visibility.Visible;
+            this.webView.SetValue(Grid.RowSpanProperty, 1);
             this.BorderBrush = Brushes.Black;
+            this.BorderThickness = this.borderThickness;
             this.ResizeMode = System.Windows.ResizeMode.CanResizeWithGrip;
 
             hiddenBorders = false;
@@ -284,14 +248,15 @@ namespace TransparentTwitchChatWPF
             var hwnd = new WindowInteropHelper(this).Handle;
             WindowHelper.SetWindowExTransparent(hwnd);
 
-            btnClose.Visibility = Visibility.Hidden;
-            btnMin.Visibility = Visibility.Hidden;
-            btnMax.Visibility = Visibility.Hidden;
-            btnHide.Visibility = Visibility.Hidden;
-            btnSettings.Visibility = Visibility.Hidden;
+            // hide minimize, maximize, and close buttons
+            //btnHide.Visibility = Visibility.Hidden;
+            //btnSettings.Visibility = Visibility.Hidden;
 
-            headerBorder.Background = Brushes.Transparent;
+            this.AppTitleBar.Visibility = Visibility.Collapsed;
+            this.FooterBar.Visibility = Visibility.Collapsed;
+            this.webView.SetValue(Grid.RowSpanProperty, 2);
             this.BorderBrush = Brushes.Transparent;
+            this.BorderThickness = this.noBorderThickness;
             this.ResizeMode = System.Windows.ResizeMode.NoResize;
 
             hiddenBorders = true;
@@ -344,42 +309,14 @@ namespace TransparentTwitchChatWPF
 
         private void Window_KeyUp(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.F9)
-            {
-                ToggleBorderVisibility();
-            }
-            else if (e.Key == Key.F8)
-            {
-                ShowSettingsWindow();
-            }
-        }
-
-        private void headerBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            base.OnMouseLeftButtonDown(e);
-
-            if (e.ClickCount == 1)
-                this.DragMove();
-            else if (e.ClickCount == 2)
-            {
-                if (this.WindowState == WindowState.Maximized)
-                    this.WindowState = WindowState.Normal;
-            }
-        }
-
-        private void CommandBinding_CanExecute_1(object sender, CanExecuteRoutedEventArgs e)
-        {
-            e.CanExecute = true;
-        }
-
-        private void CommandBinding_Executed_1(object sender, ExecutedRoutedEventArgs e)
-        {
-            ExitApplication();
-        }
-
-        private void CommandBinding_Executed_3(object sender, ExecutedRoutedEventArgs e)
-        {
-            SystemCommands.MinimizeWindow(this);
+            //if (e.KeyCode == Key.F9)
+            //{
+            //    ToggleBorderVisibility();
+            //}
+            //else if (e.Key == Key.F8)
+            //{
+            //    ShowSettingsWindow();
+            //}
         }
 
         private void SetCustomChatAddress(string url)
@@ -476,15 +413,6 @@ namespace TransparentTwitchChatWPF
         private void btnHide_Click(object sender, RoutedEventArgs e)
         {
             hideBorders();
-        }
-
-        private void Window_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            //this.contextMenu.IsOpen = false;
-            //this.contextMenu.Placement = PlacementMode.MousePoint;
-            //this.contextMenu.HorizontalOffset = 0;
-            //this.contextMenu.VerticalContentAlignment = 0;
-            //this.contextMenu.IsOpen = true;
         }
 
         private void MenuItem_ZoomIn(object sender, RoutedEventArgs e)
@@ -884,11 +812,18 @@ namespace TransparentTwitchChatWPF
 
         private void btnSettings_Click(object sender, RoutedEventArgs e)
         {
-            ShowSettingsWindow();
+            Point screenPos = btnSettings.PointToScreen(new Point(0, btnSettings.ActualHeight));
+            settingsBtnContextMenu.IsOpen = false;
+            //settingsBtnContextMenu.PlacementTarget = this.btnSettings;
+            settingsBtnContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Absolute;
+            settingsBtnContextMenu.HorizontalOffset = screenPos.X;
+            settingsBtnContextMenu.VerticalOffset = screenPos.Y;
+            settingsBtnContextMenu.IsOpen = true;
         }
 
-        private void Window_SourceInitialized(object sender, EventArgs e)
+        private void btnSettings_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
+            ShowSettingsWindow();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -1028,14 +963,6 @@ namespace TransparentTwitchChatWPF
             {
                 System.Diagnostics.Process.Start((Services.Tracker.StoreFactory as Jot.Storage.JsonFileStoreFactory).StoreFolderPath);
             }
-        }
-
-        private void btnMax_Click(object sender, RoutedEventArgs e)
-        {
-            if (this.WindowState == WindowState.Maximized)
-                this.WindowState = WindowState.Normal;
-            else
-                this.WindowState = WindowState.Maximized;
         }
 
         private void MenuItem_IncOpacity(object sender, RoutedEventArgs e)
