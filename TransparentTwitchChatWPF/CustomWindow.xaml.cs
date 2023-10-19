@@ -11,12 +11,18 @@ using System.Diagnostics;
 
 namespace TransparentTwitchChatWPF
 {
+    using System.Windows.Controls;
+
     /// <summary>
     /// Interaction logic for CustomWindow.xaml
     /// </summary>
     public partial class CustomWindow : Window, BrowserWindow
     {
+
         MainWindow mainWindow;
+        Thickness noBorderThickness = new Thickness(0);
+        Thickness borderThickness = new Thickness(4);
+        Color borderColor = (Color)ColorConverter.ConvertFromString("#5D077F");
 
         bool hiddenBorders = false;
         string customURL = "";
@@ -62,19 +68,6 @@ namespace TransparentTwitchChatWPF
             SetupBrowser();
         }
 
-        private void headerBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            base.OnMouseLeftButtonDown(e);
-
-            if (e.ClickCount == 1)
-                this.DragMove();
-            else if (e.ClickCount == 2)
-            {
-                if (this.WindowState == WindowState.Maximized)
-                    this.WindowState = WindowState.Normal;
-            }
-        }
-
         private void btnHide_Click(object sender, RoutedEventArgs e)
         {
             hideBorders();
@@ -85,14 +78,11 @@ namespace TransparentTwitchChatWPF
             var hwnd = new WindowInteropHelper(this).Handle;
             WindowHelper.SetWindowExDefault(hwnd);
 
-            btnClose.Visibility = Visibility.Visible;
-            btnMin.Visibility = Visibility.Visible;
-            btnMax.Visibility = Visibility.Visible;
-            btnHide.Visibility = Visibility.Visible;
-            //btnSettings.Visibility = System.Windows.Visibility.Visible;
-
-            headerBorder.Background = Brushes.LightSlateGray;
-            this.BorderBrush = Brushes.LightSlateGray;
+            this.AppTitleBar.Visibility = Visibility.Visible;
+            this.FooterBar.Visibility = Visibility.Visible;
+            this.webView.SetValue(Grid.RowSpanProperty, 1);
+            this.BorderBrush = new SolidColorBrush(borderColor);
+            this.BorderThickness = this.borderThickness;
             this.ResizeMode = System.Windows.ResizeMode.CanResizeWithGrip;
 
             hiddenBorders = false;
@@ -109,14 +99,11 @@ namespace TransparentTwitchChatWPF
             var hwnd = new WindowInteropHelper(this).Handle;
             WindowHelper.SetWindowExTransparent(hwnd);
 
-            btnClose.Visibility = Visibility.Hidden;
-            btnMin.Visibility = Visibility.Hidden;
-            btnMax.Visibility = Visibility.Hidden;
-            btnHide.Visibility = Visibility.Hidden;
-            btnSettings.Visibility = Visibility.Hidden;
-
-            headerBorder.Background = Brushes.Transparent;
+            this.AppTitleBar.Visibility = Visibility.Collapsed;
+            this.FooterBar.Visibility = Visibility.Collapsed;
+            this.webView.SetValue(Grid.RowSpanProperty, 2);
             this.BorderBrush = Brushes.Transparent;
+            this.BorderThickness = this.noBorderThickness;
             this.ResizeMode = System.Windows.ResizeMode.NoResize;
 
             hiddenBorders = true;
@@ -146,40 +133,6 @@ namespace TransparentTwitchChatWPF
             this.Width = 300;
         }
 
-        private void CommandBinding_CanExecute_1(object sender, CanExecuteRoutedEventArgs e)
-        {
-            e.CanExecute = true;
-        }
-
-        private void CommandBinding_Executed_1(object sender, ExecutedRoutedEventArgs e)
-        {
-            if (MessageBox.Show("This will delete the settings for this window. Are you sure?", "Remove Window", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
-            {
-                this.mainWindow.RemoveCustomWindow(this.customURL);
-                
-                string path = (Services.Tracker.StoreFactory as Jot.Storage.JsonFileStoreFactory).StoreFolderPath;
-                string jsonFile = Path.Combine(path, "CustomWindow_" + this.hashCode + ".json");
-                Debug.WriteLine(jsonFile);
-
-                trackingConfig.AutoPersistEnabled = false;
-                
-                if (File.Exists(jsonFile))
-                {
-                    try
-                    {
-                        File.Delete(jsonFile);
-                    } catch { }
-                }
-
-                SystemCommands.CloseWindow(this);
-            }
-        }
-
-        private void CommandBinding_Executed_3(object sender, ExecutedRoutedEventArgs e)
-        {
-            SystemCommands.MinimizeWindow(this);
-        }
-
         private void SetupBrowser()
         {
             if (!string.IsNullOrWhiteSpace(this.customURL))
@@ -193,21 +146,18 @@ namespace TransparentTwitchChatWPF
             webView.CoreWebView2.Navigate(url);
         }
 
-        private void ShowSettingsWindow(WindowSettings config)
-        {
-            /*SettingsWindow settingsWindow = new SettingsWindow(config);
-
-            if (settingsWindow.ShowDialog() == true)
-            {
-                // update the AppSettings
-                MessageBox.Show(config.URL);
-            }*/
-        }
-
         private void btnSettings_Click(object sender, RoutedEventArgs e)
         {
             //WindowSettings cfg = new WindowSettings { isCustomURL = true, URL = this.customURL };
             //ShowSettingsWindow(cfg);
+
+            Point screenPos = btnSettings.PointToScreen(new Point(0, btnSettings.ActualHeight));
+            settingsBtnContextMenu.IsOpen = false;
+            //settingsBtnContextMenu.PlacementTarget = this.btnSettings;
+            settingsBtnContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Absolute;
+            settingsBtnContextMenu.HorizontalOffset = screenPos.X;
+            settingsBtnContextMenu.VerticalOffset = screenPos.Y;
+            settingsBtnContextMenu.IsOpen = true;
         }
 
         private void MenuItem_VisitWebsite(object sender, RoutedEventArgs e)
@@ -237,24 +187,6 @@ namespace TransparentTwitchChatWPF
         {
             this.webView.ZoomFactor = 1;
             ZoomLevel = 1;
-        }
-
-        private void Window_SourceInitialized(object sender, EventArgs e)
-        {
-            
-        }
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            
-        }
-
-        private void btnMax_Click(object sender, RoutedEventArgs e)
-        {
-            if (this.WindowState == WindowState.Maximized)
-                this.WindowState = WindowState.Normal;
-            else
-                this.WindowState = WindowState.Maximized;
         }
 
         private async void webView_NavigationCompleted(object sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs e)
@@ -299,6 +231,40 @@ namespace TransparentTwitchChatWPF
             this.customCSS = e.EditedText;
             this.trackingConfig.Persist(); // Save the changes
             this.webView.Reload();
+        }
+
+        private void MenuItemExitApp_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (MessageBox.Show("This will delete the settings for this window. Are you sure?", "Remove Window", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+            {
+                this.mainWindow.RemoveCustomWindow(this.customURL);
+
+                string path = (Services.Tracker.StoreFactory as Jot.Storage.JsonFileStoreFactory).StoreFolderPath;
+                string jsonFile = Path.Combine(path, "CustomWindow_" + this.hashCode + ".json");
+                Debug.WriteLine(jsonFile);
+
+                trackingConfig.AutoPersistEnabled = false;
+
+                if (File.Exists(jsonFile))
+                {
+                    try
+                    {
+                        File.Delete(jsonFile);
+                    }
+                    catch { }
+                }
+
+                e.Cancel = false;
+            }
+            else
+            {
+                e.Cancel = true;
+            }
         }
     }
 }

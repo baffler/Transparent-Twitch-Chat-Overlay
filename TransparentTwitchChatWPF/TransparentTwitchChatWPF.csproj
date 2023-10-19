@@ -125,7 +125,6 @@
     <Compile Include="Chats\CustomURLChat.cs" />
     <Compile Include="Chats\jChat.cs" />
     <Compile Include="Chats\KapChat.cs" />
-    <Compile Include="Converter\PixelsToGridLengthConverter.cs" />
     <Compile Include="GetID_Window.xaml.cs">
       <DependentUpon>GetID_Window.xaml</DependentUpon>
     </Compile>

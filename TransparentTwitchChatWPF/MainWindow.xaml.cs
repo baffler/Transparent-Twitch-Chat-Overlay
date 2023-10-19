@@ -1104,6 +1104,11 @@ namespace TransparentTwitchChatWPF
         {
             this.webView.CoreWebView2.OpenDevToolsWindow();
         }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
     }
 
     [ClassInterface(ClassInterfaceType.AutoDual)]

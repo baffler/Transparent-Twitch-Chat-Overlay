@@ -18,10 +18,8 @@
         ResizeMode="CanResizeWithGrip"
         Topmost="True"
         Icon="/Icons/twitch_chat2.ico"
-        Title="Twitch Chat Overlay" Height="500" Width="360" Deactivated="Window_Deactivated" PreviewLostKeyboardFocus="Window_PreviewLostKeyboardFocus" Loaded="Window_Loaded">
+        Title="Twitch Chat Overlay" Height="500" Width="360" Closed="Window_Closed" Deactivated="Window_Deactivated" PreviewLostKeyboardFocus="Window_PreviewLostKeyboardFocus" Loaded="Window_Loaded">
     <Window.Resources>
-        <local:PixelsToGridLengthConverter x:Key="PixelsToGridLength" />
-
         <Style x:Key="AppTitleBarStyle" TargetType="ui:TitleBarControl">
             <Setter Property="ui:ThemeManager.RequestedTheme" Value="Dark" />
         </Style>
