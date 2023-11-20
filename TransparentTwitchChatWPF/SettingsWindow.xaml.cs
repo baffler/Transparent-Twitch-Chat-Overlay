@@ -99,6 +99,8 @@ namespace TransparentTwitchChatWPF
 
             string path = GetSoundClipsFolder();
 
+            if (!Directory.Exists(path)) return;
+
             string[] filesWav = System.IO.Directory.GetFiles(path, "*.wav");
             string[] filesMp3 = System.IO.Directory.GetFiles(path, "*.mp3");
 

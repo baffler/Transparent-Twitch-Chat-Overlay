@@ -1,0 +1,19 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+	 xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package Name="TransparentTCO" Manufacturer="Baffler" Version="1.0.0" UpgradeCode="4794d247-7345-4a9e-8534-cb9132dd9968" Compressed="yes">
+    <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
+	  <MediaTemplate EmbedCab="yes" />
+    <Feature Id="Main">
+      <ComponentGroupRef Id="ProductComponents" />
+	  <ComponentGroupRef Id="ApplicatonShortcut" />
+    </Feature>
+	  <ui:WixUI Id="WixUI_Minimal" InstallDirectory="INSTALLFOLDER" />
+	  <WixVariable
+		  Id="WixUILicenseRtf"
+		  Value="license.rtf" />
+	  <Property
+		  Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT"
+		  Value="Launch TransparentTCO"
+		  />
+  </Package>
+</Wix>

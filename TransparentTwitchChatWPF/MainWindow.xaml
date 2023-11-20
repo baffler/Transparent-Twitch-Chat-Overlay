@@ -17,14 +17,14 @@
         ResizeMode="CanResizeWithGrip"
         Topmost="True"
         Icon="/Icons/twitch_chat2.ico"
-        Title="Twitch Chat Overlay" Height="500" Width="360" Closed="Window_Closed" Deactivated="Window_Deactivated" PreviewLostKeyboardFocus="Window_PreviewLostKeyboardFocus" Loaded="Window_Loaded">
+        Title="Twitch Chat Overlay" Height="530" Width="360" Closed="Window_Closed" Deactivated="Window_Deactivated" PreviewLostKeyboardFocus="Window_PreviewLostKeyboardFocus" Loaded="Window_Loaded">
     <Window.Resources>
         <Style x:Key="AppTitleBarStyle" TargetType="ui:TitleBarControl">
             <Setter Property="ui:ThemeManager.RequestedTheme" Value="Dark" />
         </Style>
     </Window.Resources>
 
-    <Grid>
+    <Grid Name="mainWindowGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -111,7 +111,7 @@
             </ui:SimpleStackPanel>
         </Grid>
 
-        <wv2:WebView2
+        <!--<wv2:WebView2
             Grid.Row="1" Grid.RowSpan="1"
             Panel.ZIndex="0"
             Name="webView" 
@@ -121,7 +121,7 @@
             NavigationStarting="webView_NavigationStarting"
             NavigationCompleted="webView_NavigationCompleted"
             WebMessageReceived="webView_WebMessageReceived"
-            />
+            />-->
 
         <Border Grid.Row="1" Name="overlay" Background="black" Opacity="0.01" Panel.ZIndex="1"/>
         <Border Name="FooterBar" Grid.Row="3" Opacity="0.1" Panel.ZIndex="2" Background="Black" />

@@ -15,6 +15,8 @@ using Mayerch1.GithubUpdateCheck;
 
 /*
  * v0.10.0
+ * > Lock down app if no runtime installed
+ * >> Display a panel with link or auto-download and install
  * > Allow interaction fix (when off)
  * > Redo the startup image (for first time launch)
  * > BTTV and FFZ get unset when switching chats
@@ -90,13 +92,22 @@ namespace TransparentTwitchChatWPF
     using System.IO;
     using System.Windows.Controls;
     using System.Runtime.InteropServices;
+    using Microsoft.Web.WebView2.Wpf;
+    using System.Windows.Documents;
+    using System.Windows.Navigation;
+    using System.Runtime.InteropServices.ComTypes;
+    using NAudio.SoundFont;
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window, BrowserWindow
     {
+        private WebView2 webView;
+        private bool hasWebView2Runtime = false;
+
         private System.Timers.Timer _timer;
+        private System.Timers.Timer checkWebView2Timer;
 
         [DllImport("user32.dll")]
         static extern IntPtr GetForegroundWindow();
@@ -149,8 +160,124 @@ namespace TransparentTwitchChatWPF
             InitializeWebViewAsync();
         }
 
+
+        private void CheckWebView2Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            string version = "";
+            try
+            {
+                version = CoreWebView2Environment.GetAvailableBrowserVersionString();
+            }
+            catch
+            {
+                return;
+            }
+
+            if (string.IsNullOrEmpty(version))
+                return;
+
+            Dispatcher.Invoke(() => InitializeWebViewAsync());
+        }
+
+        private void ShowWebViewDownloadLink()
+        {
+            hasWebView2Runtime = false;
+
+            if (checkWebView2Timer == null)
+            {
+                checkWebView2Timer = new System.Timers.Timer(2500);
+                checkWebView2Timer.Elapsed += CheckWebView2Timer_Elapsed;
+                checkWebView2Timer.Start();
+            }
+
+            this.overlay.Opacity = 1;
+            TextBlock textBlock = new TextBlock
+            {
+                Text = "Please download and install the WebView2 Runtime to use this app.\nThe app will refresh after install.\n\n",
+                TextWrapping = TextWrapping.Wrap,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                FontSize = 16,
+                FontWeight = FontWeights.Bold,
+                Foreground = Brushes.White,
+                Background = Brushes.Black,
+                Padding = new Thickness(20),
+                Margin = new Thickness(20),
+            };
+
+            Hyperlink link = new Hyperlink
+            {
+                NavigateUri = new Uri("https://go.microsoft.com/fwlink/p/?LinkId=2124703"),
+                Foreground = Brushes.White,
+                FontSize = 20,
+                FontWeight = FontWeights.Bold,
+            };
+            link.Inlines.Add("https://go.microsoft.com/fwlink/p/?LinkId=2124703");
+            link.RequestNavigate += Hyperlink_RequestNavigate;
+
+            textBlock.Inlines.Add(link);
+            overlay.Child = textBlock;
+        }
+
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = e.Uri.AbsoluteUri,
+                UseShellExecute = true
+            });
+            e.Handled = true;
+        }
+
         async void InitializeWebViewAsync()
         {
+            string version = "";
+
+            try
+            {
+                version = CoreWebView2Environment.GetAvailableBrowserVersionString();
+            }
+            catch (Exception ex)
+            {
+                ShowWebViewDownloadLink();
+                return;
+            }
+
+            if (string.IsNullOrEmpty(version))
+            {
+                ShowWebViewDownloadLink();
+                return;
+            }
+
+            // setup webview
+            webView = new WebView2
+            {
+                DefaultBackgroundColor = System.Drawing.Color.Transparent
+            };
+
+            hasWebView2Runtime = true;
+            if (checkWebView2Timer != null)
+            {
+                checkWebView2Timer.Stop();
+                checkWebView2Timer.Dispose();
+                checkWebView2Timer = null;
+            }
+
+            this.overlay.Child = null;
+            this.overlay.Opacity = 0.01;
+
+            webView.CoreWebView2InitializationCompleted += webView_CoreWebView2InitializationCompleted;
+            webView.ContentLoading += webView_ContentLoading;
+            webView.NavigationStarting += webView_NavigationStarting;
+            webView.NavigationCompleted += webView_NavigationCompleted;
+            webView.WebMessageReceived += webView_WebMessageReceived;
+
+            Grid.SetRow(webView, 1);
+            Grid.SetRowSpan(webView, 1);
+            Grid.SetZIndex(webView, 0);
+
+            this.mainWindowGrid.Children.Add(webView);
+
             var options = new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required");
             string userDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF");
             CoreWebView2Environment cwv2Environment = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
@@ -271,6 +398,8 @@ namespace TransparentTwitchChatWPF
 
         public void ToggleBorderVisibility()
         {
+            if (!hasWebView2Runtime) return;
+
             if (hiddenBorders)
                 DrawBordersForAllWindows();
             else
@@ -389,6 +518,8 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItem_ToggleBorderVisible(object sender, RoutedEventArgs e)
         {
+            if (!hasWebView2Runtime) return;
+
             foreach (BrowserWindow window in this.windows)
             {
                 if (window != null)
@@ -404,6 +535,7 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItem_ShowSettings(object sender, RoutedEventArgs e)
         {
+            if (!hasWebView2Runtime) return;
             ShowSettingsWindow();
         }
 
@@ -414,11 +546,13 @@ namespace TransparentTwitchChatWPF
 
         private void btnHide_Click(object sender, RoutedEventArgs e)
         {
+            if (!hasWebView2Runtime) return;
             hideBorders();
         }
 
         private void MenuItem_ZoomIn(object sender, RoutedEventArgs e)
         {
+            if (!hasWebView2Runtime) return;
 
             if (SettingsSingleton.Instance.genSettings.ZoomLevel < 4.0)
             {
@@ -429,6 +563,8 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItem_ZoomOut(object sender, RoutedEventArgs e)
         {
+            if (!hasWebView2Runtime) return;
+
             if (SettingsSingleton.Instance.genSettings.ZoomLevel > 0.1)
             {
                 this.webView.ZoomFactor = SettingsSingleton.Instance.genSettings.ZoomLevel - 0.1;
@@ -438,6 +574,7 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItem_ZoomReset(object sender, RoutedEventArgs e)
         {
+            if (!hasWebView2Runtime) return;
             this.webView.ZoomFactor = 1.0;
             SettingsSingleton.Instance.genSettings.ZoomLevel = 1.0;
         }
@@ -605,6 +742,7 @@ namespace TransparentTwitchChatWPF
 
         private void CreateNewWindowDialog()
         {
+            if (!hasWebView2Runtime) return;
             Input_Custom inputDialog = new Input_Custom();
             if (inputDialog.ShowDialog() == true)
             {
@@ -614,6 +752,7 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItem_ClickNewWindow(object sender, RoutedEventArgs e)
         {
+            if (!hasWebView2Runtime) return;
             CreateNewWindowDialog();
         }
 
@@ -636,6 +775,26 @@ namespace TransparentTwitchChatWPF
 
         private void ShowSettingsWindow()
         {
+            if (!hasWebView2Runtime)
+            {
+                if (
+                MessageBox.Show(
+                                "Please download and install the WebView2 Runtime to use this app.\nRestart this app after you install.",
+                                "WebView2 Runtime Required",
+                                MessageBoxButton.OK, MessageBoxImage.Error
+                                )
+                    == MessageBoxResult.OK)
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "https://go.microsoft.com/fwlink/p/?LinkId=2124703",
+                        UseShellExecute = true
+                    });
+                }
+
+                return;
+            }
+
             WindowSettings config = new WindowSettings
             {
                 Title = "Main Window",
@@ -969,6 +1128,8 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItem_IncOpacity(object sender, RoutedEventArgs e)
         {
+            if (!hasWebView2Runtime) return;
+
             this.cOpacity += 15;
             if (this.cOpacity > 255) this.cOpacity = 255;
             SettingsSingleton.Instance.genSettings.OpacityLevel = (byte)this.cOpacity;
@@ -977,6 +1138,8 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItem_DecOpacity(object sender, RoutedEventArgs e)
         {
+            if (!hasWebView2Runtime) return;
+
             this.cOpacity -= 15;
             if (this.cOpacity < 0) this.cOpacity = 0;
             SettingsSingleton.Instance.genSettings.OpacityLevel = (byte)this.cOpacity;
@@ -985,6 +1148,8 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItem_ResetOpacity(object sender, RoutedEventArgs e)
         {
+            if (!hasWebView2Runtime) return;
+
             this.cOpacity = 0;
             SettingsSingleton.Instance.genSettings.OpacityLevel = 0;
             this.bgColor.Color = Color.FromArgb(0, 0, 0, 0);
@@ -1104,6 +1269,8 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItem_DevToolsClick(object sender, RoutedEventArgs e)
         {
+            if (!hasWebView2Runtime) return;
+
             this.webView.CoreWebView2.OpenDevToolsWindow();
         }
 
