@@ -1,9 +1,0 @@
-﻿<Project Sdk="WixToolset.Sdk/4.0.2">
-  <ItemGroup>
-    <None Include="license.rtf" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\TransparentTwitchChatWPF\TransparentTwitchChatWPF.csproj" />
-    <PackageReference Include="WixToolset.UI.wixext" />
-  </ItemGroup>
-</Project>

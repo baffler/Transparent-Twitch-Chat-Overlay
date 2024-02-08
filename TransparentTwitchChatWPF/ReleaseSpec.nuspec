@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+    <id>TransparentTwitchChatOverlay</id>
+    <version>0.0.0</version>
+    <title>Transparent Twitch Chat Overlay</title>
+    <authors>baffler</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">GPL-3.0-only</license>
+    <!-- <icon>icon.png</icon> -->
+    <projectUrl>https://github.com/baffler/Transparent-Twitch-Chat-Overlay</projectUrl>
+    <description>Application for Windows that will display Twitch chat on top of a windowed or borderless windowed game.</description>
+    <releaseNotes>Latest version</releaseNotes>
+    <copyright>2024</copyright>
+	<dependencies>
+		<group targetFramework=".NETFramework4.5" />
+	</dependencies>
+  </metadata>
+  <files>
+	<file src="bin\x86\Release\**" target="lib\net45" />
+  </files>
+</package>

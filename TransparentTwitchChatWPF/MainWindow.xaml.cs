@@ -12,6 +12,7 @@ using Jot.DefaultInitializer;
 using TwitchLib.PubSub;
 using TwitchLib.PubSub.Events;
 using Mayerch1.GithubUpdateCheck;
+using Squirrel;
 
 /*
  * v0.10.0
@@ -105,6 +106,8 @@ namespace TransparentTwitchChatWPF
     {
         private WebView2 webView;
         private bool hasWebView2Runtime = false;
+
+        private UpdateManager updateManager;
 
         private System.Timers.Timer _timer;
         private System.Timers.Timer checkWebView2Timer;
@@ -1005,20 +1008,29 @@ namespace TransparentTwitchChatWPF
 
         private async void CheckForUpdateAsync()
         {
-            GithubUpdateCheck update = new GithubUpdateCheck("baffler", "Transparent-Twitch-Chat-Overlay");
-            //bool isUpdate = update.IsUpdateAvailable(SettingsSingleton.Version, VersionChange.Build);
-            bool isUpdate = await update.IsUpdateAvailableAsync(SettingsSingleton.Version, VersionChange.Build);
+            updateManager = await UpdateManager.GitHubUpdateManager(@"https://github.com/baffler/Transparent-Twitch-Chat-Overlay");
 
-            if (isUpdate)
+            try
             {
-                if (MessageBox.Show($"Transparent Twitch Chat Overlay\nVersion {update.Version()} is available. Would you like to download it now?\n(Opens in your default browser)",
-                    "New Version Available",
-                    MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes)
+                var updateInfo = await updateManager.CheckForUpdate();
+
+                if (updateInfo.ReleasesToApply.Count > 0)
                 {
-                    System.Diagnostics.Process.Start("https://github.com/baffler/Transparent-Twitch-Chat-Overlay/releases/latest");
+                    if (MessageBox.Show($"Transparent Twitch Chat Overlay (Current Version: v{updateInfo.CurrentlyInstalledVersion.Version}\nNew Version: v{updateInfo.FutureReleaseEntry.Version} is available. Would you like to update now?",
+                        "New Version Available",
+                        MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes)
+                    {
+                        await updateManager.UpdateApp();
+                        MessageBox.Show("Updated successfully! You will need to restart the app to apply the update.", "Update Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Couldn't check for update:\n" + ex.Message, "Error while Checking for Update", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
+
         private void webView_ContentLoading(object sender, Microsoft.Web.WebView2.Core.CoreWebView2ContentLoadingEventArgs e)
         {
             

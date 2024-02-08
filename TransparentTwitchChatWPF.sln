@@ -5,8 +5,6 @@ VisualStudioVersion = 17.7.34202.233
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransparentTwitchChatWPF", "TransparentTwitchChatWPF\TransparentTwitchChatWPF.csproj", "{340C12FD-3B4D-4A37-AB81-5C5786135206}"
 EndProject
-Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "TransparentTCO_MsiPackage", "TransparentTCO_MsiPackage\TransparentTCO_MsiPackage.wixproj", "{591208FA-477F-4DA8-831E-AFDD6C5E427F}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,22 +33,6 @@ Global
 		{340C12FD-3B4D-4A37-AB81-5C5786135206}.Release|x64.Build.0 = Release|Any CPU
 		{340C12FD-3B4D-4A37-AB81-5C5786135206}.Release|x86.ActiveCfg = Release|x86
 		{340C12FD-3B4D-4A37-AB81-5C5786135206}.Release|x86.Build.0 = Release|x86
-		{591208FA-477F-4DA8-831E-AFDD6C5E427F}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{591208FA-477F-4DA8-831E-AFDD6C5E427F}.Debug|Any CPU.Build.0 = Debug|x64
-		{591208FA-477F-4DA8-831E-AFDD6C5E427F}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{591208FA-477F-4DA8-831E-AFDD6C5E427F}.Debug|ARM64.Build.0 = Debug|ARM64
-		{591208FA-477F-4DA8-831E-AFDD6C5E427F}.Debug|x64.ActiveCfg = Debug|x64
-		{591208FA-477F-4DA8-831E-AFDD6C5E427F}.Debug|x64.Build.0 = Debug|x64
-		{591208FA-477F-4DA8-831E-AFDD6C5E427F}.Debug|x86.ActiveCfg = Debug|x86
-		{591208FA-477F-4DA8-831E-AFDD6C5E427F}.Debug|x86.Build.0 = Debug|x86
-		{591208FA-477F-4DA8-831E-AFDD6C5E427F}.Release|Any CPU.ActiveCfg = Release|x64
-		{591208FA-477F-4DA8-831E-AFDD6C5E427F}.Release|Any CPU.Build.0 = Release|x64
-		{591208FA-477F-4DA8-831E-AFDD6C5E427F}.Release|ARM64.ActiveCfg = Release|ARM64
-		{591208FA-477F-4DA8-831E-AFDD6C5E427F}.Release|ARM64.Build.0 = Release|ARM64
-		{591208FA-477F-4DA8-831E-AFDD6C5E427F}.Release|x64.ActiveCfg = Release|x64
-		{591208FA-477F-4DA8-831E-AFDD6C5E427F}.Release|x64.Build.0 = Release|x64
-		{591208FA-477F-4DA8-831E-AFDD6C5E427F}.Release|x86.ActiveCfg = Release|x86
-		{591208FA-477F-4DA8-831E-AFDD6C5E427F}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
