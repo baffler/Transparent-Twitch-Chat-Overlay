@@ -11,10 +11,14 @@ using Jot;
 using Jot.DefaultInitializer;
 using TwitchLib.PubSub;
 using TwitchLib.PubSub.Events;
-using Mayerch1.GithubUpdateCheck;
 using Squirrel;
 
 /*
+ * 
+ * v1.0.0
+ * - Added Squirrel for installing and updating the app
+ * > Option to disable update checks from the message
+ * 
  * v0.10.0
  * > Lock down app if no runtime installed
  * >> Display a panel with link or auto-download and install
@@ -98,6 +102,14 @@ namespace TransparentTwitchChatWPF
     using System.Windows.Navigation;
     using System.Runtime.InteropServices.ComTypes;
     using NAudio.SoundFont;
+    using System.Reflection;
+    using NHotkey.Wpf;
+    using NHotkey;
+    using ModernWpf.Controls.Primitives;
+    using System.ComponentModel;
+    using System.Runtime.CompilerServices;
+    using System.Windows.Media.TextFormatting;
+    using ModernWpf.Controls;
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -107,10 +119,9 @@ namespace TransparentTwitchChatWPF
         private WebView2 webView;
         private bool hasWebView2Runtime = false;
 
-        private UpdateManager updateManager;
-
         private System.Timers.Timer _timer;
         private System.Timers.Timer checkWebView2Timer;
+        private int _timerTick = 0;
 
         [DllImport("user32.dll")]
         static extern IntPtr GetForegroundWindow();
@@ -134,16 +145,15 @@ namespace TransparentTwitchChatWPF
 
         private Chat currentChat;
 
-        /*public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName]string propertyName = null)
-        {
-            PropertyChangedEventHandler handler = this.PropertyChanged;
-            if (handler != null)
-            {
-                var e = new PropertyChangedEventArgs(propertyName);
-                handler(this, e);
-            }
-        }*/
+        //protected void OnPropertyChanged([CallerMemberName]string propertyName = null)
+        //{
+        //    PropertyChangedEventHandler handler = this.PropertyChanged;
+        //    if (handler != null)
+        //    {
+        //        var e = new PropertyChangedEventArgs(propertyName);
+        //        handler(this, e);
+        //    }
+        //}
 
         public MainWindow()
         {
@@ -156,11 +166,33 @@ namespace TransparentTwitchChatWPF
             this.genSettingsTrackingConfig = Services.Tracker.Configure(SettingsSingleton.Instance.genSettings);
             this.genSettingsTrackingConfig.IdentifyAs("MainWindow").Apply();
 
-            //_timer = new System.Timers.Timer(5000);
-            //_timer.Elapsed += _timer_Elapsed;
-            //_timer.Start();
+            _timer = new System.Timers.Timer(1000);
+            _timer.Elapsed += _timer_Elapsed;
+            _timerTick = 0;
+
+            HotkeyManager.Current.AddOrReplace("ToggleInteraction", Key.F7, ModifierKeys.None, OnHotKeyToggleInteraction);
+            HotkeyManager.Current.AddOrReplace("BringToTopTimer", Key.F8, ModifierKeys.None, OnHotKeyBringToTopTimer);
+            HotkeyManager.Current.AddOrReplace("ToggleBorders", Key.F9, ModifierKeys.None, OnHotKeyToggleBorders);
 
             InitializeWebViewAsync();
+        }
+
+        private void OnHotKeyToggleInteraction(object sender, HotkeyEventArgs e)
+        {
+            SetInteractable(!this.webView.IsEnabled);
+            e.Handled = true;
+        }
+
+        private void OnHotKeyBringToTopTimer(object sender, HotkeyEventArgs e)
+        {
+            StartCheckForegroundWindowTimer();
+            e.Handled = true;
+        }
+
+        private void OnHotKeyToggleBorders(object sender, HotkeyEventArgs e)
+        {
+            ToggleBorderVisibility();
+            e.Handled = true;
         }
 
 
@@ -302,7 +334,20 @@ namespace TransparentTwitchChatWPF
 
         private void _timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            //this.Dispatcher.Invoke(new Action(CheckForegroundWindow));
+            this.Dispatcher.Invoke(new Action(CheckForegroundWindow));
+
+            _timerTick += 1;
+            if (_timerTick >= 3)
+            {
+                _timer.Stop();
+            }
+        }
+
+        private void StartCheckForegroundWindowTimer()
+        {
+            _timer.Stop();
+            _timerTick = 0;
+            _timer.Start();
         }
 
         private void CheckForegroundWindow()
@@ -344,9 +389,35 @@ namespace TransparentTwitchChatWPF
             return true;
         }
 
+        public void SetInteractable(bool interactable)
+        {
+            this.webView.IsEnabled = interactable;
+
+            var hwnd = new WindowInteropHelper(this).Handle;
+
+            if (interactable)
+            {   
+                WindowHelper.SetWindowExDefault(hwnd);
+                this.AppTitleBar.Visibility = Visibility.Visible;
+
+                this.Topmost = false;
+                this.Activate();
+                this.Topmost = true;
+            }
+            else
+            {
+                WindowHelper.SetWindowExTransparent(hwnd);
+                this.AppTitleBar.Visibility = Visibility.Collapsed;
+            }
+
+            CheckForegroundWindow();
+            StartCheckForegroundWindowTimer();
+        }
+
         public void drawBorders()
         {
             this.ShowInTaskbar = true;
+            SetInteractable(SettingsSingleton.Instance.genSettings.AllowInteraction);
 
             var hwnd = new WindowInteropHelper(this).Handle;
             WindowHelper.SetWindowExDefault(hwnd);
@@ -368,7 +439,7 @@ namespace TransparentTwitchChatWPF
             this.Activate();
             this.Topmost = true;
 
-            this.webView.IsEnabled = SettingsSingleton.Instance.genSettings.AllowInteraction;
+            CheckForegroundWindow();
         }
 
         public void hideBorders()
@@ -376,8 +447,8 @@ namespace TransparentTwitchChatWPF
             if (SettingsSingleton.Instance.genSettings.HideTaskbarIcon)
                 this.ShowInTaskbar = false;
 
-            var hwnd = new WindowInteropHelper(this).Handle;
-            WindowHelper.SetWindowExTransparent(hwnd);
+            // Prevent interaction with the browser
+            SetInteractable(false);
 
             // hide minimize, maximize, and close buttons
             //btnHide.Visibility = Visibility.Hidden;
@@ -390,13 +461,16 @@ namespace TransparentTwitchChatWPF
             this.BorderThickness = this.noBorderThickness;
             this.ResizeMode = System.Windows.ResizeMode.NoResize;
 
+            this.WindowStyle = WindowStyle.None;
+            this.Background = Brushes.Transparent;
+
             hiddenBorders = true;
 
             this.Topmost = false;
             this.Activate();
             this.Topmost = true;
 
-            this.webView.IsEnabled = false;
+            CheckForegroundWindow();
         }
 
         public void ToggleBorderVisibility()
@@ -438,18 +512,6 @@ namespace TransparentTwitchChatWPF
             this.Top = 10;
             this.Height = 500;
             this.Width = 320;
-        }
-
-        private void Window_KeyUp(object sender, KeyEventArgs e)
-        {
-            //if (e.KeyCode == Key.F9)
-            //{
-            //    ToggleBorderVisibility();
-            //}
-            //else if (e.Key == Key.F8)
-            //{
-            //    ShowSettingsWindow();
-            //}
         }
 
         private void SetCustomChatAddress(string url)
@@ -1008,26 +1070,49 @@ namespace TransparentTwitchChatWPF
 
         private async void CheckForUpdateAsync()
         {
-            updateManager = await UpdateManager.GitHubUpdateManager(@"https://github.com/baffler/Transparent-Twitch-Chat-Overlay");
-
             try
             {
-                var updateInfo = await updateManager.CheckForUpdate();
-
-                if (updateInfo.ReleasesToApply.Count > 0)
+                using (var updateManager = await UpdateManager.GitHubUpdateManager(@"https://github.com/baffler/Transparent-Twitch-Chat-Overlay"))
                 {
-                    if (MessageBox.Show($"Transparent Twitch Chat Overlay (Current Version: v{updateInfo.CurrentlyInstalledVersion.Version}\nNew Version: v{updateInfo.FutureReleaseEntry.Version} is available. Would you like to update now?",
-                        "New Version Available",
-                        MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes)
+                    var updateInfo = await updateManager.CheckForUpdate();
+
+                    if (updateInfo.ReleasesToApply.Count > 0)
                     {
-                        await updateManager.UpdateApp();
-                        MessageBox.Show("Updated successfully! You will need to restart the app to apply the update.", "Update Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                        string currentVersion = "0.0.0";
+
+                        if (updateInfo.CurrentlyInstalledVersion == null)
+                        {
+                            Version version = Assembly.GetExecutingAssembly().GetName().Version;
+                            currentVersion = $"{version.Major}.{version.Minor}.{version.Build}";
+                        }
+                        else
+                            currentVersion = updateInfo.CurrentlyInstalledVersion.Version.ToString();
+
+                        currentVersion = string.IsNullOrEmpty(currentVersion) ? "0.0.0" : currentVersion;
+
+                        string nextVersion = updateInfo.FutureReleaseEntry.Version.ToString();
+                        nextVersion = string.IsNullOrEmpty(nextVersion) ? "0.0.0" : nextVersion;
+
+                        if (MessageBox.Show($"New Version [v{nextVersion}] is available.\n(Currently on [v{currentVersion}])\n\nWould you like to update now?",
+                            "New Version Available",
+                            MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes)
+                        {
+                            try
+                            {
+                                await updateManager.UpdateApp();
+                                MessageBox.Show("Updated successfully! You will need to restart the app to apply the update.", "Update Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show("Failed to update:\n" + ex.Message, "Error while Updating", MessageBoxButton.OK, MessageBoxImage.Error);
+                            }
+                        }
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show("Couldn't check for update:\n" + ex.Message, "Error while Checking for Update", MessageBoxButton.OK, MessageBoxImage.Error);
+                //MessageBox.Show("Couldn't check for update:\n" + ex.Message, "Error while Checking for Update", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -1286,11 +1371,23 @@ namespace TransparentTwitchChatWPF
             this.webView.CoreWebView2.OpenDevToolsWindow();
         }
 
+        private void MenuItem_BringToTopTimer(object sender, RoutedEventArgs e)
+        {
+            StartCheckForegroundWindowTimer();
+        }
+
+        private void MenuItem_ToggleInteractable(object sender, RoutedEventArgs e)
+        {
+            if (!hasWebView2Runtime) return;
+            SetInteractable(!this.webView.IsEnabled);
+        }
+
         private void Window_Closed(object sender, EventArgs e)
         {
             if (!App.IsShuttingDown)
                 ExitApplication();
         }
+        
     }
 
     [ClassInterface(ClassInterfaceType.AutoDual)]

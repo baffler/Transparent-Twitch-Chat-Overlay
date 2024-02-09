@@ -239,7 +239,7 @@
                         <CheckBox 
                             Visibility="Visible"
                             Name="cbMultiInstance"
-                            Content="Allow Mulitple Instances (beta)"
+                            Content="Allow Multiple Instances (beta)"
                             HorizontalAlignment="Left" 
                             VerticalAlignment="Top"
                             Margin="20,10,0,0"

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
@@ -17,7 +18,13 @@ namespace TransparentTwitchChatWPF
         public GeneralSettings genSettings;
         //private GeneralSettings genDefaultSettings;
 
-        public static string Version { get { return "0.10.0"; } }
+        public static string Version { 
+            get 
+            {
+                Version version = Assembly.GetExecutingAssembly().GetName().Version;
+                return $"{version.Major}.{version.Minor}.{version.Build}";
+            } 
+        }
 
         private SettingsSingleton()
         {

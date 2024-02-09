@@ -85,6 +85,9 @@
                             <MenuItem Header="Settings" Click="MenuItem_ShowSettings" />
                             <MenuItem Header="Dev Tools" Click="MenuItem_DevToolsClick" />
                             <Separator />
+                            <MenuItem Header="Toggle Interactable (F7)" Click="MenuItem_ToggleInteractable" />
+                            <MenuItem Header="Bring To Top (F8)" Click="MenuItem_BringToTopTimer" />
+                            <Separator />
                             <MenuItem Header="GitHub latest release" Click="MenuItem_VisitWebsite" />
                         </ContextMenu>
                     </ui:TitleBarButton.ContextMenu>

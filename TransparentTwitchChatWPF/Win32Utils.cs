@@ -34,6 +34,9 @@ namespace TransparentTwitchChatWPF
         public const int LWA_ALPHA = 0x2;
         public const int LWA_COLORKEY = 0x1;
 
+        public const int GWL_STYLE = -16;
+        public const int WS_SYSMENU = 0x80000;
+
         public static void SetWindowExTransparent(IntPtr hwnd)
         {
             SetWindowLong(hwnd, GWL_EXSTYLE,
@@ -44,6 +47,18 @@ namespace TransparentTwitchChatWPF
         {
             SetWindowLong(hwnd, GWL_EXSTYLE,
                 (IntPtr)(GetWindowLong(hwnd, GWL_EXSTYLE) & ~(WS_EX_LAYERED | WS_EX_TRANSPARENT)));
+        }
+
+        public static void HideWindowSystemMenu(IntPtr hwnd)
+        {
+            SetWindowLong(hwnd, GWL_STYLE, 
+                (IntPtr)(GetWindowLong(hwnd, GWL_STYLE) & ~WS_SYSMENU));
+        }
+
+        public static void ShowWindowSystemMenu(IntPtr hwnd)
+        {
+            SetWindowLong(hwnd, GWL_STYLE,
+                (IntPtr)(GetWindowLong(hwnd, GWL_STYLE) | WS_SYSMENU));
         }
 
         public static void SetWindowPosTopMost(IntPtr hwnd)
