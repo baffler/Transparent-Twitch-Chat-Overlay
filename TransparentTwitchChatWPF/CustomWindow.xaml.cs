@@ -51,6 +51,8 @@ namespace TransparentTwitchChatWPF
             trackingConfig = Services.Tracker.Configure(this).IdentifyAs(hashCode);
             trackingConfig.Apply();
 
+            if (ZoomLevel <= 0) ZoomLevel = 1;
+
             InitializeWebViewAsync();
         }
 
@@ -176,7 +178,7 @@ namespace TransparentTwitchChatWPF
         {
             if (ZoomLevel < 4.0)
             {
-                this.webView.ZoomFactor = ZoomLevel + 0.1;
+                SetZoomFactor(ZoomLevel + 0.1);
                 ZoomLevel = this.webView.ZoomFactor;
             }
         }
@@ -185,20 +187,29 @@ namespace TransparentTwitchChatWPF
         {
             if (ZoomLevel > 0.1)
             {
-                this.webView.ZoomFactor = ZoomLevel - 0.1;
+                SetZoomFactor(ZoomLevel - 0.1);
                 ZoomLevel = this.webView.ZoomFactor;
             }
         }
 
         private void MenuItem_ZoomReset(object sender, RoutedEventArgs e)
         {
-            this.webView.ZoomFactor = 1;
+            SetZoomFactor(1);
             ZoomLevel = 1;
+        }
+
+        private void SetZoomFactor(double zoom)
+        {
+            if (zoom <= 0.1) zoom = 0.1;
+            if (zoom > 4) zoom = 4;
+
+            this.webView.ZoomFactor = zoom;
+            ZoomLevel = zoom;
         }
 
         private async void webView_NavigationCompleted(object sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs e)
         {
-            this.webView.Dispatcher.Invoke(new Action(() => { this.webView.ZoomFactor = ZoomLevel; }));
+            this.webView.Dispatcher.Invoke(new Action(() => { SetZoomFactor(ZoomLevel); }));
 
             // Insert some custom CSS for webcaptioner.com domain
             if (this.customURL.ToLower().Contains("webcaptioner.com"))

@@ -622,7 +622,7 @@ namespace TransparentTwitchChatWPF
 
             if (SettingsSingleton.Instance.genSettings.ZoomLevel < 4.0)
             {
-                this.webView.ZoomFactor = SettingsSingleton.Instance.genSettings.ZoomLevel + 0.1;
+                SetZoomFactor(SettingsSingleton.Instance.genSettings.ZoomLevel + 0.1);
                 SettingsSingleton.Instance.genSettings.ZoomLevel = this.webView.ZoomFactor;
             }
         }
@@ -633,7 +633,7 @@ namespace TransparentTwitchChatWPF
 
             if (SettingsSingleton.Instance.genSettings.ZoomLevel > 0.1)
             {
-                this.webView.ZoomFactor = SettingsSingleton.Instance.genSettings.ZoomLevel - 0.1;
+                SetZoomFactor(SettingsSingleton.Instance.genSettings.ZoomLevel - 0.1);
                 SettingsSingleton.Instance.genSettings.ZoomLevel = this.webView.ZoomFactor;
             }
         }
@@ -641,8 +641,17 @@ namespace TransparentTwitchChatWPF
         private void MenuItem_ZoomReset(object sender, RoutedEventArgs e)
         {
             if (!hasWebView2Runtime) return;
-            this.webView.ZoomFactor = 1.0;
-            SettingsSingleton.Instance.genSettings.ZoomLevel = 1.0;
+            SetZoomFactor(1);
+            SettingsSingleton.Instance.genSettings.ZoomLevel = 1;
+        }
+
+        private void SetZoomFactor(double zoom)
+        {
+            if (zoom <= 0.1) zoom = 0.1;
+            if (zoom > 4) zoom = 4;
+
+            this.webView.ZoomFactor = zoom;
+            SettingsSingleton.Instance.genSettings.ZoomLevel = zoom;
         }
 
         private void webView_NavigationStarting(object sender, CoreWebView2NavigationStartingEventArgs e)
@@ -658,8 +667,7 @@ namespace TransparentTwitchChatWPF
             }
 
             this.webView.Dispatcher.Invoke(new Action(() => {
-                if (SettingsSingleton.Instance.genSettings.ZoomLevel > 0)
-                    this.webView.ZoomFactor = SettingsSingleton.Instance.genSettings.ZoomLevel; 
+                    SetZoomFactor(SettingsSingleton.Instance.genSettings.ZoomLevel); 
             }));
 
             if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.TwitchPopout)
@@ -1124,6 +1132,9 @@ namespace TransparentTwitchChatWPF
 
         private void SetupBrowser()
         {
+            if (SettingsSingleton.Instance.genSettings.ZoomLevel <= 0)
+                SettingsSingleton.Instance.genSettings.ZoomLevel = 1;
+
             webView.DefaultBackgroundColor = System.Drawing.Color.Transparent;
             //this.bgColor = new SolidColorBrush(Color.FromArgb(SettingsSingleton.Instance.genSettings.OpacityLevel, 0, 0, 0));
             this.cOpacity = SettingsSingleton.Instance.genSettings.OpacityLevel;
