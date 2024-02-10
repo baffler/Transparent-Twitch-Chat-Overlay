@@ -128,10 +128,11 @@ namespace TransparentTwitchChatWPF
 
         /// 
 
-        SolidColorBrush bgColor;
+        //SolidColorBrush bgColor;
         Thickness noBorderThickness = new Thickness(0);
         Thickness borderThickness = new Thickness(4);
         int cOpacity = 0;
+        
         bool hiddenBorders = false;
         //GeneralSettings genSettings;
         TrackingConfiguration genSettingsTrackingConfig;
@@ -1124,9 +1125,9 @@ namespace TransparentTwitchChatWPF
         private void SetupBrowser()
         {
             webView.DefaultBackgroundColor = System.Drawing.Color.Transparent;
-            this.bgColor = new SolidColorBrush(Color.FromArgb(SettingsSingleton.Instance.genSettings.OpacityLevel, 0, 0, 0));
-            this.Background = this.bgColor;
+            //this.bgColor = new SolidColorBrush(Color.FromArgb(SettingsSingleton.Instance.genSettings.OpacityLevel, 0, 0, 0));
             this.cOpacity = SettingsSingleton.Instance.genSettings.OpacityLevel;
+            SetBackgroundOpacity(this.cOpacity);
 
             if (SettingsSingleton.Instance.genSettings.AutoHideBorders)
                 hideBorders();
@@ -1223,6 +1224,21 @@ namespace TransparentTwitchChatWPF
             }
         }
 
+        private void SetBackgroundOpacity(int Opacity)
+        {
+            double Remap(int inputValue)
+            {
+                double outputValue = (inputValue - 0) * (1.0 - 0.0) / (255 - 0) + 0.0;
+                return outputValue;
+            }
+
+            double remapped = Remap(Opacity);
+            if (remapped <= 0) remapped = 0.01;
+            else if (remapped >= 1) remapped = 1;
+            this.overlay.Opacity = remapped;
+            this.FooterBar.Opacity = remapped;
+        }
+
         private void MenuItem_IncOpacity(object sender, RoutedEventArgs e)
         {
             if (!hasWebView2Runtime) return;
@@ -1230,7 +1246,8 @@ namespace TransparentTwitchChatWPF
             this.cOpacity += 15;
             if (this.cOpacity > 255) this.cOpacity = 255;
             SettingsSingleton.Instance.genSettings.OpacityLevel = (byte)this.cOpacity;
-            this.bgColor.Color = Color.FromArgb((byte)this.cOpacity, 0, 0, 0);
+            //this.bgColor.Color = Color.FromArgb((byte)this.cOpacity, 0, 0, 0);
+            SetBackgroundOpacity(this.cOpacity);
         }
 
         private void MenuItem_DecOpacity(object sender, RoutedEventArgs e)
@@ -1240,7 +1257,8 @@ namespace TransparentTwitchChatWPF
             this.cOpacity -= 15;
             if (this.cOpacity < 0) this.cOpacity = 0;
             SettingsSingleton.Instance.genSettings.OpacityLevel = (byte)this.cOpacity;
-            this.bgColor.Color = Color.FromArgb((byte)this.cOpacity, 0, 0, 0);
+            //this.bgColor.Color = Color.FromArgb((byte)this.cOpacity, 0, 0, 0);
+            SetBackgroundOpacity(this.cOpacity);
         }
 
         private void MenuItem_ResetOpacity(object sender, RoutedEventArgs e)
@@ -1249,7 +1267,8 @@ namespace TransparentTwitchChatWPF
 
             this.cOpacity = 0;
             SettingsSingleton.Instance.genSettings.OpacityLevel = 0;
-            this.bgColor.Color = Color.FromArgb(0, 0, 0, 0);
+            //this.bgColor.Color = Color.FromArgb(0, 0, 0, 0);
+            SetBackgroundOpacity(this.cOpacity);
         }
 
         private void PushNewMessage(string message = "")
