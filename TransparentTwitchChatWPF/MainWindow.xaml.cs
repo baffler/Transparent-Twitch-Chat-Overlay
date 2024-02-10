@@ -191,10 +191,16 @@ namespace TransparentTwitchChatWPF
             HotkeyManager.Current.Remove("ToggleInteraction");
             HotkeyManager.Current.Remove("BringToTopTimer");
 
+            menuItemToggleBorders.Header = "Toggle Borders";
+            menuItemToggleInteractable.Header = "Toggle Interactable";
+            menuItemBringToTop.Header = "Bring to Top";
+
             if (SettingsSingleton.Instance.genSettings.ToggleBordersHotkey != null)
             {
                 if (SettingsSingleton.Instance.genSettings.ToggleBordersHotkey.Key != Key.None)
                 {
+                    menuItemToggleBorders.Header = $"Toggle Borders ({SettingsSingleton.Instance.genSettings.ToggleBordersHotkey.ToString()})";
+
                     HotkeyManager.Current.AddOrReplace(
                         "ToggleBorders",
                         SettingsSingleton.Instance.genSettings.ToggleBordersHotkey.Key,
@@ -207,6 +213,7 @@ namespace TransparentTwitchChatWPF
             {
                 if (SettingsSingleton.Instance.genSettings.ToggleInteractableHotkey.Key != Key.None)
                 {
+                    menuItemToggleInteractable.Header = $"Toggle Interactable ({SettingsSingleton.Instance.genSettings.ToggleInteractableHotkey.ToString()})";
                     HotkeyManager.Current.AddOrReplace(
                         "ToggleInteraction",
                         SettingsSingleton.Instance.genSettings.ToggleInteractableHotkey.Key,
@@ -219,6 +226,7 @@ namespace TransparentTwitchChatWPF
             {
                 if (SettingsSingleton.Instance.genSettings.BringToTopHotkey.Key != Key.None)
                 {
+                    menuItemBringToTop.Header = $"Bring to Top ({SettingsSingleton.Instance.genSettings.BringToTopHotkey.ToString()})";
                     HotkeyManager.Current.AddOrReplace(
                         "BringToTopTimer",
                         SettingsSingleton.Instance.genSettings.BringToTopHotkey.Key,
