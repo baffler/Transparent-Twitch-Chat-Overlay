@@ -199,13 +199,18 @@ namespace TransparentTwitchChatWPF
             {
                 if (SettingsSingleton.Instance.genSettings.ToggleBordersHotkey.Key != Key.None)
                 {
-                    menuItemToggleBorders.Header = $"Toggle Borders ({SettingsSingleton.Instance.genSettings.ToggleBordersHotkey.ToString()})";
+                    try
+                    {
+                        HotkeyManager.Current.AddOrReplace(
+                            "ToggleBorders",
+                            SettingsSingleton.Instance.genSettings.ToggleBordersHotkey.Key,
+                            SettingsSingleton.Instance.genSettings.ToggleBordersHotkey.Modifiers,
+                            OnHotKeyToggleBorders);
 
-                    HotkeyManager.Current.AddOrReplace(
-                        "ToggleBorders",
-                        SettingsSingleton.Instance.genSettings.ToggleBordersHotkey.Key,
-                        SettingsSingleton.Instance.genSettings.ToggleBordersHotkey.Modifiers,
-                        OnHotKeyToggleBorders);
+                        menuItemToggleBorders.Header = $"Toggle Borders ({SettingsSingleton.Instance.genSettings.ToggleBordersHotkey.ToString()})";
+                    }
+                    catch (Exception)
+                    { }
                 }
             }
 
@@ -213,12 +218,18 @@ namespace TransparentTwitchChatWPF
             {
                 if (SettingsSingleton.Instance.genSettings.ToggleInteractableHotkey.Key != Key.None)
                 {
-                    menuItemToggleInteractable.Header = $"Toggle Interactable ({SettingsSingleton.Instance.genSettings.ToggleInteractableHotkey.ToString()})";
-                    HotkeyManager.Current.AddOrReplace(
-                        "ToggleInteraction",
-                        SettingsSingleton.Instance.genSettings.ToggleInteractableHotkey.Key,
-                        SettingsSingleton.Instance.genSettings.ToggleInteractableHotkey.Modifiers,
-                        OnHotKeyToggleInteraction);
+                    try
+                    {
+                        HotkeyManager.Current.AddOrReplace(
+                            "ToggleInteraction",
+                            SettingsSingleton.Instance.genSettings.ToggleInteractableHotkey.Key,
+                            SettingsSingleton.Instance.genSettings.ToggleInteractableHotkey.Modifiers,
+                            OnHotKeyToggleInteraction);
+
+                        menuItemToggleInteractable.Header = $"Toggle Interactable ({SettingsSingleton.Instance.genSettings.ToggleInteractableHotkey.ToString()})";
+                    }
+                    catch (Exception)
+                    { }
                 }
             }
 
@@ -226,12 +237,17 @@ namespace TransparentTwitchChatWPF
             {
                 if (SettingsSingleton.Instance.genSettings.BringToTopHotkey.Key != Key.None)
                 {
-                    menuItemBringToTop.Header = $"Bring to Top ({SettingsSingleton.Instance.genSettings.BringToTopHotkey.ToString()})";
-                    HotkeyManager.Current.AddOrReplace(
-                        "BringToTopTimer",
-                        SettingsSingleton.Instance.genSettings.BringToTopHotkey.Key,
-                        SettingsSingleton.Instance.genSettings.BringToTopHotkey.Modifiers,
-                        OnHotKeyBringToTopTimer);
+                    try
+                    {
+                        HotkeyManager.Current.AddOrReplace(
+                            "BringToTopTimer",
+                            SettingsSingleton.Instance.genSettings.BringToTopHotkey.Key,
+                            SettingsSingleton.Instance.genSettings.BringToTopHotkey.Modifiers,
+                            OnHotKeyBringToTopTimer);
+                        menuItemBringToTop.Header = $"Bring to Top ({SettingsSingleton.Instance.genSettings.BringToTopHotkey.ToString()})";
+                    }
+                    catch (Exception)
+                    { }
                 }
             }
         }
