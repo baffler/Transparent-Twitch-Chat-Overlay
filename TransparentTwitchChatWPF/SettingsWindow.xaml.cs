@@ -16,9 +16,10 @@ using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
 using TwitchLib.Api.Auth;
 using NAudio.Wave;
-using System.Windows.Forms;
+//using System.Windows.Forms;
 using System.IO;
 using System.Diagnostics;
+using System.Windows.Threading;
 
 namespace TransparentTwitchChatWPF
 {
@@ -27,6 +28,8 @@ namespace TransparentTwitchChatWPF
     /// </summary>
     public partial class SettingsWindow : Window
     {
+        public static event Action<bool> SettingsWindowActive;
+
         WindowSettings config;
         MainWindow _main;
         TwitchAPI _api;
@@ -46,6 +49,8 @@ namespace TransparentTwitchChatWPF
             ValidateTwitchConnection();
 
             InitializeComponent();
+
+            SettingsWindowActive?.Invoke(true);
 
             tbPopoutCSS.SyntaxHighlighting = ICSharpCode.AvalonEdit.Highlighting.HighlightingManager.Instance.GetDefinition("CSS");
             tbWidgetCustomCSS.SyntaxHighlighting = ICSharpCode.AvalonEdit.Highlighting.HighlightingManager.Instance.GetDefinition("CSS");
@@ -281,6 +286,12 @@ namespace TransparentTwitchChatWPF
 
             SettingsSingleton.Instance.genSettings.CheckForUpdates = this.cbCheckForUpdates.IsChecked ?? false;
 
+            // Hotkeys
+            SettingsSingleton.Instance.genSettings.ToggleBordersHotkey = hotkeyInputToggleBorders.Hotkey;
+            SettingsSingleton.Instance.genSettings.ToggleInteractableHotkey = hotkeyInputToggleInteractable.Hotkey;
+            SettingsSingleton.Instance.genSettings.BringToTopHotkey = hotkeyInputBringToTop.Hotkey;
+
+
             SettingsSingleton.Instance.genSettings.DeviceID = (int)DevicesComboBox.SelectedValue;
             SettingsSingleton.Instance.genSettings.DeviceName = DevicesComboBox.Text;
 
@@ -339,6 +350,10 @@ namespace TransparentTwitchChatWPF
             this.cbInteraction.IsChecked = this.config.AllowInteraction;
             this.cbCheckForUpdates.IsChecked = SettingsSingleton.Instance.genSettings.CheckForUpdates;
             this.cbMultiInstance.IsChecked = TransparentTwitchChatWPF.Properties.Settings.Default.allowMultipleInstances;
+
+            this.hotkeyInputToggleBorders.Hotkey = SettingsSingleton.Instance.genSettings.ToggleBordersHotkey;
+            this.hotkeyInputToggleInteractable.Hotkey = SettingsSingleton.Instance.genSettings.ToggleInteractableHotkey;
+            this.hotkeyInputBringToTop.Hotkey = SettingsSingleton.Instance.genSettings.BringToTopHotkey;
 
             LoadDevices();
             this.OutputVolumeSlider.Value = SettingsSingleton.Instance.genSettings.OutputVolume * 100;
@@ -400,11 +415,6 @@ namespace TransparentTwitchChatWPF
 
                 this.tbURL.Text = string.Empty;
             }
-        }
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            
         }
 
         private void cbFade_Checked(object sender, RoutedEventArgs e)
@@ -716,9 +726,9 @@ namespace TransparentTwitchChatWPF
 
         private void btChangeSoundClipsFolder_Click(object sender, RoutedEventArgs e)
         {
-            using (var dialog = new FolderBrowserDialog())
+            using (var dialog = new System.Windows.Forms.FolderBrowserDialog())
             {
-                DialogResult result = dialog.ShowDialog();
+                System.Windows.Forms.DialogResult result = dialog.ShowDialog();
 
                 if (result == System.Windows.Forms.DialogResult.OK)
                 {
@@ -735,6 +745,54 @@ namespace TransparentTwitchChatWPF
             this.tbSoundClipsFolder.Text = "Default";
             this.LoadSoundClips();
             this.comboChatSound.SelectedIndex = 0;
+        }
+
+        private void setHotkeyToggleBorders_Click(object sender, RoutedEventArgs e)
+        {
+            if (hotkeyInputToggleBorders.IsCapturing)
+            {
+                hotkeyInputToggleBorders.StopCapturing();
+                btCaptureHotkeyToggleBorders.Content = "Capture Hotkey";
+            }
+            else
+            {
+                hotkeyInputToggleBorders.StartCapturing();
+                btCaptureHotkeyToggleBorders.Content = "Set Hotkey";
+            }
+        }
+
+        
+        private void setHotkeyToggleInteractable_Click(object sender, RoutedEventArgs e)
+        {
+            if (hotkeyInputToggleInteractable.IsCapturing)
+            {
+                hotkeyInputToggleInteractable.StopCapturing();
+                btCaptureHotkeyInteractable.Content = "Capture Hotkey";
+            }
+            else
+            {
+                hotkeyInputToggleInteractable.StartCapturing();
+                btCaptureHotkeyInteractable.Content = "Set Hotkey";
+            }
+        }
+
+        private void setHotkeyBringToTop_Click(object sender, RoutedEventArgs e)
+        {
+            if (hotkeyInputBringToTop.IsCapturing)
+            {
+                hotkeyInputBringToTop.StopCapturing();
+                btCaptureHotkeyBringToTop.Content = "Capture Hotkey";
+            }
+            else
+            {
+                hotkeyInputBringToTop.StartCapturing();
+                btCaptureHotkeyBringToTop.Content = "Set Hotkey";
+            }
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            SettingsWindowActive?.Invoke(false);
         }
     }
 }

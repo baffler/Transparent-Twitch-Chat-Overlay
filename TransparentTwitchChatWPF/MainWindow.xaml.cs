@@ -14,6 +14,9 @@ using TwitchLib.PubSub.Events;
 using Squirrel;
 
 /*
+ * v1.0.1
+ * > While settings are open, don't register hotkeys
+ * 
  * 
  * v1.0.0
  * - Added Squirrel for installing and updating the app
@@ -171,11 +174,58 @@ namespace TransparentTwitchChatWPF
             _timer.Elapsed += _timer_Elapsed;
             _timerTick = 0;
 
-            HotkeyManager.Current.AddOrReplace("ToggleInteraction", Key.F7, ModifierKeys.None, OnHotKeyToggleInteraction);
-            HotkeyManager.Current.AddOrReplace("BringToTopTimer", Key.F8, ModifierKeys.None, OnHotKeyBringToTopTimer);
-            HotkeyManager.Current.AddOrReplace("ToggleBorders", Key.F9, ModifierKeys.None, OnHotKeyToggleBorders);
+            SetupOrReplaceHotkeys();
+            SettingsWindow.SettingsWindowActive += OnSettingsWindowActive;
 
             InitializeWebViewAsync();
+        }
+
+        private void OnSettingsWindowActive(bool isActive)
+        {
+            HotkeyManager.Current.IsEnabled = !isActive;
+        }
+
+        private void SetupOrReplaceHotkeys()
+        {
+            HotkeyManager.Current.Remove("ToggleBorders");
+            HotkeyManager.Current.Remove("ToggleInteraction");
+            HotkeyManager.Current.Remove("BringToTopTimer");
+
+            if (SettingsSingleton.Instance.genSettings.ToggleBordersHotkey != null)
+            {
+                if (SettingsSingleton.Instance.genSettings.ToggleBordersHotkey.Key != Key.None)
+                {
+                    HotkeyManager.Current.AddOrReplace(
+                        "ToggleBorders",
+                        SettingsSingleton.Instance.genSettings.ToggleBordersHotkey.Key,
+                        SettingsSingleton.Instance.genSettings.ToggleBordersHotkey.Modifiers,
+                        OnHotKeyToggleBorders);
+                }
+            }
+
+            if (SettingsSingleton.Instance.genSettings.ToggleInteractableHotkey != null)
+            {
+                if (SettingsSingleton.Instance.genSettings.ToggleInteractableHotkey.Key != Key.None)
+                {
+                    HotkeyManager.Current.AddOrReplace(
+                        "ToggleInteraction",
+                        SettingsSingleton.Instance.genSettings.ToggleInteractableHotkey.Key,
+                        SettingsSingleton.Instance.genSettings.ToggleInteractableHotkey.Modifiers,
+                        OnHotKeyToggleInteraction);
+                }
+            }
+
+            if (SettingsSingleton.Instance.genSettings.BringToTopHotkey != null)
+            {
+                if (SettingsSingleton.Instance.genSettings.BringToTopHotkey.Key != Key.None)
+                {
+                    HotkeyManager.Current.AddOrReplace(
+                        "BringToTopTimer",
+                        SettingsSingleton.Instance.genSettings.BringToTopHotkey.Key,
+                        SettingsSingleton.Instance.genSettings.BringToTopHotkey.Modifiers,
+                        OnHotKeyBringToTopTimer);
+                }
+            }
         }
 
         private void OnHotKeyToggleInteraction(object sender, HotkeyEventArgs e)
@@ -1010,6 +1060,8 @@ namespace TransparentTwitchChatWPF
 
                 if (!this.hiddenBorders) this.webView.IsEnabled = config.AllowInteraction;
 
+                SetupOrReplaceHotkeys();
+
                 // Save the new changes for settings
                 this.genSettingsTrackingConfig.Persist();
             }
@@ -1101,6 +1153,8 @@ namespace TransparentTwitchChatWPF
 
                         string nextVersion = updateInfo.FutureReleaseEntry.Version.ToString();
                         nextVersion = string.IsNullOrEmpty(nextVersion) ? "0.0.0" : nextVersion;
+
+                        if (string.Equals(currentVersion, nextVersion)) return;
 
                         if (MessageBox.Show($"New Version [v{nextVersion}] is available.\n(Currently on [v{currentVersion}])\n\nWould you like to update now?",
                             "New Version Available",
@@ -1599,5 +1653,11 @@ namespace TransparentTwitchChatWPF
         public int DeviceID { get; set; }
         [Trackable]
         public string SoundClipsFolder { get; set; }
+        [Trackable]
+        public Hotkey ToggleBordersHotkey { get; set; }
+        [Trackable]
+        public Hotkey ToggleInteractableHotkey { get; set; }
+        [Trackable]
+        public Hotkey BringToTopHotkey { get; set; }
     }
 }

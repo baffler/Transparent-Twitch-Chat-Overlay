@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using System.Windows.Input;
 
 namespace TransparentTwitchChatWPF
 {
@@ -69,6 +70,9 @@ namespace TransparentTwitchChatWPF
                 DeviceName = "",
                 DeviceID = -1,
                 SoundClipsFolder = "Default",
+                ToggleBordersHotkey = new Hotkey(Key.F9, ModifierKeys.Control | ModifierKeys.Alt),
+                ToggleInteractableHotkey = new Hotkey(Key.F7, ModifierKeys.Control | ModifierKeys.Alt),
+                BringToTopHotkey = new Hotkey(Key.F8, ModifierKeys.Control | ModifierKeys.Alt),
             };
         }
 

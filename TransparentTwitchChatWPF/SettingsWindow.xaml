@@ -12,7 +12,7 @@
         ui:TitleBar.ExtendViewIntoTitleBar="False"
         Title="Settings"
         WindowStyle="ToolWindow"
-        Height="500" Width="550" Topmost="True" WindowStartupLocation="CenterScreen" Loaded="Window_Loaded" SourceInitialized="Window_SourceInitialized">
+        Height="500" Width="550" Topmost="True" WindowStartupLocation="CenterScreen" Closing="Window_Closing" SourceInitialized="Window_SourceInitialized">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="110"/>
@@ -61,7 +61,7 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <Grid Name="chatGrid" Grid.Row="0">
+            <Grid Name="chatGrid" Visibility="Visible" Grid.Row="0">
                 <Grid Name ="twitchPopoutChat" Visibility="Hidden">
                     <Label Content="Username" HorizontalAlignment="Left" Margin="12,15,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                     <TextBox Name="tbTwitchPopoutUsername" HorizontalAlignment="Left" Height="23" Width="240" Margin="20,40,0,0" TextWrapping="NoWrap" Text="username" VerticalAlignment="Top" />
@@ -247,6 +247,32 @@
                             Unchecked="cbMultiInstance_Unchecked"
                             />
 
+                        <Rectangle Height="2" Fill="Gray" Margin="10 5 25 5" />
+
+                        <Label Margin="15,5,0,0" HorizontalAlignment="Left" Content="Global Hotkeys" FontWeight="Bold" />
+                        <Label Margin="15,5,0,0" HorizontalAlignment="Left" FontStyle="Italic" Content="To unset, click Capture Hotkey and press Esc, Delete, or Backspace" />
+                        <Label Margin="15,5,0,0" HorizontalAlignment="Left" FontStyle="Italic" Content="Since hotkeys are global, consider using modifier keys" />
+                        <Label Margin="15,5,0,0" HorizontalAlignment="Left" FontStyle="Italic" Content="Otherwise you can't use that key in other apps!" />
+
+                        <Label Margin="15,15,0,0" HorizontalAlignment="Left" Content="Toggle Borders Hotkey"  />
+                        <StackPanel Orientation="Horizontal">
+                            <local:HotkeyEditorControl x:Name="hotkeyInputToggleBorders" Margin="15,5,0,0" Width="250" HorizontalAlignment="Left" />
+                            <Button Margin="15,5,0,0" Name="btCaptureHotkeyToggleBorders" Content="Capture Hotkey" Click="setHotkeyToggleBorders_Click" />
+                        </StackPanel>
+
+                        <Label Content="Toggle Interactable Hotkey" Margin="15,15,0,0" HorizontalAlignment="Left" />
+                        <StackPanel Orientation="Horizontal">
+                            <local:HotkeyEditorControl x:Name="hotkeyInputToggleInteractable" Margin="15,5,0,0" Width="250" HorizontalAlignment="Left" />
+                            <Button Margin="15,5,0,0" Name="btCaptureHotkeyInteractable" Content="Capture Hotkey" Click="setHotkeyToggleInteractable_Click" />
+                        </StackPanel>
+
+                        <Label Margin="15,15,0,0" HorizontalAlignment="Left" Content="Bring To Top Hotkey"  />
+                        <StackPanel Orientation="Horizontal">
+                            <local:HotkeyEditorControl x:Name="hotkeyInputBringToTop" Margin="15,5,0,0" Width="250" HorizontalAlignment="Left" />
+                            <Button Margin="15,5,0,0" Name="btCaptureHotkeyBringToTop" Content="Capture Hotkey" Click="setHotkeyBringToTop_Click" />
+                        </StackPanel>
+
+                        <Rectangle Height="2" Fill="Gray" Margin="10 15 25 5" />
                         <Label Content="Sound Output Device" Margin="15,5,0,0" FontWeight="Bold"/>
                         <ComboBox x:Name="DevicesComboBox" Margin="20,5,20,10" />
                         <Label Content="Volume For Sound Clips" Margin="15,0,0,0" FontWeight="Bold"/>

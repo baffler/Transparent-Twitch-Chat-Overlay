@@ -128,6 +128,10 @@
     <Compile Include="GetID_Window.xaml.cs">
       <DependentUpon>GetID_Window.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Hotkey.cs" />
+    <Compile Include="HotkeyEditorControl.xaml.cs">
+      <DependentUpon>HotkeyEditorControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Input_Username.xaml.cs">
       <DependentUpon>Input_Username.xaml</DependentUpon>
     </Compile>
@@ -163,6 +167,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="GetID_Window.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="HotkeyEditorControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
