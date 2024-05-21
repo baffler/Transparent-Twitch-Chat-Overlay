@@ -14,9 +14,14 @@ using TwitchLib.PubSub.Events;
 using Squirrel;
 
 /*
- * v1.0.1
- * > While settings are open, don't register hotkeys
+ * v1.0.4
+ * > Memory leak with settings window?
+ * > Channel point redemptions not working
+ * > Line 1090: make overlay opacity 0, to allow click-through
+ * >> but find a way to set opacity on the background another way!
  * 
+ * v1.0.3
+ * * Fix for KapChat not working
  * 
  * v1.0.0
  * - Added Squirrel for installing and updating the app
@@ -254,7 +259,7 @@ namespace TransparentTwitchChatWPF
 
         private void OnHotKeyToggleInteraction(object sender, HotkeyEventArgs e)
         {
-            SetInteractable(!this.webView.IsEnabled);
+            SetInteractable(!this.webView.Focusable);
             e.Handled = true;
         }
 
@@ -466,7 +471,9 @@ namespace TransparentTwitchChatWPF
 
         public void SetInteractable(bool interactable)
         {
-            this.webView.IsEnabled = interactable;
+            this.Dispatcher.Invoke(() => {
+                this.webView.Focusable = interactable;
+            });
 
             var hwnd = new WindowInteropHelper(this).Handle;
 
@@ -478,11 +485,19 @@ namespace TransparentTwitchChatWPF
                 this.Topmost = false;
                 this.Activate();
                 this.Topmost = true;
+
+                this.overlay.Opacity = 0.01;
+                // TODO: Setting overlay Opacity to 0 allow click-through
+                // but still need a way to set opacity on BG?
             }
             else
             {
                 WindowHelper.SetWindowExTransparent(hwnd);
                 this.AppTitleBar.Visibility = Visibility.Collapsed;
+
+                this.overlay.Opacity = 0;
+                // TODO: Setting overlay Opacity to 0 allow click-through
+                // but still need a way to set opacity on BG?
             }
 
             CheckForegroundWindow();
@@ -607,7 +622,7 @@ namespace TransparentTwitchChatWPF
             if ((SettingsSingleton.Instance.genSettings.ThemeIndex >= 0) && (SettingsSingleton.Instance.genSettings.ThemeIndex < KapChat.Themes.Count))
                 theme = KapChat.Themes[SettingsSingleton.Instance.genSettings.ThemeIndex];
 
-            string url = @"https://www.nightdev.com/hosted/obschat/?";
+            string url = @"https://nightdev.com/hosted/obschat/?";
             url += @"theme=" + theme;
             url += @"&channel=" + username;
             url += @"&fade=" + fade;
@@ -1082,7 +1097,12 @@ namespace TransparentTwitchChatWPF
                 this.taskbarControl.Visibility = Visibility.Visible; //config.EnableTrayIcon ? Visibility.Visible : Visibility.Hidden;
                 this.ShowInTaskbar = !config.HideTaskbarIcon;
 
-                if (!this.hiddenBorders) this.webView.IsEnabled = config.AllowInteraction;
+                if (!this.hiddenBorders)
+                {
+                    this.webView.Focusable = true;
+                    if (config.AllowInteraction)
+                        SetInteractable(true);
+                }
 
                 SetupOrReplaceHotkeys();
 
@@ -1487,7 +1507,7 @@ namespace TransparentTwitchChatWPF
         private void MenuItem_ToggleInteractable(object sender, RoutedEventArgs e)
         {
             if (!hasWebView2Runtime) return;
-            SetInteractable(!this.webView.IsEnabled);
+            SetInteractable(!this.webView.Focusable);
         }
 
         private void Window_Closed(object sender, EventArgs e)

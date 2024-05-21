@@ -41,7 +41,7 @@ namespace TransparentTwitchChatWPF
 
     public static class CustomCSS_Defaults
     {
-        public static string TwitchPopoutChat = @"body { background-color: rgba(0,0,0,0.1) !important; }
+        public static string TwitchPopoutChat = @"body { background-color: rgba(0,0,0,0) !important; }
 .chat-input { display:none; }
 .stream-chat .stream-chat-header { display:none; background-color: rgba(0,0,0,0) !important; color:white !important; }
 .chat-room__notifcations { display:none; }

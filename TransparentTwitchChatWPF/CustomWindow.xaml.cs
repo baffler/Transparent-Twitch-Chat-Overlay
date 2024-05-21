@@ -93,7 +93,7 @@ namespace TransparentTwitchChatWPF
             this.Activate();
             this.Topmost = true;
 
-            this.webView.IsEnabled = true;
+            this.webView.Focusable = true;
         }
 
         public void hideBorders()
@@ -114,7 +114,7 @@ namespace TransparentTwitchChatWPF
             this.Activate();
             this.Topmost = true;
 
-            this.webView.IsEnabled = false;
+            this.webView.Focusable = false;
         }
 
         public void ToggleBorderVisibility()
