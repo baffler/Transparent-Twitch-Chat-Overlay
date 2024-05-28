@@ -140,6 +140,7 @@
       <DependentUpon>TextEditorWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="TwitchConnection.cs" />
+    <Compile Include="VisualTreeHelperExtensions.cs" />
     <Compile Include="WindowSettings.cs" />
     <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>

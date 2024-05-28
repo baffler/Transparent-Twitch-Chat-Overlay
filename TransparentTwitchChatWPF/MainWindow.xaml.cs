@@ -14,14 +14,16 @@ using TwitchLib.PubSub.Events;
 using Squirrel;
 
 /*
- * v1.0.4
+ * v1.0.5
  * > Memory leak with settings window?
- * > Channel point redemptions not working
- * > Line 1090: make overlay opacity 0, to allow click-through
- * >> but find a way to set opacity on the background another way!
+ * 
+ * v1.0.4
+ * - Remove that little x
+ * - Channel point redemptions working
+ * - Background opacity fixes
  * 
  * v1.0.3
- * * Fix for KapChat not working
+ * - Fix for KapChat not working
  * 
  * v1.0.0
  * - Added Squirrel for installing and updating the app
@@ -118,6 +120,8 @@ namespace TransparentTwitchChatWPF
     using System.Runtime.CompilerServices;
     using System.Windows.Media.TextFormatting;
     using ModernWpf.Controls;
+    using System.Threading;
+    using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -141,7 +145,8 @@ namespace TransparentTwitchChatWPF
         Thickness borderThickness = new Thickness(4);
         int cOpacity = 0;
         
-        bool hiddenBorders = false;
+        private bool _hiddenBorders = false;
+        private bool _interactable = true;
         //GeneralSettings genSettings;
         TrackingConfiguration genSettingsTrackingConfig;
         JsCallbackFunctions jsCallbackFunctions;
@@ -153,6 +158,8 @@ namespace TransparentTwitchChatWPF
         private bool _isPubSubConnected = false;
 
         private Chat currentChat;
+
+        private Button _closeButton;
 
         //protected void OnPropertyChanged([CallerMemberName]string propertyName = null)
         //{
@@ -379,7 +386,6 @@ namespace TransparentTwitchChatWPF
             }
 
             this.overlay.Child = null;
-            this.overlay.Opacity = 0.01;
 
             webView.CoreWebView2InitializationCompleted += webView_CoreWebView2InitializationCompleted;
             webView.ContentLoading += webView_ContentLoading;
@@ -394,6 +400,7 @@ namespace TransparentTwitchChatWPF
             this.mainWindowGrid.Children.Add(webView);
 
             var options = new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required");
+            options.AdditionalBrowserArguments = "--disable-background-timer-throttling";
             string userDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF");
             CoreWebView2Environment cwv2Environment = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
             await webView.EnsureCoreWebView2Async(cwv2Environment);
@@ -475,6 +482,7 @@ namespace TransparentTwitchChatWPF
                 this.webView.Focusable = interactable;
             });
 
+            _interactable = interactable;
             var hwnd = new WindowInteropHelper(this).Handle;
 
             if (interactable)
@@ -486,18 +494,16 @@ namespace TransparentTwitchChatWPF
                 this.Activate();
                 this.Topmost = true;
 
-                this.overlay.Opacity = 0.01;
-                // TODO: Setting overlay Opacity to 0 allow click-through
-                // but still need a way to set opacity on BG?
+                if (this.cOpacity <= 0)
+                    this.overlay.Opacity = 0.01;
             }
             else
             {
                 WindowHelper.SetWindowExTransparent(hwnd);
                 this.AppTitleBar.Visibility = Visibility.Collapsed;
 
-                this.overlay.Opacity = 0;
-                // TODO: Setting overlay Opacity to 0 allow click-through
-                // but still need a way to set opacity on BG?
+                if (this.cOpacity <= 0)
+                    this.overlay.Opacity = 0;
             }
 
             CheckForegroundWindow();
@@ -515,6 +521,7 @@ namespace TransparentTwitchChatWPF
             // show minimize, maximize, and close buttons
             //btnHide.Visibility = Visibility.Visible;
             //btnSettings.Visibility = Visibility.Visible;
+            SetCloseButtonVisibility(true);
 
             this.AppTitleBar.Visibility = Visibility.Visible;
             this.FooterBar.Visibility = Visibility.Visible;
@@ -523,7 +530,7 @@ namespace TransparentTwitchChatWPF
             this.BorderThickness = this.borderThickness;
             this.ResizeMode = System.Windows.ResizeMode.CanResizeWithGrip;
 
-            hiddenBorders = false;
+            _hiddenBorders = false;
 
             this.Topmost = false;
             this.Activate();
@@ -543,6 +550,7 @@ namespace TransparentTwitchChatWPF
             // hide minimize, maximize, and close buttons
             //btnHide.Visibility = Visibility.Hidden;
             //btnSettings.Visibility = Visibility.Hidden;
+            SetCloseButtonVisibility(false);
 
             this.AppTitleBar.Visibility = Visibility.Collapsed;
             this.FooterBar.Visibility = Visibility.Collapsed;
@@ -554,7 +562,7 @@ namespace TransparentTwitchChatWPF
             this.WindowStyle = WindowStyle.None;
             this.Background = Brushes.Transparent;
 
-            hiddenBorders = true;
+            _hiddenBorders = true;
 
             this.Topmost = false;
             this.Activate();
@@ -567,7 +575,7 @@ namespace TransparentTwitchChatWPF
         {
             if (!hasWebView2Runtime) return;
 
-            if (hiddenBorders)
+            if (_hiddenBorders)
                 DrawBordersForAllWindows();
             else
                 HideBordersForAllWindows();
@@ -679,7 +687,7 @@ namespace TransparentTwitchChatWPF
             {
                 if (window != null)
                 {
-                    if (this.hiddenBorders)
+                    if (this._hiddenBorders)
                         window.drawBorders();
                     else
                         window.hideBorders();
@@ -755,6 +763,8 @@ namespace TransparentTwitchChatWPF
                 return;
             }
 
+            Debug.WriteLine("Navigation completed: " + e.HttpStatusCode);
+
             this.webView.Dispatcher.Invoke(new Action(() => {
                     SetZoomFactor(SettingsSingleton.Instance.genSettings.ZoomLevel); 
             }));
@@ -777,6 +787,12 @@ namespace TransparentTwitchChatWPF
                 await this.webView.ExecuteScriptAsync(script);
 
             this.PushNewMessage("Loading...");
+
+            // Pub Sub
+            if (SettingsSingleton.Instance.genSettings.RedemptionsEnabled)
+            {
+                SetupPubSubRedemptions();
+            }
         }
 
         private void TwitchPopoutSetup()
@@ -1026,12 +1042,10 @@ namespace TransparentTwitchChatWPF
 
                     if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.Username))
                     {
-                        SetChatAddress(SettingsSingleton.Instance.genSettings.Username);
-
-                        if (config.RedemptionsEnabled)
-                            SetupPubSubRedemptions();
-                        else
+                        if (!config.RedemptionsEnabled)
                             DisablePubSubRedemptions();
+
+                        SetChatAddress(SettingsSingleton.Instance.genSettings.Username);
                     }
 
 
@@ -1059,12 +1073,10 @@ namespace TransparentTwitchChatWPF
 
                     if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.Username))
                     {
-                        SetCustomChatAddress(SettingsSingleton.Instance.genSettings.jChatURL);
-
-                        if (config.RedemptionsEnabled)
-                            SetupPubSubRedemptions();
-                        else
+                        if (!config.RedemptionsEnabled)
                             DisablePubSubRedemptions();
+
+                        SetCustomChatAddress(SettingsSingleton.Instance.genSettings.jChatURL);
                     }
                     else
                         SetCustomChatAddress(SettingsSingleton.Instance.genSettings.jChatURL);
@@ -1092,12 +1104,11 @@ namespace TransparentTwitchChatWPF
                 SettingsSingleton.Instance.genSettings.HideTaskbarIcon = config.HideTaskbarIcon;
                 SettingsSingleton.Instance.genSettings.AllowInteraction = config.AllowInteraction;
                 SettingsSingleton.Instance.genSettings.RedemptionsEnabled = config.RedemptionsEnabled;
-                SettingsSingleton.Instance.genSettings.ChannelID = config.ChannelID;
 
                 this.taskbarControl.Visibility = Visibility.Visible; //config.EnableTrayIcon ? Visibility.Visible : Visibility.Hidden;
                 this.ShowInTaskbar = !config.HideTaskbarIcon;
 
-                if (!this.hiddenBorders)
+                if (!this._hiddenBorders)
                 {
                     this.webView.Focusable = true;
                     if (config.AllowInteraction)
@@ -1167,9 +1178,38 @@ namespace TransparentTwitchChatWPF
 
             this.taskbarControl.Visibility = Visibility.Visible;
 
+            try
+            {
+                var mainWindow = Application.Current.MainWindow;
+
+                if (mainWindow != null)
+                {
+                    var titleBarControl = mainWindow.FindChildByType<DependencyObject>("ModernWpf.Controls.Primitives.TitleBarControl");
+                    if (titleBarControl != null)
+                    {
+                        _closeButton = titleBarControl.FindChild<Button>("CloseButton");
+                    }
+                }
+            }
+            catch //(Exception ex)
+            {
+                //MessageBox.Show($"Failed to hide close button: {ex.Message}");
+            }
+
             if (SettingsSingleton.Instance.genSettings.CheckForUpdates)
             {
                 Task.Run(() => CheckForUpdateAsync());
+            }
+        }
+
+        private void SetCloseButtonVisibility(bool isVisible)
+        {
+            if (_closeButton != null)
+            {
+                if (isVisible)
+                    _closeButton.Visibility = Visibility.Visible;
+                else
+                    _closeButton.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -1290,11 +1330,6 @@ namespace TransparentTwitchChatWPF
                     string address = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\index.html";
                     webView.CoreWebView2.Navigate(address);
                 }
-
-                if (SettingsSingleton.Instance.genSettings.RedemptionsEnabled)
-                {
-                    SetupPubSubRedemptions();
-                }
             }
             else if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.jChat)
             { // TODO: need to clean this up to determine which type of chat to load better
@@ -1342,7 +1377,13 @@ namespace TransparentTwitchChatWPF
             }
 
             double remapped = Remap(Opacity);
-            if (remapped <= 0) remapped = 0.01;
+            if (remapped <= 0)
+            {
+                if (_interactable)
+                    remapped = 0.01;
+                else
+                    remapped = 0;
+            }
             else if (remapped >= 1) remapped = 1;
             this.overlay.Opacity = remapped;
             this.FooterBar.Opacity = remapped;
@@ -1399,8 +1440,34 @@ namespace TransparentTwitchChatWPF
                 this.webView.ExecuteScriptAsync(js);
         }
 
+        private void PushNewMessageDispatcherInvoke(string message = "")
+        {
+            string js = this.currentChat.PushNewMessage(message);
+
+            if (!string.IsNullOrEmpty(js))
+            {
+                this.webView.Dispatcher.Invoke(() =>
+                {
+                    this.webView.ExecuteScriptAsync(js);
+                });
+            }
+        }
+
+        private void PushNewChatMessageDispatcherInvoke(string message = "", string nick = "", string color = "")
+        {
+            string js = this.currentChat.PushNewChatMessage(message, nick, color);
+            if (!string.IsNullOrEmpty(js))
+            {
+                this.webView.Dispatcher.Invoke(() =>
+                {
+                    this.webView.ExecuteScriptAsync(js);
+                });
+            }
+        }
+
         public void SetupPubSubRedemptions()
         {
+            Debug.WriteLine("Setting up PubSub Redemptions");
             DisablePubSubRedemptions();
 
             if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.ChannelID)
@@ -1416,6 +1483,12 @@ namespace TransparentTwitchChatWPF
                 _pubSub.ListenToChannelPoints(SettingsSingleton.Instance.genSettings.ChannelID);
                 _pubSub.Connect();
             }
+            else
+            {
+                Debug.WriteLine("Channel ID or OAuth Token is missing.");
+                Debug.WriteLine($"Channel ID: '{SettingsSingleton.Instance.genSettings.ChannelID}' - OAuthToken: '{SettingsSingleton.Instance.genSettings.OAuthToken}'");
+            }
+
         }
 
         public void DisablePubSubRedemptions()
@@ -1446,33 +1519,53 @@ namespace TransparentTwitchChatWPF
 
         private void _pubSub_OnPubSubServiceConnected(object sender, System.EventArgs e)
         {
-            _isPubSubConnected = true;
-            if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.OAuthToken))
+            Debug.WriteLine("PubSub Service Connected");
+            this.Dispatcher.Invoke(() => {
+                this.PubSubConnectedInit();
+            });
+        }
+
+        private void PubSubConnectedInit()
+        {
+            try
             {
-                PushNewMessage("PubSub Service Connected");
-                _pubSub.SendTopics(SettingsSingleton.Instance.genSettings.OAuthToken);
+                _isPubSubConnected = true;
+                if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.OAuthToken))
+                {
+                    PushNewMessage("PubSub Service Connected");
+                    Debug.WriteLine("PubSub Service: SendTopics()");
+                    _pubSub.SendTopics(SettingsSingleton.Instance.genSettings.OAuthToken);
+                }
+                else
+                {
+                    PushNewMessage("PubSub Service Connected, but no OAuth Token found. Try reconnecting your Twitch account in the settings.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"PubSubConnectedInit() Error: {ex.Message}");
             }
         }
 
         private void _pubSub_OnPubSubServiceError(object sender, OnPubSubServiceErrorArgs e)
         {
-            PushNewMessage($"PubSub Service Error: {e.Exception.Message}");
+            PushNewMessageDispatcherInvoke($"PubSub Service Error: {e.Exception.Message}");
         }
 
         private void _pubSub_OnPubSubServiceClosed(object sender, EventArgs e)
         {
             _isPubSubConnected = false;
-            PushNewMessage("PubSub Service Closed");
+            PushNewMessageDispatcherInvoke("PubSub Service Closed");
         }
 
         private void _pubSub_OnListenResponse(object sender, OnListenResponseArgs e)
         {
             if (!e.Successful)
             {
-                PushNewMessage($"Failed to listen! Response: {e.Response.Error}");
+                PushNewMessageDispatcherInvoke($"Failed to listen! Response: {e.Response.Error}");
             }
             else
-                PushNewMessage($"Success! Listening to topic: {e.Topic}");
+                PushNewMessageDispatcherInvoke($"Success! Listening to topic: {e.Topic}");
         }
 
         private void _pubSub_OnChannelPointsRewardRedeemed(object sender, OnChannelPointsRewardRedeemedArgs e)
@@ -1481,13 +1574,13 @@ namespace TransparentTwitchChatWPF
             {
                 var redeem = e.RewardRedeemed.Redemption;
 
-                PushNewChatMessage(
+                PushNewChatMessageDispatcherInvoke(
                     $"redeemed '{redeem.Reward.Title}' ({redeem.Reward.Cost} points)", // ~ {e.ChannelId}",
                     redeem.User.DisplayName, "#a1b3c4");
 
                 if (!string.IsNullOrEmpty(redeem.UserInput) && !string.IsNullOrWhiteSpace(redeem.UserInput))
                 {
-                    PushNewChatMessage($"\"{redeem.UserInput}\"", redeem.User.DisplayName, "#a1b3c4");
+                    PushNewChatMessageDispatcherInvoke($"\"{redeem.UserInput}\"", redeem.User.DisplayName, "#a1b3c4");
                 }
             }
         }
