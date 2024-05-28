@@ -12,6 +12,7 @@ using System.Diagnostics;
 namespace TransparentTwitchChatWPF
 {
     using System.Windows.Controls;
+    using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
     /// <summary>
     /// Interaction logic for CustomWindow.xaml
@@ -29,6 +30,8 @@ namespace TransparentTwitchChatWPF
         string hashCode = "";
 
         TrackingConfiguration trackingConfig;
+
+        private Button _closeButton;
 
         [Trackable]
         public double ZoomLevel { get; set; }
@@ -59,6 +62,7 @@ namespace TransparentTwitchChatWPF
         async void InitializeWebViewAsync()
         {
             var options = new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required");
+            options.AdditionalBrowserArguments = "--disable-background-timer-throttling";
             string userDataFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF");
 
             CoreWebView2Environment cwv2Environment = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
@@ -80,6 +84,8 @@ namespace TransparentTwitchChatWPF
             var hwnd = new WindowInteropHelper(this).Handle;
             WindowHelper.SetWindowExDefault(hwnd);
 
+            SetCloseButtonVisibility(true);
+
             this.AppTitleBar.Visibility = Visibility.Visible;
             this.FooterBar.Visibility = Visibility.Visible;
             this.webView.SetValue(Grid.RowSpanProperty, 1);
@@ -100,6 +106,8 @@ namespace TransparentTwitchChatWPF
         {
             var hwnd = new WindowInteropHelper(this).Handle;
             WindowHelper.SetWindowExTransparent(hwnd);
+
+            SetCloseButtonVisibility(false);
 
             this.AppTitleBar.Visibility = Visibility.Collapsed;
             this.FooterBar.Visibility = Visibility.Collapsed;
@@ -133,6 +141,17 @@ namespace TransparentTwitchChatWPF
             this.Top = 10;
             this.Height = 450;
             this.Width = 300;
+        }
+
+        private void SetCloseButtonVisibility(bool isVisible)
+        {
+            if (_closeButton != null)
+            {
+                if (isVisible)
+                    _closeButton.Visibility = Visibility.Visible;
+                else
+                    _closeButton.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void SetupBrowser()
@@ -285,6 +304,27 @@ namespace TransparentTwitchChatWPF
             else
             {
                 e.Cancel = true;
+            }
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var thisWindow = sender as Window;
+
+                if (thisWindow != null)
+                {
+                    var titleBarControl = thisWindow.FindChildByType<DependencyObject>("ModernWpf.Controls.Primitives.TitleBarControl");
+                    if (titleBarControl != null)
+                    {
+                        _closeButton = titleBarControl.FindChild<Button>("CloseButton");
+                    }
+                }
+            }
+            catch //(Exception ex)
+            {
+                //MessageBox.Show($"Failed to hide close button: {ex.Message}");
             }
         }
     }

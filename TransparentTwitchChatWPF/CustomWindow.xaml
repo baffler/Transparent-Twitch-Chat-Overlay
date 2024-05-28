@@ -20,7 +20,7 @@
         ShowInTaskbar="false"
         Icon="/Icons/twitch_chat2.ico"
         Title="Twitch Chat Overlay" Height="500" Width="360"
-        Closing="Window_Closing">
+        Closing="Window_Closing" Loaded="Window_Loaded">
     <Window.Resources>
         <Style x:Key="AppTitleBarStyle" TargetType="ui:TitleBarControl">
             <Setter Property="ui:ThemeManager.RequestedTheme" Value="Dark" />
