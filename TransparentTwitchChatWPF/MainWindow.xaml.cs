@@ -1655,7 +1655,7 @@ namespace TransparentTwitchChatWPF
             if (!SettingsSingleton.Instance.genSettings.DeviceName.StartsWith(capabilities.ProductName))
             {
                 SettingsSingleton.Instance.genSettings.DeviceID = -1;
-                SettingsSingleton.Instance.genSettings.DeviceName = "Default";
+                SettingsSingleton.Instance.gen.settings.DeviceName = "Default";
             }
         }
 
@@ -1675,15 +1675,22 @@ namespace TransparentTwitchChatWPF
 
             if (string.IsNullOrEmpty(_mediaFile) || string.Equals(_mediaFile.ToLower(), "none")) return;
 
-            _audioFileReader = new AudioFileReader(_mediaFile);
-            _audioFileReader.Volume = SettingsSingleton.Instance.genSettings.OutputVolume;
-            _waveOutDevice = new WaveOutEvent();
+            try
+            {
+                _audioFileReader = new AudioFileReader(_mediaFile);
+                _audioFileReader.Volume = SettingsSingleton.Instance.genSettings.OutputVolume;
+                _waveOutDevice = new WaveOutEvent();
 
-            VerifyOutputDevice();
-            if (SettingsSingleton.Instance.genSettings.DeviceID >= 0)
-                _waveOutDevice.DeviceNumber = SettingsSingleton.Instance.genSettings.DeviceID;
+                VerifyOutputDevice();
+                if (SettingsSingleton.Instance.genSettings.DeviceID >= 0)
+                    _waveOutDevice.DeviceNumber = SettingsSingleton.Instance.genSettings.DeviceID;
 
-            _waveOutDevice.Init(_audioFileReader);
+                _waveOutDevice.Init(_audioFileReader);
+            }
+            catch (NAudio.MmException ex)
+            {
+                MessageBox.Show($"Error initializing audio: {ex.Message}", "Audio Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         public void playSound()
