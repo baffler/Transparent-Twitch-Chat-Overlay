@@ -9,6 +9,7 @@ using System.Windows.Shell;
 using System.Reflection;
 using System.Resources;
 using Microsoft.Shell;
+using System.IO;
 
 namespace TransparentTwitchChatWPF
 {
@@ -96,8 +97,24 @@ namespace TransparentTwitchChatWPF
 
         void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            MessageBox.Show("An unhandled exception occured. Note you can click on this message box to focus it, then press Ctrl-C to copy the entire message.\n\n" + e.ExceptionObject.ToString(), 
-                "Click on this message box and press Ctrl-C to copy the entire message");
+            string logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "error.log");
+            string errorMessage = $"An unhandled exception occurred: {e.ExceptionObject.ToString()}";
+
+            try
+            {
+                File.AppendAllText(logFilePath, $"{DateTime.Now}: {errorMessage}{Environment.NewLine}");
+            }
+            catch
+            {
+                // Ignore any exceptions thrown while logging the error
+            }
+
+            MessageBox.Show(errorMessage, "Unhandled Exception", MessageBoxButton.OK, MessageBoxImage.Error);
+
+            if (e.IsTerminating)
+            {
+                Environment.Exit(1);
+            }
         }
     }
 }
