@@ -11,7 +11,7 @@ namespace TransparentTwitchChatWPF
         KapChat = 0,
         TwitchPopout = 1,
         CustomURL = 2,
-        jChat = 3
+        jCyan = 3
     }
 
     public class WindowSettings
@@ -124,7 +124,6 @@ if (typeof(info.badges) === 'string')
         {
             highlightSuffix = 'VIP';
             vip = true;
-            return;
         }
     });
 }
@@ -141,7 +140,37 @@ if (typeof(info.badges) === 'string')
         {
             highlightSuffix = 'Mod';
             mod = true;
-            return;
+        }
+    });
+}
+if (mod) { allowOther = true; }";
+        
+        public static string jCyan_VIP_Check = @"
+var vip = false;
+if (tags && typeof(tags.badges) === 'string')
+{
+    tags.badges.split(',').forEach(badge => {
+        badge = badge.split('/');
+        if (badge[0].toLowerCase() == 'vip')
+        {
+            highlightSuffix = 'VIP';
+            vip = true;
+        }
+    });
+}
+allowOther = vip;";
+
+        public static string jCyan_Mod_Check = @"
+var mod = false;
+
+if (tags && typeof(tags.badges) === 'string')
+{
+    tags.badges.split(',').forEach(badge => {
+        badge = badge.split('/');
+        if (badge[0].toLowerCase() == 'moderator')
+        {
+            highlightSuffix = 'Mod';
+            mod = true;
         }
     });
 }

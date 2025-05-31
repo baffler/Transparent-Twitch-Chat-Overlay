@@ -12,10 +12,13 @@ using Jot.DefaultInitializer;
 using TwitchLib.PubSub;
 using TwitchLib.PubSub.Events;
 using Squirrel;
+using TransparentTwitchChatWPF.Helpers;
 
 /*
  * v1.0.5
+ * > Widget inclusion in Bring to top Hotkey
  * > Memory leak with settings window?
+ * > Link to sample CSS for custom CSS for the different chat types
  * 
  * v1.0.4
  * - Remove that little x
@@ -189,6 +192,7 @@ namespace TransparentTwitchChatWPF
             SetupOrReplaceHotkeys();
             SettingsWindow.SettingsWindowActive += OnSettingsWindowActive;
 
+            LocalHtmlHelper.EnsureLocalBrowserFiles();
             InitializeWebViewAsync();
         }
 
@@ -753,17 +757,18 @@ namespace TransparentTwitchChatWPF
 
         private void webView_NavigationStarting(object sender, CoreWebView2NavigationStartingEventArgs e)
         {
-            
+            Console.WriteLine("webView_NavigationStarting");
         }
 
         private async void webView_NavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
         {
             if (!e.IsSuccess)
             {
+                Console.WriteLine("webView_NavigationCompleted: (Unsuccessful) " + e.WebErrorStatus.ToString());
                 return;
             }
 
-            Debug.WriteLine("Navigation completed: " + e.HttpStatusCode);
+            Console.WriteLine("Navigation completed: " + e.HttpStatusCode);
 
             this.webView.Dispatcher.Invoke(new Action(() => {
                     SetZoomFactor(SettingsSingleton.Instance.genSettings.ZoomLevel); 
@@ -786,7 +791,8 @@ namespace TransparentTwitchChatWPF
             if (!string.IsNullOrEmpty(script))
                 await this.webView.ExecuteScriptAsync(script);
 
-            this.PushNewMessage("Loading...");
+            if (this.currentChat != null)
+                this.PushNewMessage(this.currentChat.ChatType.ToString() + " Loaded.");
 
             // Pub Sub
             if (SettingsSingleton.Instance.genSettings.RedemptionsEnabled)
@@ -845,7 +851,7 @@ namespace TransparentTwitchChatWPF
                     Debug.WriteLine(ex.Message);
                 }
             }
-            if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.jChat)
+            if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.jCyan)
             {
                 try
                 {
@@ -880,6 +886,15 @@ namespace TransparentTwitchChatWPF
             string script = "const ttcCSS = document.createElement('style');";
             script += "ttcCSS.innerHTML = decodeURIComponent(\"" + uriEncodedCSS + "\");";
             script += "document.querySelector('head').appendChild(ttcCSS);";
+            return script;
+        }
+        
+        private string InsertCustomJS2(string js)
+        {
+            string uriEncodedJS = Uri.EscapeDataString(js);
+            string script = "const ttcJS = document.createElement('script');";
+            script += "ttcJS.innerHTML = decodeURIComponent(\"" + uriEncodedJS + "\");";
+            script += "document.querySelector('head').appendChild(ttcJS);";
             return script;
         }
 
@@ -1065,9 +1080,9 @@ namespace TransparentTwitchChatWPF
                     }
                 }
 
-                else if (config.ChatType == (int)ChatTypes.jChat)
+                else if (config.ChatType == (int)ChatTypes.jCyan)
                 {
-                    this.currentChat = new jChat();
+                    this.currentChat = new jCyan();
                     SettingsSingleton.Instance.genSettings.jChatURL = config.jChatURL;
                     SettingsSingleton.Instance.genSettings.ChatNotificationSound = config.ChatNotificationSound;
 
@@ -1076,10 +1091,21 @@ namespace TransparentTwitchChatWPF
                         if (!config.RedemptionsEnabled)
                             DisablePubSubRedemptions();
 
-                        SetCustomChatAddress(SettingsSingleton.Instance.genSettings.jChatURL);
+                        if (string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.jChatURL)) {
+                            string localIndex = LocalHtmlHelper.GetIndexHtmlPath();
+                            webView.CoreWebView2.Navigate(new Uri(localIndex).AbsoluteUri);
+                        }
+                        else
+                            SetCustomChatAddress(SettingsSingleton.Instance.genSettings.jChatURL);
                     }
-                    else
-                        SetCustomChatAddress(SettingsSingleton.Instance.genSettings.jChatURL);
+                    else {
+                        if (string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.jChatURL)) {
+                            string localIndex = LocalHtmlHelper.GetIndexHtmlPath();
+                            webView.CoreWebView2.Navigate(new Uri(localIndex).AbsoluteUri);
+                        }
+                        else
+                            SetCustomChatAddress(SettingsSingleton.Instance.genSettings.jChatURL);
+                    }
 
 
                     if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() == "none")
@@ -1302,6 +1328,10 @@ namespace TransparentTwitchChatWPF
                     OpenNewCustomWindow(url, "", SettingsSingleton.Instance.genSettings.AutoHideBorders);
             }
 
+            if (SettingsSingleton.Instance.genSettings.jChatURL.ToLower().Contains("giambaj.it")) {
+                SettingsSingleton.Instance.genSettings.jChatURL = string.Empty;
+            }
+
             if ((SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.CustomURL) && (!string.IsNullOrWhiteSpace(SettingsSingleton.Instance.genSettings.CustomURL)))
             {
                 this.currentChat = new CustomURLChat(ChatTypes.CustomURL);
@@ -1319,28 +1349,38 @@ namespace TransparentTwitchChatWPF
                     this.currentChat = new Chats.KapChat();
                     SetChatAddress(SettingsSingleton.Instance.genSettings.Username);
                 }
-                else if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.jChat)
+                else if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.jCyan)
                 {
-                    this.currentChat = new jChat();
-                    SetCustomChatAddress(SettingsSingleton.Instance.genSettings.jChatURL);
+                    if (string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.jChatURL)) {
+                        string localIndex = LocalHtmlHelper.GetJChatIndexPath();
+                        webView.CoreWebView2.Navigate(new Uri(localIndex).AbsoluteUri);
+                    }
+                    else {
+                        this.currentChat = new jCyan();
+                        SetCustomChatAddress(SettingsSingleton.Instance.genSettings.jChatURL);
+                    }
                 }
                 else
                 {
-                    Uri startupPath = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
-                    string address = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\index.html";
-                    webView.CoreWebView2.Navigate(address);
+                    string localIndex = LocalHtmlHelper.GetIndexHtmlPath();
+                    webView.CoreWebView2.Navigate(new Uri(localIndex).AbsoluteUri);
                 }
             }
-            else if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.jChat)
+            else if (SettingsSingleton.Instance.genSettings.ChatType == (int)ChatTypes.jCyan)
             { // TODO: need to clean this up to determine which type of chat to load better
-                this.currentChat = new jChat();
-                SetCustomChatAddress(SettingsSingleton.Instance.genSettings.jChatURL);
+                if (string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.jChatURL)) {
+                    string localIndex = LocalHtmlHelper.GetJChatIndexPath();
+                    webView.CoreWebView2.Navigate(new Uri(localIndex).AbsoluteUri);
+                }
+                else {
+                    this.currentChat = new jCyan();
+                    SetCustomChatAddress(SettingsSingleton.Instance.genSettings.jChatURL);
+                }
             }
             else
             {
-                Uri startupPath = new Uri(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
-                string address = System.IO.Path.GetDirectoryName(startupPath.LocalPath) + "\\index.html";
-                webView.CoreWebView2.Navigate(address);
+                string localIndex = LocalHtmlHelper.GetIndexHtmlPath();
+                webView.CoreWebView2.Navigate(new Uri(localIndex).AbsoluteUri);
 
                 //CefSharp.WebBrowserExtensions.LoadHtml(Browser1,
                 //"<html><body style=\"font-size: x-large; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; \">Load a channel to connect to by right-clicking the tray icon.<br /><br />You can move and resize the window, then press the [o] button to hide borders, or use the tray icon menu.</body></html>");
@@ -1699,6 +1739,35 @@ namespace TransparentTwitchChatWPF
                     }
                 }
             } catch (Exception ex) { MessageBox.Show(ex.Message); }
+        }
+        
+        public async Task playSoundAsync()
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(_mediaFile))
+                {
+                    if ((_waveOutDevice != null) && (_audioFileReader != null))
+                    {
+                        _audioFileReader.Position = 0;
+                        _waveOutDevice.Play();
+                    }
+                }
+                Console.WriteLine("[C# Host] PlaySoundAsync called.");
+                // Example of a potential issue:
+                // throw new InvalidOperationException("Test sound error from C#");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[C# Host ERROR] Exception in PlaySoundAsync: {ex.Message}\n{ex.StackTrace}");
+                // Re-throw if you want JS to see it as a rejected promise,
+                // or handle it and perhaps return a status object to JS.
+                throw;
+            }
+        }
+
+        public void logMessage(string msg) {
+            Console.WriteLine($"[JS] {msg}");
         }
 
         public void showMessageBox(string msg)

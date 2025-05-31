@@ -7,6 +7,7 @@ using System.Windows.Media;
 
 namespace TransparentTwitchChatWPF.Chats
 {
+    /*
     public class jChat : Chat
     {
         public jChat() : base(ChatTypes.jChat)
@@ -58,8 +59,8 @@ namespace TransparentTwitchChatWPF.Chats
                 string[] vipList = new string[SettingsSingleton.Instance.genSettings.AllowedUsersList.Count];
                 SettingsSingleton.Instance.genSettings.AllowedUsersList.CopyTo(vipList, 0);
 
-                js += @"var oldChatWrite = Chat.write;
-                            Chat.write = function(nick, info, message) {
+                js += @"var oldChatWrite = V.write;
+                            V.write = function(nick, info, message) {
 
                                 var vips = ['";
                 js += string.Join(",", vipList).Replace(",", "','").ToLower();
@@ -201,5 +202,5 @@ namespace TransparentTwitchChatWPF.Chats
 
             return css;
         }
-    }
+    }*/
 }

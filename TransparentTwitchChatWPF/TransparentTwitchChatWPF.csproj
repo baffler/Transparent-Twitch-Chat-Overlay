@@ -124,10 +124,12 @@
     <Compile Include="Chats\AbstractChat.cs" />
     <Compile Include="Chats\CustomURLChat.cs" />
     <Compile Include="Chats\jChat.cs" />
+    <Compile Include="Chats\jCyan.cs" />
     <Compile Include="Chats\KapChat.cs" />
     <Compile Include="GetID_Window.xaml.cs">
       <DependentUpon>GetID_Window.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\LocalHtmlHelper.cs" />
     <Compile Include="Hotkey.cs" />
     <Compile Include="HotkeyEditorControl.xaml.cs">
       <DependentUpon>HotkeyEditorControl.xaml</DependentUpon>
@@ -237,6 +239,12 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="app.config" />
+    <Content Include="browser\index.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="browser\jchat.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TransparentTwitchChatWPF.exe.manifest">
       <SubType>Designer</SubType>
     </Content>
@@ -292,9 +300,6 @@
     <Resource Include="FodyWeavers.xml" />
     <EmbeddedResource Include="Costura32\Microsoft.Web.WebView2.Core.dll" />
     <EmbeddedResource Include="Costura32\WebView2Loader.dll" />
-    <Content Include="index.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AvalonEdit">

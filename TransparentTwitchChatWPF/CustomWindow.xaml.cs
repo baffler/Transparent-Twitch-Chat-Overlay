@@ -84,6 +84,9 @@ namespace TransparentTwitchChatWPF
             var hwnd = new WindowInteropHelper(this).Handle;
             WindowHelper.SetWindowExDefault(hwnd);
 
+            // TODO: check if setting for interactable is enabled?
+            this.overlay.Opacity = 0.01;
+
             SetCloseButtonVisibility(true);
 
             this.AppTitleBar.Visibility = Visibility.Visible;
@@ -106,6 +109,8 @@ namespace TransparentTwitchChatWPF
         {
             var hwnd = new WindowInteropHelper(this).Handle;
             WindowHelper.SetWindowExTransparent(hwnd);
+
+            this.overlay.Opacity = 0;
 
             SetCloseButtonVisibility(false);
 

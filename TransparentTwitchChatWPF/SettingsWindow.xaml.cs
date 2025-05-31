@@ -268,7 +268,7 @@ namespace TransparentTwitchChatWPF
                     this.config.CustomCSS = this.tbCSS.Text;
                 }
             }
-            else if (this.config.ChatType == (int)ChatTypes.jChat)
+            else if (this.config.ChatType == (int)ChatTypes.jCyan)
             {
                 this.config.URL = string.Empty;
                 this.config.jChatURL = this.tb_jChatURL.Text;
@@ -564,7 +564,7 @@ namespace TransparentTwitchChatWPF
                     this.twitchPopoutChat.Visibility = Visibility.Hidden;
                     this.jChatGrid.Visibility = Visibility.Hidden;
                     break;
-                case (int)ChatTypes.jChat:
+                case (int)ChatTypes.jCyan:
                     this.kapChatGrid.Visibility = Visibility.Hidden;
                     this.customURLGrid.Visibility = Visibility.Hidden;
                     this.twitchPopoutChat.Visibility = Visibility.Hidden;

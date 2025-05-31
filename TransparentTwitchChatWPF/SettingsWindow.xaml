@@ -145,7 +145,7 @@
                 </Grid>
                 <Grid Name="jChatGrid" Visibility="Hidden"  Grid.Column="1">
                     <StackPanel HorizontalAlignment="Left" Orientation="Vertical" Width="127">
-                        <Label Content="jChat URL" HorizontalAlignment="Left" Margin="20,33,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                        <Label Content="jCyan URL" HorizontalAlignment="Left" Margin="20,33,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                         <Label Content="Redemptions" HorizontalAlignment="Left" Margin="20,35,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                         <Label Content="Twitch" HorizontalAlignment="Left" Margin="20,20,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                         <Label Content="Filter Settings" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
@@ -159,7 +159,7 @@
                                 HorizontalAlignment="Left" 
                                 VerticalAlignment="Top"
                                 Margin="20,0,0,0">
-                            <Hyperlink NavigateUri = "https://www.giambaj.it/twitch/jchat/"
+                            <Hyperlink NavigateUri = "https://chat.johnnycyan.com/"
                                Hyperlink.RequestNavigate = "Hyperlink_RequestNavigate" >
                                 <TextBlock Text="Click this link to generate the URL" />
                             </Hyperlink>
@@ -421,7 +421,7 @@
                         <ComboBoxItem Content="KapChat (Default)" />
                         <ComboBoxItem Content="Twitch Popout" />
                         <ComboBoxItem Content="Custom URL" />
-                        <ComboBoxItem Content="jChat (Beta)" />
+                        <ComboBoxItem Content="jCyan (Beta)" />
                     </ComboBox>
             
                     <Button
