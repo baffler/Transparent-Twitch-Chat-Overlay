@@ -158,7 +158,7 @@ if (tags && typeof(tags.badges) === 'string')
         }
     });
 }
-allowOther = vip;";
+allowOtherBasedOnTags = vip;";
 
         public static string jCyan_Mod_Check = @"
 var mod = false;
@@ -174,6 +174,6 @@ if (tags && typeof(tags.badges) === 'string')
         }
     });
 }
-if (mod) { allowOther = true; }";
+if (mod) { allowOtherBasedOnTags = true; }";
     }
 }

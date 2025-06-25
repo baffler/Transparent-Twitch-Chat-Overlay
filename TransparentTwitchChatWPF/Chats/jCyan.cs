@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Windows.Media;
+using TwitchLib.Api.Helix;
 
 namespace TransparentTwitchChatWPF.Chats
 {
@@ -37,9 +39,10 @@ namespace TransparentTwitchChatWPF.Chats
             var sb = new StringBuilder();
             // --- Start of the self-invoking wrapper function ---
             sb.AppendLine("(function() {"); // Encapsulate to avoid global scope pollution as much as possible
+            sb.AppendLine("    'use strict';"); // Enable strict mode for better error handling
             sb.AppendLine("    const MAX_RETRIES = 20;");
             sb.AppendLine("    let currentRetry = 0;");
-            sb.AppendLine("    const SCRIPT_ID = 'ChatWrapper_Main_v1.1';");
+            sb.AppendLine("    const SCRIPT_ID = 'ChatWrapper_Main_v1.2';");
             sb.AppendLine(@"
         function logToWebViewConsole(level, message) {
             const logMessage = `[${SCRIPT_ID} - ${level.toUpperCase()}]: ${message}`;
@@ -58,8 +61,7 @@ namespace TransparentTwitchChatWPF.Chats
                     window.chrome.webview.hostObjects.jsCallbackFunctions.logMessage(logMessage);
                 }
             } catch (e) {
-                // console.warn(`[${SCRIPT_ID} - WARN]: Error calling hostObject logMessage: ${e.message}`);
-                // Avoid logging within logToWebViewConsole about logging itself to prevent loops if console is also broken
+                // Avoid logging errors about logging, which can cause infinite loops.
             }
         }");
 
@@ -116,9 +118,16 @@ namespace TransparentTwitchChatWPF.Chats
             sb.AppendLine("            jsCallback: (window.chrome && window.chrome.webview && window.chrome.webview.hostObjects) ? window.chrome.webview.hostObjects.jsCallbackFunctions : null");
             sb.AppendLine("        };");
             // Parse JSON strings in JS
-            sb.AppendLine("        CSHARP_SETTINGS.vips = JSON.parse(CSHARP_SETTINGS.vipListJSON);");
-            sb.AppendLine("        CSHARP_SETTINGS.blockList = JSON.parse(CSHARP_SETTINGS.blockListJSON);");
-            sb.AppendLine("        logToWebViewConsole('info', 'CSHARP_SETTINGS loaded: ' + JSON.stringify({ ...CSHARP_SETTINGS, vips: '...', blockList: '...' }));");
+            sb.AppendLine("        try {");
+            sb.AppendLine("             CSHARP_SETTINGS.vips = JSON.parse(CSHARP_SETTINGS.vipListJSON);");
+            sb.AppendLine("             CSHARP_SETTINGS.blockList = JSON.parse(CSHARP_SETTINGS.blockListJSON);");
+            sb.AppendLine("        } catch (e) {");
+            sb.AppendLine("             logToWebViewConsole('error', `Failed to parse settings JSON: ${e.message}`);");
+            sb.AppendLine("             CSHARP_SETTINGS.vips = [];"); // Default to empty array on error
+            sb.AppendLine("             CSHARP_SETTINGS.blockList = [];"); // Default to empty array on error
+            sb.AppendLine("        }");
+            sb.AppendLine("");
+            sb.AppendLine("        logToWebViewConsole('info', 'CSHARP_SETTINGS loaded: ' + JSON.stringify({ ...CSHARP_SETTINGS }));");
 
 
             // --- Original Chat.write and the New Wrapped Function ---
@@ -127,21 +136,38 @@ namespace TransparentTwitchChatWPF.Chats
             sb.AppendLine("            const lowerNick = nick.toLowerCase();");
             sb.AppendLine("            let allowOtherBasedOnTags = false;");
             sb.AppendLine("            let highlightSuffix = '';");
+            sb.AppendLine("            let isVip = false;");
+            sb.AppendLine("            let isMod = false;");
 
             // 1. Block List Check (Universal)
             sb.AppendLine("            if (CSHARP_SETTINGS.blockList.includes(lowerNick)) {");
             sb.AppendLine("                //logToWebViewConsole('info', `User '${nick}' is blocked. Message suppressed.`);");
-            sb.AppendLine("                return;"); // Stop processing
+            sb.AppendLine("                return;"); // Suppress message
             sb.AppendLine("            }");
 
-            // 2. VIP/Mod Tag Checks (Used for multiple features)
-            sb.AppendLine("            if (CSHARP_SETTINGS.filterAllowAllVIPs) {");
-            sb.Append("                "); // Indentation for snippet
-            sb.AppendLine(CustomJS_Defaults.jCyan_VIP_Check.Trim().Replace("\n", "\n                "));
+            // 2. VIP/Mod Tag Checks
+            sb.AppendLine(@"            if (tags && typeof(tags.badges) === 'string')
+            {
+                tags.badges.split(',').forEach(badgeStr => {
+                    const badge = badgeStr.split('/')[0].toLowerCase();
+                    if (badge === 'vip')
+                    {
+                        isVip = true;
+                    }
+                    else if (badge === 'moderator')
+                    {
+                        isMod = true;
+                    }
+                });
+            }");
+
+            sb.AppendLine("            if (CSHARP_SETTINGS.filterAllowAllVIPs && isVip) {");
+            sb.AppendLine("                 highlightSuffix = 'VIP';");
+            sb.AppendLine("                 allowOtherBasedOnTags = true;"); // Allow other based on VIP tag
             sb.AppendLine("            }");
-            sb.AppendLine("            if (CSHARP_SETTINGS.filterAllowAllMods) {");
-            sb.Append("                "); // Indentation for snippet
-            sb.AppendLine(CustomJS_Defaults.jCyan_Mod_Check.Trim().Replace("\n", "\n                "));
+            sb.AppendLine("            if (CSHARP_SETTINGS.filterAllowAllMods && isMod) {");
+            sb.AppendLine("                 highlightSuffix = 'Mod';");
+            sb.AppendLine("                 allowOtherBasedOnTags = true;"); // Allow other based on Mod tag
             sb.AppendLine("            }");
 
             // 3. Allowed Users Only Filter
@@ -149,30 +175,22 @@ namespace TransparentTwitchChatWPF.Chats
             sb.AppendLine("                const isExplicitlyAllowed = CSHARP_SETTINGS.vips.includes(lowerNick);");
             sb.AppendLine("                if (!isExplicitlyAllowed && !allowOtherBasedOnTags) {");
             sb.AppendLine("                    //logToWebViewConsole('info', `User '${nick}' not in allowed list (AllowedUsersOnly). Message suppressed.`);");
-            sb.AppendLine("                    return;"); // Stop processing
+            sb.AppendLine("                    return;"); // Suppress message
             sb.AppendLine("                }");
             sb.AppendLine("            }");
 
-            // 4. Determine if Highlighting is Needed
-            sb.AppendLine("            let applyHighlighting = false;");
-            sb.AppendLine("            if (CSHARP_SETTINGS.highlightUsers) {");
-            sb.AppendLine("                if (CSHARP_SETTINGS.vips.includes(lowerNick) || allowOtherBasedOnTags) {");
-            sb.AppendLine("                    applyHighlighting = true;");
-            sb.AppendLine("                    if (highlightSuffix === '' && CSHARP_SETTINGS.vips.includes(lowerNick)) highlightSuffix = ' vip-list-highlight';");
-            // Generic highlight suffix if only allowOtherBasedOnTags was true and no specific one was set by VIP/Mod checks
-            sb.AppendLine("                    if (highlightSuffix === '' && allowOtherBasedOnTags) highlightSuffix = ' general-tag-highlight';");
-            sb.AppendLine("                    if (highlightSuffix === '') highlightSuffix = ' default-highlight';"); // Fallback if needed
-            sb.AppendLine("                }");
-            sb.AppendLine("            }");
+            // 4. Determine if highlighting should be applied BEFORE using it. ***
+            sb.AppendLine("            const isManuallyHighlightedUser = CSHARP_SETTINGS.vips.includes(lowerNick);");
+            sb.AppendLine("            const shouldHighlight = CSHARP_SETTINGS.highlightUsers && (isManuallyHighlightedUser || allowOtherBasedOnTags);");
 
             // 5. Play Notification Sound
             sb.AppendLine("            if (CSHARP_SETTINGS.playSound && CSHARP_SETTINGS.jsCallback && typeof CSHARP_SETTINGS.jsCallback.playSound === 'function') {");
             sb.AppendLine("                let shouldPlaySound = false;");
             sb.AppendLine("                if (CSHARP_SETTINGS.highlightUsers) {"); // If highlighting is on, sound only for highlighted users
-            sb.AppendLine("                    if (applyHighlighting) shouldPlaySound = true;");
+            sb.AppendLine("                    if (shouldHighlight) shouldPlaySound = true;");
             sb.AppendLine("                } else if (CSHARP_SETTINGS.allowedUsersOnly) {"); // If allowed-only is on (and highlighting is off), sound for allowed users
             sb.AppendLine("                    if (CSHARP_SETTINGS.vips.includes(lowerNick) || allowOtherBasedOnTags) shouldPlaySound = true;");
-            sb.AppendLine("                } else {"); // Neither specific filter is on, so sound for everyone (not blocked)
+            sb.AppendLine("                } else {"); // If not highlighting or filtering, play sound for every message
             sb.AppendLine("                    shouldPlaySound = true;");
             sb.AppendLine("                }");
             sb.AppendLine("                if (shouldPlaySound) {");
@@ -191,7 +209,7 @@ namespace TransparentTwitchChatWPF.Chats
             sb.AppendLine("            }");
 
             // 6. Execute Chat Write (Original or Wrapped for Highlighting)
-            sb.AppendLine("            if (applyHighlighting) {");
+            sb.AppendLine("            if (shouldHighlight) {");
             sb.AppendLine("                //logToWebViewConsole('info', `Applying highlight (class: 'highlight${highlightSuffix}') for user '${nick}'.`);");
             sb.AppendLine("                const originalLinesPush = Chat.info.lines.push;");
             sb.AppendLine("                let capturedChatLineHtml = '';");
@@ -200,9 +218,17 @@ namespace TransparentTwitchChatWPF.Chats
             sb.AppendLine("                Chat.info.lines.push = originalLinesPush;");
             sb.AppendLine("                if (capturedChatLineHtml) {");
             sb.AppendLine("                    const wrappedHtml = `<div class=\"highlight${highlightSuffix}\">${capturedChatLineHtml}</div>`;");
+            // Push the modified HTML to the chat display
             sb.AppendLine("                    Chat.info.lines.push.call(Chat.info.lines, wrappedHtml);"); // Ensure correct 'this' for push
-            sb.AppendLine("                } else { logToWebViewConsole('warn', `No HTML captured for highlight for nick: ${nick}`); }");
-            sb.AppendLine("            } else {");
+            sb.AppendLine("                }");
+            // Fallback in case capture failed, just write the message normally.
+            sb.AppendLine("                else {");
+            sb.AppendLine("                    logToWebViewConsole('warn', `No HTML captured for highlight for nick: ${nick}`);");
+            sb.AppendLine("                    try { originalChatWrite.apply(this, arguments); } catch (e) { logToWebViewConsole('error', 'Error in originalChatWrite (fallback path): ' + e); }");
+            sb.AppendLine("                }");
+            sb.AppendLine("            }");
+            // Normal path for users who are not highlighted
+            sb.AppendLine("            else {");
             sb.AppendLine("                try { originalChatWrite.apply(this, arguments); } catch (e) { logToWebViewConsole('error', 'Error in originalChatWrite (normal path): ' + e); }");
             sb.AppendLine("            }");
             sb.AppendLine("            return;"); // End of wrapped Chat.write
@@ -216,8 +242,11 @@ namespace TransparentTwitchChatWPF.Chats
             sb.AppendLine("    performChatWriteModification();"); // Initial call
             sb.AppendLine("})();"); // End of self-invoking wrapper function
 
+            Debug.WriteLine(sb);
+
             return sb.ToString();
         }
+
 
         public override string SetupCustomCSS() {
             string css = string.Empty;
