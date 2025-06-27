@@ -16,7 +16,7 @@
         BorderThickness="4"
         ResizeMode="CanResizeWithGrip"
         Topmost="True"
-        Icon="/Icons/twitch_chat2.ico"
+        Icon="/icons/twitch_chat2.ico"
         Title="Twitch Chat Overlay" Height="530" Width="360" Closed="Window_Closed" Deactivated="Window_Deactivated" PreviewLostKeyboardFocus="Window_PreviewLostKeyboardFocus" Loaded="Window_Loaded">
     <Window.Resources>
         <Style x:Key="AppTitleBarStyle" TargetType="ui:TitleBarControl">
@@ -33,7 +33,7 @@
 
         <tb:TaskbarIcon
             Name="taskbarControl"
-            IconSource="/Icons/twitch_chat2.ico"
+            IconSource="/icons/twitch_chat2.ico"
             ToolTipText="Twitch Chat Overlay">
             <!-- Set a simple context menu  -->
             <tb:TaskbarIcon.ContextMenu>

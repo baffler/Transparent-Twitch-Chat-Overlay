@@ -1,400 +1,81 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{340C12FD-3B4D-4A37-AB81-5C5786135206}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TransparentTwitchChatWPF</RootNamespace>
-    <AssemblyName>TransparentTwitchChatWPF</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <WarningLevel>4</WarningLevel>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
-    <TargetFrameworkProfile />
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <AutorunEnabled>true</AutorunEnabled>
-    <ApplicationRevision>3</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <PublishWizardCompleted>true</PublishWizardCompleted>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <PlatformTarget>x86</PlatformTarget>
-    <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <PlatformTarget>x86</PlatformTarget>
-    <OutputPath>bin\x86\Release\</OutputPath>
-    <Optimize>false</Optimize>
-    <DefineConstants>
-    </DefineConstants>
-    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ManifestCertificateThumbprint>553D0F03FE85462BF575FD77BA1FA5741F6B421A</ManifestCertificateThumbprint>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ManifestKeyFile>
-    </ManifestKeyFile>
-  </PropertyGroup>
-  <PropertyGroup>
-    <GenerateManifests>true</GenerateManifests>
-  </PropertyGroup>
-  <PropertyGroup>
-    <SignManifests>false</SignManifests>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationIcon>twitch_chat2.ico</ApplicationIcon>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ManifestTimestampUrl>http://timestamp.sectigo.com/</ManifestTimestampUrl>
-  </PropertyGroup>
-  <PropertyGroup>
-    <TargetZone>LocalIntranet</TargetZone>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationManifest>TransparentTwitchChatWPF.exe.manifest</ApplicationManifest>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="netstandard" />
-    <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
-    <Reference Include="System.ComponentModel.DataAnnotations" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Runtime.Remoting" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Web.Extensions" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Xaml">
-      <RequiredTargetFramework>4.0</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="WindowsBase" />
-    <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="ChatFilters.xaml.cs">
-      <DependentUpon>ChatFilters.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Chats\AbstractChat.cs" />
-    <Compile Include="Chats\CustomURLChat.cs" />
-    <Compile Include="Chats\jChat.cs" />
-    <Compile Include="Chats\jCyan.cs" />
-    <Compile Include="Chats\KapChat.cs" />
-    <Compile Include="GetID_Window.xaml.cs">
-      <DependentUpon>GetID_Window.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Helpers\LocalHtmlHelper.cs" />
-    <Compile Include="Hotkey.cs" />
-    <Compile Include="HotkeyEditorControl.xaml.cs">
-      <DependentUpon>HotkeyEditorControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Input_Username.xaml.cs">
-      <DependentUpon>Input_Username.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="SettingsSingleton.cs" />
-    <Compile Include="TextEditorWindow.xaml.cs">
-      <DependentUpon>TextEditorWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="TwitchConnection.cs" />
-    <Compile Include="VisualTreeHelperExtensions.cs" />
-    <Compile Include="WindowSettings.cs" />
-    <Page Include="App.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Compile Include="BrowserWindow.cs" />
-    <Compile Include="CustomWindow.xaml.cs">
-      <DependentUpon>CustomWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Input_Custom.xaml.cs">
-      <DependentUpon>Input_Custom.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Services.cs" />
-    <Compile Include="SettingsWindow.xaml.cs">
-      <DependentUpon>SettingsWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="SingleInstance.cs" />
-    <Compile Include="Win32Utils.cs" />
-    <Page Include="ChatFilters.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="CustomWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="GetID_Window.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="HotkeyEditorControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Input_Custom.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Input_Fade.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Input.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Input_Username.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="MainWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Compile Include="App.xaml.cs">
-      <DependentUpon>App.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Input_Fade.xaml.cs">
-      <DependentUpon>Input_Fade.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Input.xaml.cs">
-      <DependentUpon>Input.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Page Include="SettingsWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="TextEditorWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <None Include="app.config" />
-    <Content Include="browser\index.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="browser\jchat.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="TransparentTwitchChatWPF.exe.manifest">
-      <SubType>Designer</SubType>
-    </Content>
-    <None Include="FodyWeavers.xsd">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <AppDesigner Include="Properties\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Icons\twitch_chat.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Icons\twitch_chat2.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.5.2 %28x86 and x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="twitch_chat2.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="assets\Alert 1.wav">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="assets\Alert 1 %28Low%29.wav">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="assets\Alert 2.wav">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="assets\Alert 2 %28Low%29.wav">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="assets\Alert 3 %28Low%29.wav">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="assets\Alert 3.wav">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Resource Include="FodyWeavers.xml" />
-    <EmbeddedResource Include="Costura32\Microsoft.Web.WebView2.Core.dll" />
-    <EmbeddedResource Include="Costura32\WebView2Loader.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="AvalonEdit">
-      <Version>6.3.0.90</Version>
-    </PackageReference>
-    <PackageReference Include="Costura.Fody">
-      <Version>5.7.0</Version>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Extended.Wpf.Toolkit">
-      <Version>4.5.0</Version>
-    </PackageReference>
-    <PackageReference Include="Hardcodet.NotifyIcon.Wpf">
-      <Version>1.0.8</Version>
-    </PackageReference>
-    <PackageReference Include="Jot">
-      <Version>1.4.1</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.CSharp">
-      <Version>4.7.0</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Logging">
-      <Version>7.0.0</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions">
-      <Version>7.0.1</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Web.WebView2">
-      <Version>1.0.2045.28</Version>
-    </PackageReference>
-    <PackageReference Include="ModernWpfUI">
-      <Version>0.9.6</Version>
-    </PackageReference>
-    <PackageReference Include="NAudio">
-      <Version>2.2.1</Version>
-    </PackageReference>
-    <PackageReference Include="NETStandard.Library">
-      <Version>2.0.3</Version>
-    </PackageReference>
-    <PackageReference Include="NHotkey.Wpf">
-      <Version>3.0.0</Version>
-    </PackageReference>
-    <PackageReference Include="NuGet.CommandLine">
-      <Version>6.8.0</Version>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Squirrel.Windows">
-      <Version>1.9.1</Version>
-    </PackageReference>
-    <PackageReference Include="System.Runtime">
-      <Version>4.3.1</Version>
-    </PackageReference>
-    <PackageReference Include="System.Text.Json">
-      <Version>7.0.1</Version>
-    </PackageReference>
-    <PackageReference Include="TwitchLib.Api">
-      <Version>3.9.0</Version>
-    </PackageReference>
-    <PackageReference Include="TwitchLib.PubSub">
-      <Version>3.2.6</Version>
-    </PackageReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>del "$(TargetDir)*.xml", "$(TargetDir)*.pdb"
-del "$(TargetDir)*.application"
-RD /S /Q "$(TargetDir)runtimes\"
-RD /S /Q "$(TargetDir)app.publish\"</PostBuildEvent>
-  </PropertyGroup>
-  <Target Name="AfterBuild">
-    <ItemGroup>
-      <NugetTools Include="$(PkgNuGet_CommandLine)\tools\NuGet.exe" />
-      <SquirrelTools Include="$(Pkgsquirrel_windows)\tools\Squirrel.exe" />
-    </ItemGroup>
-    <Copy SourceFiles="@(SquirrelTools->'%(FullPath)')" DestinationFiles="$(OutDir)..\Update.exe" Condition="!Exists('$(OutDir)..\Update.exe')" />
-    <GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
-      <Output TaskParameter="Assemblies" ItemName="assemblyInfo" />
-    </GetAssemblyIdentity>
-    <PropertyGroup>
-      <Version>$([System.Version]::Parse(%(assemblyInfo.Version)).ToString(3))</Version>
-      <NuspecFile>$(SolutionDir)TransparentTwitchChatWPF\ReleaseSpec.nuspec</NuspecFile>
-    </PropertyGroup>
-    <XmlPeek XmlInputPath="$(NuspecFile)" Query="/package/metadata/id/text()">
-      <Output TaskParameter="Result" ItemName="ID" />
-    </XmlPeek>
-    <Exec Condition=" '$(Configuration)' == 'Release'" Command="@(NugetTools->'%(FullPath)') pack $(NuspecFile) -Version $(Version) -Properties Configuration=Release -OutputDirectory $(SolutionDir)Deployment\GeneratedNugets" />
-    <Exec Condition=" '$(Configuration)' == 'Release'" Command="@(SquirrelTools->'%(FullPath)') --releasify $(SolutionDir)Deployment\GeneratedNugets\@(ID).$(Version).nupkg --releaseDir=$(SolutionDir)Deployment\Releases" />
-  </Target>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- main property group -->
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<OutputType>WinExe</OutputType>
+		<StartupObject>TransparentTwitchChatWPF.App</StartupObject>
+		<UseWPF>true</UseWPF>
+		<!-- UseWindowsForms is needed for things like NotifyIcon -->
+		<UseWindowsForms>true</UseWindowsForms>
+		<ApplicationIcon>twitch_chat2.ico</ApplicationIcon>
+		<!-- This ensures platform-specific assets are handled correctly -->
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<!-- property group for a specific build configuration -->
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+		<OutputPath>bin\x86\Release\</OutputPath>
+		<Optimize>true</Optimize>
+	</PropertyGroup>
+
+	<!-- NuGet package dependencies -->
+	<ItemGroup>
+		<PackageReference Include="AvalonEdit" Version="6.3.1.120" />
+		<PackageReference Include="Costura.Fody" Version="6.0.0">
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="Extended.Wpf.Toolkit" Version="4.7.25104.5739" />
+		<PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
+		<PackageReference Include="Jot" Version="2.1.17" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.6" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.6" />
+		<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3296.44" />
+		<PackageReference Include="ModernWpfUI" Version="0.9.6" />
+		<PackageReference Include="NAudio" Version="2.2.1" />
+		<PackageReference Include="NHotkey.Wpf" Version="3.0.0" />
+		<PackageReference Include="SharpCompress" Version="0.40.0" />
+		<PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.6" />
+		<PackageReference Include="System.Text.Json" Version="9.0.6" />
+		<PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+		<PackageReference Include="TwitchLib.Api" Version="3.10.0-preview-e47ba7f" />
+		<PackageReference Include="TwitchLib.EventSub.Core" Version="3.0.0-preview.58.b20c9f1" />
+		<PackageReference Include="TwitchLib.EventSub.Websockets" Version="0.7.0-preview.70.cd91499" />
+		<PackageReference Include="Velopack" Version="0.0.1298" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Remove="icons\twitch_chat.ico" />
+		<Resource Include="icons\twitch_chat.ico" />
+		<None Remove="icons\twitch_chat2.ico" />
+		<Resource Include="icons\twitch_chat2.ico" />
+	</ItemGroup>
+
+	<!-- content files that need to be copied to the output directory -->
+	<ItemGroup>
+		<Content Include="assets\*.wav">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="browser\*.html">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="twitch_chat2.ico" />
+		<ApplicationDefinition Remove="App.xaml" />
+	</ItemGroup>
+
+	<!-- Fody, which handles embedding DLLs at build time -->
+	<ItemGroup>
+		<Resource Include="FodyWeavers.xml" />
+		<EmbeddedResource Include="Costura-win-x64\Microsoft.Web.WebView2.Core.dll" />
+		<EmbeddedResource Include="Costura-win-x64\Microsoft.Web.WebView2.Wpf.dll" />
+		<EmbeddedResource Include="Costura-win-x64\WebView2Loader.dll" />
+		<EmbeddedResource Include="Costura-win-x86\Microsoft.Web.WebView2.Core.dll" />
+		<EmbeddedResource Include="Costura-win-x86\Microsoft.Web.WebView2.Wpf.dll" />
+		<EmbeddedResource Include="Costura-win-x86\WebView2Loader.dll" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Include="App.xaml" />
+	</ItemGroup>
+
 </Project>

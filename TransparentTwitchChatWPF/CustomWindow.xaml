@@ -18,7 +18,7 @@
         ResizeMode="CanResizeWithGrip"
         Topmost="True"
         ShowInTaskbar="false"
-        Icon="/Icons/twitch_chat2.ico"
+        Icon="/icons/twitch_chat2.ico"
         Title="Twitch Chat Overlay" Height="500" Width="360"
         Closing="Window_Closing" Loaded="Window_Loaded">
     <Window.Resources>

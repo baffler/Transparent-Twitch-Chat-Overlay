@@ -12,11 +12,11 @@ namespace TransparentTwitchChatWPF
 {
     public sealed class SettingsSingleton
     {
-        private static readonly Lazy<SettingsSingleton> lazy = new Lazy<SettingsSingleton>(() => new SettingsSingleton());
+        //private static readonly Lazy<SettingsSingleton> lazy = new Lazy<SettingsSingleton>(() => new SettingsSingleton());
 
-        public static SettingsSingleton Instance { get { return lazy.Value; } }
+        //public static SettingsSingleton Instance { get { return lazy.Value; } }
 
-        public GeneralSettings genSettings;
+        //public GeneralSettings genSettings;
         //private GeneralSettings genDefaultSettings;
 
         public static string Version { 
@@ -27,7 +27,7 @@ namespace TransparentTwitchChatWPF
             } 
         }
 
-        private SettingsSingleton()
+        /*private SettingsSingleton()
         {
             this.genSettings = new GeneralSettings
             {
@@ -74,7 +74,7 @@ namespace TransparentTwitchChatWPF
                 ToggleInteractableHotkey = new Hotkey(Key.F7, ModifierKeys.Control | ModifierKeys.Alt),
                 BringToTopHotkey = new Hotkey(Key.F8, ModifierKeys.Control | ModifierKeys.Alt),
             };
-        }
+        }*/
 
         //public void ResetGeneralSettingsToDefault()
         //{

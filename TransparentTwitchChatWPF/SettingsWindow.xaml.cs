@@ -1,25 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using System.Media;
 using TwitchLib.Api;
 using TwitchLib.Api.Helix.Models.Users.GetUsers;
 using TwitchLib.Api.Auth;
 using NAudio.Wave;
-//using System.Windows.Forms;
 using System.IO;
-using System.Diagnostics;
-using System.Windows.Threading;
+using TransparentTwitchChatWPF.Twitch;
+using Brushes = System.Windows.Media.Brushes;
+using MessageBox = System.Windows.MessageBox;
 
 namespace TransparentTwitchChatWPF
 {
@@ -70,8 +58,8 @@ namespace TransparentTwitchChatWPF
             DevicesComboBox.DisplayMemberPath = "Name";
             DevicesComboBox.SelectedValuePath = "Id";
 
-            DevicesComboBox.SelectedValue = SettingsSingleton.Instance.genSettings.DeviceID;
-            if (!DevicesComboBox.Text.StartsWith(SettingsSingleton.Instance.genSettings.DeviceName))
+            DevicesComboBox.SelectedValue = App.Settings.GeneralSettings.DeviceID;
+            if (!DevicesComboBox.Text.StartsWith(App.Settings.GeneralSettings.DeviceName))
             {
                 DevicesComboBox.SelectedValue = -1;
             }
@@ -126,7 +114,7 @@ namespace TransparentTwitchChatWPF
 
         private void TwitchConnection_AccessTokenResponse(object sender, string e)
         {
-            SettingsSingleton.Instance.genSettings.OAuthToken = e;
+            App.Settings.GeneralSettings.OAuthToken = e;
             _api.Settings.AccessToken = e;
 
             _ = FetchUserDataAsync();
@@ -154,7 +142,7 @@ namespace TransparentTwitchChatWPF
 
             lblTwitch.Content = $"{userName} ({userID})";
 
-            SettingsSingleton.Instance.genSettings.ChannelID = userID;
+            App.Settings.GeneralSettings.ChannelID = userID;
 
             var bitmap = TwitchConnectionUtils.LoadImageFromUrl(profileImageUrl);
             imgTwitch.Source = bitmap;
@@ -242,11 +230,11 @@ namespace TransparentTwitchChatWPF
                 if (!string.IsNullOrWhiteSpace(this.tbPopoutCSS.Text) && !string.IsNullOrEmpty(this.tbPopoutCSS.Text)
                     && (this.tbPopoutCSS.Text.ToLower() != "css"))
                 {
-                    SettingsSingleton.Instance.genSettings.TwitchPopoutCSS = this.tbPopoutCSS.Text;
+                    App.Settings.GeneralSettings.TwitchPopoutCSS = this.tbPopoutCSS.Text;
                 }
                 else
                 {
-                    SettingsSingleton.Instance.genSettings.TwitchPopoutCSS = CustomCSS_Defaults.TwitchPopoutChat;
+                    App.Settings.GeneralSettings.TwitchPopoutCSS = CustomCSS_Defaults.TwitchPopoutChat;
                 }
 
                 this.config.BetterTtv = this.cbBetterTtv.IsChecked ?? false;
@@ -284,16 +272,16 @@ namespace TransparentTwitchChatWPF
             this.config.HideTaskbarIcon  = this.cbTaskbar.IsChecked ?? false;
             this.config.AllowInteraction = this.cbInteraction.IsChecked ?? false;
 
-            SettingsSingleton.Instance.genSettings.CheckForUpdates = this.cbCheckForUpdates.IsChecked ?? false;
+            App.Settings.GeneralSettings.CheckForUpdates = this.cbCheckForUpdates.IsChecked ?? false;
 
             // Hotkeys
-            SettingsSingleton.Instance.genSettings.ToggleBordersHotkey = hotkeyInputToggleBorders.Hotkey;
-            SettingsSingleton.Instance.genSettings.ToggleInteractableHotkey = hotkeyInputToggleInteractable.Hotkey;
-            SettingsSingleton.Instance.genSettings.BringToTopHotkey = hotkeyInputBringToTop.Hotkey;
+            App.Settings.GeneralSettings.ToggleBordersHotkey = hotkeyInputToggleBorders.Hotkey;
+            App.Settings.GeneralSettings.ToggleInteractableHotkey = hotkeyInputToggleInteractable.Hotkey;
+            App.Settings.GeneralSettings.BringToTopHotkey = hotkeyInputBringToTop.Hotkey;
 
 
-            SettingsSingleton.Instance.genSettings.DeviceID = (int)DevicesComboBox.SelectedValue;
-            SettingsSingleton.Instance.genSettings.DeviceName = DevicesComboBox.Text;
+            App.Settings.GeneralSettings.DeviceID = (int)DevicesComboBox.SelectedValue;
+            App.Settings.GeneralSettings.DeviceName = DevicesComboBox.Text;
 
             double ClampBetween0And1(double value)
             {
@@ -301,9 +289,9 @@ namespace TransparentTwitchChatWPF
                 return Math.Max(0, Math.Min(1, s));
             }
 
-            SettingsSingleton.Instance.genSettings.OutputVolume = (float)ClampBetween0And1(this.OutputVolumeSlider.Value);
+            App.Settings.GeneralSettings.OutputVolume = (float)ClampBetween0And1(this.OutputVolumeSlider.Value);
 
-            SettingsSingleton.Instance.genSettings.SoundClipsFolder = this.tbSoundClipsFolder.Text;
+            App.Settings.GeneralSettings.SoundClipsFolder = this.tbSoundClipsFolder.Text;
 
             DialogResult = true;
         }
@@ -311,7 +299,7 @@ namespace TransparentTwitchChatWPF
         private void SetupValues()
         {
             // Load this first so GetSoundsClipsFolder() gets the correct value
-            this.tbSoundClipsFolder.Text = SettingsSingleton.Instance.genSettings.SoundClipsFolder;
+            this.tbSoundClipsFolder.Text = App.Settings.GeneralSettings.SoundClipsFolder;
 
             this.tbUsername.Text = this.config.Username;
             this.tb_jChatURL.Text = this.config.jChatURL;
@@ -348,15 +336,16 @@ namespace TransparentTwitchChatWPF
             //this.cbConfirmClose.IsChecked = this.config.ConfirmClose;
             this.cbTaskbar.IsChecked = this.config.HideTaskbarIcon;
             this.cbInteraction.IsChecked = this.config.AllowInteraction;
-            this.cbCheckForUpdates.IsChecked = SettingsSingleton.Instance.genSettings.CheckForUpdates;
-            this.cbMultiInstance.IsChecked = TransparentTwitchChatWPF.Properties.Settings.Default.allowMultipleInstances;
+            this.cbCheckForUpdates.IsChecked = App.Settings.GeneralSettings.CheckForUpdates;
+            // TODO: add single instance back?
+            this.cbMultiInstance.IsChecked = true;// TransparentTwitchChatWPF.Properties.Settings.Default.allowMultipleInstances;
 
-            this.hotkeyInputToggleBorders.Hotkey = SettingsSingleton.Instance.genSettings.ToggleBordersHotkey;
-            this.hotkeyInputToggleInteractable.Hotkey = SettingsSingleton.Instance.genSettings.ToggleInteractableHotkey;
-            this.hotkeyInputBringToTop.Hotkey = SettingsSingleton.Instance.genSettings.BringToTopHotkey;
+            this.hotkeyInputToggleBorders.Hotkey = App.Settings.GeneralSettings.ToggleBordersHotkey;
+            this.hotkeyInputToggleInteractable.Hotkey = App.Settings.GeneralSettings.ToggleInteractableHotkey;
+            this.hotkeyInputBringToTop.Hotkey = App.Settings.GeneralSettings.BringToTopHotkey;
 
             LoadDevices();
-            this.OutputVolumeSlider.Value = SettingsSingleton.Instance.genSettings.OutputVolume * 100;
+            this.OutputVolumeSlider.Value = App.Settings.GeneralSettings.OutputVolume * 100;
 
             this.comboChatType.SelectedIndex = this.config.ChatType;
 
@@ -380,10 +369,10 @@ namespace TransparentTwitchChatWPF
                 this.customURLGrid.Visibility = Visibility.Hidden;
                 this.jChatGrid.Visibility = Visibility.Hidden;
 
-                if (string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.TwitchPopoutCSS))
+                if (string.IsNullOrEmpty(App.Settings.GeneralSettings.TwitchPopoutCSS))
                     this.tbPopoutCSS.Text = CustomCSS_Defaults.TwitchPopoutChat;
                 else
-                    this.tbPopoutCSS.Text = SettingsSingleton.Instance.genSettings.TwitchPopoutCSS;
+                    this.tbPopoutCSS.Text = App.Settings.GeneralSettings.TwitchPopoutCSS;
 
                 this.cbBetterTtv.IsChecked = this.config.BetterTtv;
                 this.cbFfz.IsChecked = this.config.FrankerFaceZ;
@@ -461,11 +450,11 @@ namespace TransparentTwitchChatWPF
 
         private void ValidateTwitchConnection()
         {
-            if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.OAuthToken))
+            if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.OAuthToken))
             {
-                _api.Settings.AccessToken = SettingsSingleton.Instance.genSettings.OAuthToken;
+                _api.Settings.AccessToken = App.Settings.GeneralSettings.OAuthToken;
                 _ = FetchUserDataAsync();
-                _ = ValidateAuthToken(SettingsSingleton.Instance.genSettings.OAuthToken);
+                _ = ValidateAuthToken(App.Settings.GeneralSettings.OAuthToken);
             }
         }
 
@@ -553,10 +542,10 @@ namespace TransparentTwitchChatWPF
                     this.twitchPopoutChat.Visibility = Visibility.Visible;
                     this.jChatGrid.Visibility = Visibility.Hidden;
 
-                    if (string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.TwitchPopoutCSS))
+                    if (string.IsNullOrEmpty(App.Settings.GeneralSettings.TwitchPopoutCSS))
                         this.tbPopoutCSS.Text = CustomCSS_Defaults.TwitchPopoutChat;
                     else 
-                        this.tbPopoutCSS.Text = SettingsSingleton.Instance.genSettings.TwitchPopoutCSS;
+                        this.tbPopoutCSS.Text = App.Settings.GeneralSettings.TwitchPopoutCSS;
                     break;
                 case (int)ChatTypes.CustomURL:
                     this.kapChatGrid.Visibility = Visibility.Hidden;
@@ -634,8 +623,8 @@ namespace TransparentTwitchChatWPF
         {
             bool isActive = false;
 
-            if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.ChannelID) &&
-                !string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.OAuthToken))
+            if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.ChannelID) &&
+                !string.IsNullOrEmpty(App.Settings.GeneralSettings.OAuthToken))
             {
                 isActive = true;
             }
@@ -658,8 +647,8 @@ namespace TransparentTwitchChatWPF
         {
             bool isActive = false;
 
-            if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.ChannelID) &&
-                !string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.OAuthToken))
+            if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.ChannelID) &&
+                !string.IsNullOrEmpty(App.Settings.GeneralSettings.OAuthToken))
             {
                 isActive = true;
             }
@@ -690,20 +679,22 @@ namespace TransparentTwitchChatWPF
 
         private void cbMultiInstance_Checked(object sender, RoutedEventArgs e)
         {
-            TransparentTwitchChatWPF.Properties.Settings.Default.allowMultipleInstances = true;
-            TransparentTwitchChatWPF.Properties.Settings.Default.Save();
+            // TODO: add single instance back?
+            //TransparentTwitchChatWPF.Properties.Settings.Default.allowMultipleInstances = true;
+            //TransparentTwitchChatWPF.Properties.Settings.Default.Save();
         }
 
         private void cbMultiInstance_Unchecked(object sender, RoutedEventArgs e)
         {
-            TransparentTwitchChatWPF.Properties.Settings.Default.allowMultipleInstances = false;
-            TransparentTwitchChatWPF.Properties.Settings.Default.Save();
+            // TODO: add single instance back?
+            //TransparentTwitchChatWPF.Properties.Settings.Default.allowMultipleInstances = false;
+            //TransparentTwitchChatWPF.Properties.Settings.Default.Save();
         }
 
         private void btConnect_Click(object sender, RoutedEventArgs e)
         {
             this._twitchConnection.ConnectTwitchAccount();
-            System.Windows.MessageBox.Show("Please check your default browser. A new tab should have opened and you can authorize the app to be connected there.", "Twitch Connection", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Please check your default browser. A new tab should have opened and you can authorize the app to be connected there.", "Twitch Connection", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         
         private void btDisconnect_Click(object sender, RoutedEventArgs e)
@@ -719,8 +710,8 @@ namespace TransparentTwitchChatWPF
             btGetChannelID.Visibility = Visibility.Visible;
             btGetChannelID2.Visibility = Visibility.Visible;
 
-            SettingsSingleton.Instance.genSettings.ChannelID = string.Empty;
-            SettingsSingleton.Instance.genSettings.OAuthToken = string.Empty;
+            App.Settings.GeneralSettings.ChannelID = string.Empty;
+            App.Settings.GeneralSettings.OAuthToken = string.Empty;
             _api.Settings.AccessToken = string.Empty;
         }
 

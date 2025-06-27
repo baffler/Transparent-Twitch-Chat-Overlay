@@ -1,70 +1,145 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Shell;
-using System.Reflection;
-using System.Resources;
-using Microsoft.Shell;
-using System.IO;
+using Velopack;
+using Application = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
 
 namespace TransparentTwitchChatWPF
 {
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
-    public partial class App : Application, ISingleInstanceApp
+    public partial class App : Application
     {
+        public static AppSettings Settings = new AppSettings();
         public static bool IsShuttingDown { get; set; } = false;
-        static bool allowMultipleInstances = false;
+
+        // The Host object that manages the application's services and lifetime
+        public static IHost Host { get; private set; }
+
+        public App()
+        {
+            ShutdownMode = ShutdownMode.OnMainWindowClose;
+        }
 
         [STAThread]
-        public static void Main()
+        private static void Main(string[] args)
         {
-            allowMultipleInstances = TransparentTwitchChatWPF.Properties.Settings.Default.allowMultipleInstances;
+            // Velopack needs to be able to bootstrap your application and handle updates
+            VelopackApp.Build().Run();
 
-            if (allowMultipleInstances)
+            var application = new App();
+            application.InitializeComponent(); // loads App.xaml resources
+            application.Run(); // Triggers the OnStartup event
+        }
+
+        protected override async void OnStartup(StartupEventArgs e)
+        {
+            SimpleFileLogger.Log($"--- New App Instance Started. Args: {string.Join(" ", e.Args)} ---");
+
+            // ALWAYS call the base method first
+            base.OnStartup(e);
+
+            Settings.Init();
+
+            // --- SINGLE-INSTANCE LOGIC ---
+            // First, check if we should enforce single-instance behavior.
+            if (!Settings.GeneralSettings.AllowMultipleInstances)
             {
-                var application = new App();
-                application.Init();
-                application.Run();
+                SimpleFileLogger.Log("Single-instance mode is active.");
+
+                SimpleFileLogger.Log("Attempting to start IPC server...");
+
+                // Try to become the IPC server. If it fails, another instance is already running.
+                if (!IpcManager.StartServer())
+                {
+                    SimpleFileLogger.Log("IPC server start failed. This must be a SECOND instance.");
+
+
+                    // We are a subsequent instance.
+                    // Show a message if the user just double-clicked the .exe
+                    if (e.Args.Length == 0)
+                    {
+                        SimpleFileLogger.Log("No args detected, showing 'already running' message.");
+                        MessageBox.Show("The application is already running. Check your system tray or taskbar.", "Application Running", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+
+                    // Send arguments to the first instance so it can process them (e.g., from a JumpList).
+                    await IpcManager.SendArgumentsToFirstInstance(e.Args);
+
+                    SimpleFileLogger.Log("Shutdown command issued for this instance.");
+                    // Immediately shut down this new instance.
+                    Application.Current.Shutdown();
+                    return; // IMPORTANT: Stop all further execution in this instance.
+                }
+
+                SimpleFileLogger.Log("IPC server started successfully. This must be the FIRST instance.");
+                // If we've reached here, we are the FIRST instance.
+                // Set up the listener for arguments from future instances.
+                IpcManager.ArgumentsReceived += ProcessCommandLineArgsFromSecondInstance;
+                // Create the JumpList, as we are the primary instance.
+                CreateJumpList();
             }
             else
             {
-                if (SingleInstance<App>.InitializeAsFirstInstance("AdvancedJumpList"))
-                {
-                    var application = new App();
-                    application.Init();
-                    application.Run();
-
-                    // Allow single instance code to perform cleanup operations
-                    SingleInstance<App>.Cleanup();
-                }
+                SimpleFileLogger.Log("Multi-instance mode is active. Skipping IPC checks.");
             }
+            // If AllowMultipleInstances is true, we simply skip all the logic above.
+
+            SimpleFileLogger.Log("Proceeding with full application startup.");
+
+            // --- COMMON STARTUP LOGIC for all instances that are allowed to run ---
+
+            // Hook the global unhandled exception handler
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+
+            // Build the Dependency Injection Host
+            Host = Microsoft.Extensions.Hosting.Host.
+            CreateDefaultBuilder().
+            UseContentRoot(AppContext.BaseDirectory).
+            ConfigureServices((context, services) =>
+            {
+                services.AddSingleton<MainWindow>();
+                // Register other services here
+            })
+            .ConfigureLogging(logging =>
+            {
+                logging.ClearProviders();
+                logging.AddConsole();
+                logging.AddDebug();
+                // can add other providers here, like Serilog, NLog, or a file logger.
+            })
+            .Build();
+
+            await Host.StartAsync();
+
+            // Create and show the main window
+            var mainWindow = Host.Services.GetRequiredService<MainWindow>();
+
+            // Let the main window process its own startup arguments
+            mainWindow.ProcessCommandLineArgs(e.Args);
+            mainWindow.Show();
         }
 
-        public void Init()
+        private void CreateJumpList()
         {
-            this.InitializeComponent();
-        }
+            // First, create a new empty list and set it. This clears all old items.
+            JumpList.SetJumpList(Application.Current, new JumpList());
 
-        public bool SignalExternalCommandLineArgs(IList<string> args)
-        {
-            return ((MainWindow)MainWindow).ProcessCommandLineArgs(args);
-        }
-
-        protected override void OnStartup(StartupEventArgs e)
-        {
             JumpList jumplist = new JumpList();
 
             jumplist.JumpItems.Add(new JumpTask
             {
                 Title = "Toggle Borders",
                 CustomCategory = "Actions",
-                ApplicationPath = Assembly.GetEntryAssembly().Location,
+                //ApplicationPath = Assembly.GetEntryAssembly().Location,
                 Arguments = "/toggleborders"
             });
 
@@ -72,7 +147,7 @@ namespace TransparentTwitchChatWPF
             {
                 Title = "Show Settings",
                 CustomCategory = "Actions",
-                ApplicationPath = Assembly.GetEntryAssembly().Location,
+                //ApplicationPath = Assembly.GetEntryAssembly().Location,
                 Arguments = "/settings"
             });
 
@@ -80,7 +155,7 @@ namespace TransparentTwitchChatWPF
             {
                 Title = "Reset Window",
                 CustomCategory = "Actions",
-                ApplicationPath = Assembly.GetEntryAssembly().Location,
+                //ApplicationPath = Assembly.GetEntryAssembly().Location,
                 Arguments = "/resetwindow"
             });
 
@@ -88,14 +163,24 @@ namespace TransparentTwitchChatWPF
             jumplist.ShowRecentCategory = false;
 
             JumpList.SetJumpList(Application.Current, jumplist);
-
-            // hook on error before app really starts
-            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
-
-            base.OnStartup(e);
         }
 
-        void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        private void ProcessCommandLineArgsFromSecondInstance(string[] args)
+        {
+            // Find the running MainWindow and ask it to process the arguments.
+            if (Application.Current.MainWindow is MainWindow mw)
+            {
+                mw.ProcessCommandLineArgs(args);
+            }
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            IpcManager.StopServer();
+            base.OnExit(e);
+        }
+
+        private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             MessageBox.Show("An unhandled exception occurred. Note you can click on this message box to focus it, then press Ctrl-C to copy the entire message.\n\n" + e.ExceptionObject.ToString(),
                 "Click on this message box and press Ctrl-C to copy the entire message");

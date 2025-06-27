@@ -1,29 +1,32 @@
-﻿using System;
+﻿using Jot;
+using Microsoft.Web.WebView2.Core;
+using System;
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Interop;
-using Jot.DefaultInitializer;
-using Microsoft.Web.WebView2.Core;
-using Jot;
-using System.IO;
-using System.Diagnostics;
+using System.Windows.Media;
+using Application = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
+using Brushes = System.Windows.Media.Brushes;
+using Point = System.Windows.Point;
 
 namespace TransparentTwitchChatWPF
 {
+    using Jot.Configuration;
     using System.Windows.Controls;
-    using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
     /// <summary>
     /// Interaction logic for CustomWindow.xaml
     /// </summary>
-    public partial class CustomWindow : Window, BrowserWindow
+    public partial class CustomWindow : Window, BrowserWindow, ITrackingAware
     {
 
         MainWindow mainWindow;
         Thickness noBorderThickness = new Thickness(0);
         Thickness borderThickness = new Thickness(4);
-        Color borderColor = (Color)ColorConverter.ConvertFromString("#5D077F");
+        System.Windows.Media.Color borderColor = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#5D077F");
 
         bool hiddenBorders = false;
         string customURL = "";
@@ -33,11 +36,10 @@ namespace TransparentTwitchChatWPF
 
         private Button _closeButton;
 
-        [Trackable]
+        // Tracked properties
+        public Tracker Tracker = new Tracker();
         public double ZoomLevel { get; set; }
-        [Trackable]
         public string customCSS { get; set; }
-        [Trackable]
         public string customJS { get; set; }
 
         public CustomWindow(MainWindow main, string Url, string CustomCSS)
@@ -51,12 +53,33 @@ namespace TransparentTwitchChatWPF
             InitializeComponent();
 
             hashCode = String.Format("{0:X}", this.customURL.GetHashCode());
-            trackingConfig = Services.Tracker.Configure(this).IdentifyAs(hashCode);
-            trackingConfig.Apply();
+            Tracker //= Services.Tracker.Configure(this).IdentifyAs(hashCode);
+                .Configure<CustomWindow>()
+                .Id(w => w.hashCode)
+                .Properties(cw => new
+                {
+                    cw.customURL,
+                    cw.ZoomLevel,
+                    cw.customCSS,
+                    cw.customJS
+                })
+                .PersistOn(nameof(Window.Closing))
+                .StopTrackingOn(nameof(Window.Closing));
+
 
             if (ZoomLevel <= 0) ZoomLevel = 1;
 
             InitializeWebViewAsync();
+        }
+
+        public void ConfigureTracking(TrackingConfiguration configuration)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Persist()
+        {
+            Tracker.Persist(this);
         }
 
         async void InitializeWebViewAsync()
@@ -271,7 +294,7 @@ namespace TransparentTwitchChatWPF
         private void TextEditorWindow_TextEdited(object sender, TextEditedEventArgs e)
         {
             this.customCSS = e.EditedText;
-            this.trackingConfig.Persist(); // Save the changes
+            this.Persist(); // Save the changes
             this.webView.Reload();
         }
 
@@ -289,11 +312,12 @@ namespace TransparentTwitchChatWPF
             {
                 this.mainWindow.RemoveCustomWindow(this.customURL);
 
-                string path = (Services.Tracker.StoreFactory as Jot.Storage.JsonFileStoreFactory).StoreFolderPath;
+                // TODO: Remove the tracking configuration for this window
+                /*string path = (Services.Tracker.StoreFactory as Jot.Storage.JsonFileStoreFactory).StoreFolderPath;
                 string jsonFile = Path.Combine(path, "CustomWindow_" + this.hashCode + ".json");
                 Debug.WriteLine(jsonFile);
 
-                trackingConfig.AutoPersistEnabled = false;
+                //trackingConfig.AutoPersistEnabled = false;
 
                 if (File.Exists(jsonFile))
                 {
@@ -302,7 +326,7 @@ namespace TransparentTwitchChatWPF
                         File.Delete(jsonFile);
                     }
                     catch { }
-                }
+                }*/
 
                 e.Cancel = false;
             }

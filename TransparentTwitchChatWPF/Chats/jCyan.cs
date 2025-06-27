@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Windows.Media;
 using TwitchLib.Api.Helix;
+using Color = System.Windows.Media.Color;
 
 namespace TransparentTwitchChatWPF.Chats
 {
@@ -24,7 +25,7 @@ namespace TransparentTwitchChatWPF.Chats
         }
         
         public override string SetupJavascript() {
-            var settings = SettingsSingleton.Instance.genSettings;
+            var settings = App.Settings.GeneralSettings;
             // Determine if any Chat.write modification is needed at all.
             bool modifyChatWrite = settings.HighlightUsersChat ||
                                    settings.AllowedUsersOnlyChat ||
@@ -242,33 +243,196 @@ namespace TransparentTwitchChatWPF.Chats
             sb.AppendLine("    performChatWriteModification();"); // Initial call
             sb.AppendLine("})();"); // End of self-invoking wrapper function
 
-            Debug.WriteLine(sb);
-
             return sb.ToString();
         }
 
+        public string SetupJavascript2()
+        {
+            var settings = App.Settings.GeneralSettings;
+
+            bool modifyChatWrite = settings.HighlightUsersChat ||
+                                     settings.AllowedUsersOnlyChat ||
+                                     (settings.ChatNotificationSound?.ToLower() != "none") ||
+                                     (settings.BlockedUsersList != null && settings.BlockedUsersList.Count > 0);
+
+            if (!modifyChatWrite)
+            {
+                return string.Empty; // No script needed
+            }
+
+            // 1. Prepare settings values for injection
+            //var vipList = settings.AllowedUsersList ?? new List<string>();
+            //var blockList = settings.BlockedUsersList ?? new List<string>();
+            List<string> vipList = new List<string>();
+            if (settings.AllowedUsersList != null)
+            {
+                foreach (string item in settings.AllowedUsersList)
+                {
+                    vipList.Add(item.ToLowerInvariant());
+                }
+            }
+
+            List<string> blockList = new List<string>();
+            if (settings.BlockedUsersList != null)
+            {
+                foreach (string item in settings.BlockedUsersList)
+                {
+                    blockList.Add(item.ToLowerInvariant());
+                }
+            }
+
+            // Serialize lists to JSON strings. Lowercasing is handled in JS for consistency.
+            string vipListJson = JsonSerializer.Serialize(vipList.ConvertAll(u => u.ToLowerInvariant()));
+            string blockListJson = JsonSerializer.Serialize(blockList.ConvertAll(u => u.ToLowerInvariant()));
+
+            // 2. Use a Raw String Literal ($""") to build the final script
+            string finalScript = $$"""
+        (function() {
+            'use strict';
+
+            const MAX_RETRIES = 20;
+            let currentRetry = 0;
+            const SCRIPT_ID = 'ChatWrapper_Main_v1.4_Raw';
+
+            function logToWebViewConsole(level, message) {
+                const logMessage = `[${SCRIPT_ID} - ${level.toUpperCase()}]: ${message}`;
+                if (console[level.toLowerCase()]) {
+                    console[level.toLowerCase()](logMessage);
+                } else {
+                    console.log(logMessage);
+                }
+                try {
+                    if (window.chrome && window.chrome.webview && window.chrome.webview.hostObjects &&
+                        window.chrome.webview.hostObjects.jsCallbackFunctions &&
+                        typeof window.chrome.webview.hostObjects.jsCallbackFunctions.logMessage === 'function') {
+                        window.chrome.webview.hostObjects.jsCallbackFunctions.logMessage(logMessage);
+                    }
+                } catch (e) { /* silent fail */ }
+            }
+
+            logToWebViewConsole('info', 'Chat wrapper injection script started.');
+
+            function performChatWriteModification() {
+                if (typeof Chat === 'undefined' || typeof Chat.write !== 'function' || typeof Chat.info === 'undefined' || typeof Chat.info.lines === 'undefined') {
+                    currentRetry++;
+                    if (currentRetry < MAX_RETRIES) {
+                        setTimeout(performChatWriteModification, 500);
+                    } else {
+                        logToWebViewConsole('error', 'Failed to modify Chat.write after max retries.');
+                    }
+                    return;
+                }
+
+                if (Chat.write.isWrappedByMyScript) {
+                    return;
+                }
+
+                const CSHARP_SETTINGS = {
+                    highlightUsers: {{settings.HighlightUsersChat.ToString().ToLower()}},
+                    allowedUsersOnly: {{settings.AllowedUsersOnlyChat.ToString().ToLower()}},
+                    playSound: {{(settings.ChatNotificationSound?.ToLower() != "none").ToString().ToLower()}},
+                    filterAllowAllVIPs: {{settings.FilterAllowAllVIPs.ToString().ToLower()}},
+                    filterAllowAllMods: {{settings.FilterAllowAllMods.ToString().ToLower()}},
+                    vips: JSON.parse('{{vipListJson}}'),
+                    blockList: JSON.parse('{{blockListJson}}'),
+                    jsCallback: (window.chrome && window.chrome.webview && window.chrome.webview.hostObjects) ? window.chrome.webview.hostObjects.jsCallbackFunctions : null
+                };
+
+                const originalChatWrite = Chat.write;
+                Chat.write = function(nick, tags, message, platform) {
+                    const lowerNick = nick.toLowerCase();
+                    if (CSHARP_SETTINGS.blockList.includes(lowerNick)) return;
+                    
+                    let allowOtherBasedOnTags = false;
+                    let highlightSuffix = '';
+                    let isVip = false;
+                    let isMod = false;
+
+                    if (tags && typeof(tags.badges) === 'string') {
+                        tags.badges.split(',').forEach(badgeStr => {
+                            const badge = badgeStr.split('/')[0].toLowerCase();
+                            if (badge === 'vip') isVip = true;
+                            else if (badge === 'moderator') isMod = true;
+                        });
+                    }
+                    
+                    if (CSHARP_SETTINGS.filterAllowAllVIPs && isVip) {
+                        highlightSuffix = 'VIP';
+                        allowOtherBasedOnTags = true;
+                    }
+                    if (CSHARP_SETTINGS.filterAllowAllMods && isMod) {
+                        highlightSuffix = 'Mod';
+                        allowOtherBasedOnTags = true;
+                    }
+
+                    if (CSHARP_SETTINGS.allowedUsersOnly) {
+                        const isExplicitlyAllowed = CSHARP_SETTINGS.vips.includes(lowerNick);
+                        if (!isExplicitlyAllowed && !allowOtherBasedOnTags) return;
+                    }
+                    
+                    const isManuallyHighlightedUser = CSHARP_SETTINGS.vips.includes(lowerNick);
+                    const shouldHighlight = CSHARP_SETTINGS.highlightUsers && (isManuallyHighlightedUser || allowOtherBasedOnTags);
+
+                    // Sound logic...
+                    if (CSHARP_SETTINGS.playSound && CSHARP_SETTINGS.jsCallback && typeof CSHARP_SETTINGS.jsCallback.playSound === 'function') {
+                         let shouldPlaySound = !CSHARP_SETTINGS.highlightUsers && !CSHARP_SETTINGS.allowedUsersOnly ||
+                                     (CSHARP_SETTINGS.highlightUsers && shouldHighlight) ||
+                                     (CSHARP_SETTINGS.allowedUsersOnly && (CSHARP_SETTINGS.vips.includes(lowerNick) || allowOtherBasedOnTags));
+                        if (shouldPlaySound) {
+                            CSHARP_SETTINGS.jsCallback.playSound().catch(err => logToWebViewConsole('error', 'Error playing sound: ' + (err.message || err)));
+                        }
+                    }
+                    
+                    if (shouldHighlight) {
+                        const originalLinesPush = Chat.info.lines.push;
+                        let capturedChatLineHtml = '';
+                        Chat.info.lines.push = (html) => { capturedChatLineHtml = html; };
+                        try {
+                            originalChatWrite.apply(this, arguments);
+                        } finally {
+                            Chat.info.lines.push = originalLinesPush;
+                        }
+                        if (capturedChatLineHtml) {
+                            const wrappedHtml = `<div class="highlight${highlightSuffix}">${capturedChatLineHtml}</div>`;
+                            Chat.info.lines.push.call(Chat.info.lines, wrappedHtml);
+                        } else {
+                            originalChatWrite.apply(this, arguments);
+                        }
+                    } else {
+                        originalChatWrite.apply(this, arguments);
+                    }
+                };
+                Chat.write.isWrappedByMyScript = true;
+                logToWebViewConsole('info', 'SUCCESS: Chat.write has been modified.');
+            }
+            performChatWriteModification();
+        })();
+        """;
+
+            return finalScript;
+        }
 
         public override string SetupCustomCSS() {
             string css = string.Empty;
 
-            if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.CustomCSS))
-                css = SettingsSingleton.Instance.genSettings.CustomCSS;
+            if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.CustomCSS))
+                css = App.Settings.GeneralSettings.CustomCSS;
             else
             {
                 // Highlight
-                Color c = SettingsSingleton.Instance.genSettings.ChatHighlightColor;
+                Color c = App.Settings.GeneralSettings.ChatHighlightColor;
                 float a = (c.A / 255f);
                 string rgba = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, a);
                 css = ".highlight { background-color: " + rgba + " !important; }";
 
                 // Mods Highlight
-                c = SettingsSingleton.Instance.genSettings.ChatHighlightModsColor;
+                c = App.Settings.GeneralSettings.ChatHighlightModsColor;
                 a = (c.A / 255f);
                 rgba = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, a);
                 css += "\n .highlightMod { background-color: " + rgba + " !important; }";
 
                 // VIPs Highlight
-                c = SettingsSingleton.Instance.genSettings.ChatHighlightVIPsColor;
+                c = App.Settings.GeneralSettings.ChatHighlightVIPsColor;
                 a = (c.A / 255f);
                 rgba = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, a);
                 css += "\n .highlightVIP { background-color: " + rgba + " !important; }";

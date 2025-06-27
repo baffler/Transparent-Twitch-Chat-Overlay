@@ -24,13 +24,13 @@ namespace TransparentTwitchChatWPF.Chats
 
             if (this.ChatType == ChatTypes.TwitchPopout)
             {
-                if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.TwitchPopoutCSS))
-                    css = SettingsSingleton.Instance.genSettings.TwitchPopoutCSS;
+                if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.TwitchPopoutCSS))
+                    css = App.Settings.GeneralSettings.TwitchPopoutCSS;
             }
             else
             {
-                if (!string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.CustomCSS))
-                    css = SettingsSingleton.Instance.genSettings.CustomCSS;
+                if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.CustomCSS))
+                    css = App.Settings.GeneralSettings.CustomCSS;
             }
 
             return css;

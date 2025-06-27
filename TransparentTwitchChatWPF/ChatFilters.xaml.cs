@@ -28,28 +28,28 @@ namespace TransparentTwitchChatWPF
         {
             InitializeComponent();
 
-            if (SettingsSingleton.Instance.genSettings.AllowedUsersList == null)
-                SettingsSingleton.Instance.genSettings.AllowedUsersList = new StringCollection();
-            if (SettingsSingleton.Instance.genSettings.BlockedUsersList == null)
-                SettingsSingleton.Instance.genSettings.BlockedUsersList = new StringCollection();
+            if (App.Settings.GeneralSettings.AllowedUsersList == null)
+                App.Settings.GeneralSettings.AllowedUsersList = new StringCollection();
+            if (App.Settings.GeneralSettings.BlockedUsersList == null)
+                App.Settings.GeneralSettings.BlockedUsersList = new StringCollection();
 
-            foreach (string s in SettingsSingleton.Instance.genSettings.AllowedUsersList)
+            foreach (string s in App.Settings.GeneralSettings.AllowedUsersList)
                 scAllowedUsers.Add(s);
 
-            foreach (string s in SettingsSingleton.Instance.genSettings.BlockedUsersList)
+            foreach (string s in App.Settings.GeneralSettings.BlockedUsersList)
                 scBlockedUsers.Add(s);
 
             refreshListBoxAllowedUsers();
             refreshListBoxBlockedUsers();
 
-            this.cbHighlightUsers.IsChecked = SettingsSingleton.Instance.genSettings.HighlightUsersChat;
-            this.cbAllowedUsers.IsChecked = SettingsSingleton.Instance.genSettings.AllowedUsersOnlyChat;
-            this.cbAllMods.IsChecked = SettingsSingleton.Instance.genSettings.FilterAllowAllMods;
-            this.cbAllVIPs.IsChecked = SettingsSingleton.Instance.genSettings.FilterAllowAllVIPs;
-            this.cbBlockBotActivity.IsChecked = SettingsSingleton.Instance.genSettings.BlockBotActivity;
-            this.colorPicker.SelectedColor = SettingsSingleton.Instance.genSettings.ChatHighlightColor;
-            this.colorPickerMods.SelectedColor = SettingsSingleton.Instance.genSettings.ChatHighlightModsColor;
-            this.colorPickerVIPs.SelectedColor = SettingsSingleton.Instance.genSettings.ChatHighlightVIPsColor;
+            this.cbHighlightUsers.IsChecked = App.Settings.GeneralSettings.HighlightUsersChat;
+            this.cbAllowedUsers.IsChecked = App.Settings.GeneralSettings.AllowedUsersOnlyChat;
+            this.cbAllMods.IsChecked = App.Settings.GeneralSettings.FilterAllowAllMods;
+            this.cbAllVIPs.IsChecked = App.Settings.GeneralSettings.FilterAllowAllVIPs;
+            this.cbBlockBotActivity.IsChecked = App.Settings.GeneralSettings.BlockBotActivity;
+            this.colorPicker.SelectedColor = App.Settings.GeneralSettings.ChatHighlightColor;
+            this.colorPickerMods.SelectedColor = App.Settings.GeneralSettings.ChatHighlightModsColor;
+            this.colorPickerVIPs.SelectedColor = App.Settings.GeneralSettings.ChatHighlightVIPsColor;
         }
 
         private void OnClick_RemoveAllowedUsername(object sender, RoutedEventArgs e)
@@ -119,16 +119,16 @@ namespace TransparentTwitchChatWPF
 
         private void OKButton_Click(object sender, RoutedEventArgs e)
         {
-            SettingsSingleton.Instance.genSettings.HighlightUsersChat = this.cbHighlightUsers.IsChecked ?? false;
-            SettingsSingleton.Instance.genSettings.AllowedUsersOnlyChat = this.cbAllowedUsers.IsChecked ?? false;
-            SettingsSingleton.Instance.genSettings.FilterAllowAllMods = this.cbAllMods.IsChecked ?? false;
-            SettingsSingleton.Instance.genSettings.FilterAllowAllVIPs = this.cbAllVIPs.IsChecked ?? false;
-            SettingsSingleton.Instance.genSettings.AllowedUsersList = scAllowedUsers;
-            SettingsSingleton.Instance.genSettings.BlockedUsersList = scBlockedUsers;
-            SettingsSingleton.Instance.genSettings.BlockBotActivity = this.cbBlockBotActivity.IsChecked ?? false;
-            SettingsSingleton.Instance.genSettings.ChatHighlightColor = this.colorPicker.SelectedColor ?? SettingsSingleton.Instance.genSettings.ChatHighlightColor;
-            SettingsSingleton.Instance.genSettings.ChatHighlightModsColor = this.colorPickerMods.SelectedColor ?? SettingsSingleton.Instance.genSettings.ChatHighlightModsColor;
-            SettingsSingleton.Instance.genSettings.ChatHighlightVIPsColor = this.colorPickerVIPs.SelectedColor ?? SettingsSingleton.Instance.genSettings.ChatHighlightVIPsColor;
+            App.Settings.GeneralSettings.HighlightUsersChat = this.cbHighlightUsers.IsChecked ?? false;
+            App.Settings.GeneralSettings.AllowedUsersOnlyChat = this.cbAllowedUsers.IsChecked ?? false;
+            App.Settings.GeneralSettings.FilterAllowAllMods = this.cbAllMods.IsChecked ?? false;
+            App.Settings.GeneralSettings.FilterAllowAllVIPs = this.cbAllVIPs.IsChecked ?? false;
+            App.Settings.GeneralSettings.AllowedUsersList = scAllowedUsers;
+            App.Settings.GeneralSettings.BlockedUsersList = scBlockedUsers;
+            App.Settings.GeneralSettings.BlockBotActivity = this.cbBlockBotActivity.IsChecked ?? false;
+            App.Settings.GeneralSettings.ChatHighlightColor = this.colorPicker.SelectedColor ?? App.Settings.GeneralSettings.ChatHighlightColor;
+            App.Settings.GeneralSettings.ChatHighlightModsColor = this.colorPickerMods.SelectedColor ?? App.Settings.GeneralSettings.ChatHighlightModsColor;
+            App.Settings.GeneralSettings.ChatHighlightVIPsColor = this.colorPickerVIPs.SelectedColor ?? App.Settings.GeneralSettings.ChatHighlightVIPsColor;
             DialogResult = true;
         }
 

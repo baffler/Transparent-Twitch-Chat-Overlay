@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
+﻿using Color = System.Windows.Media.Color;
 
 namespace TransparentTwitchChatWPF.Chats
 {
@@ -40,15 +33,15 @@ namespace TransparentTwitchChatWPF.Chats
 
         public override string SetupJavascript()
         {
-            string[] blockList = new string[SettingsSingleton.Instance.genSettings.BlockedUsersList.Count];
-            SettingsSingleton.Instance.genSettings.BlockedUsersList.CopyTo(blockList, 0);
+            string[] blockList = new string[App.Settings.GeneralSettings.BlockedUsersList.Count];
+            App.Settings.GeneralSettings.BlockedUsersList.CopyTo(blockList, 0);
 
             string js = @"const jsCallback = chrome.webview.hostObjects.jsCallbackFunctions;";
 
-            if (SettingsSingleton.Instance.genSettings.HighlightUsersChat)
+            if (App.Settings.GeneralSettings.HighlightUsersChat)
             {
-                string[] vipList = new string[SettingsSingleton.Instance.genSettings.AllowedUsersList.Count];
-                SettingsSingleton.Instance.genSettings.AllowedUsersList.CopyTo(vipList, 0);
+                string[] vipList = new string[App.Settings.GeneralSettings.AllowedUsersList.Count];
+                App.Settings.GeneralSettings.AllowedUsersList.CopyTo(vipList, 0);
 
                 js += @"var oldChatInsert = Chat.insert;
                             Chat.insert = function(nick, tags, message) {
@@ -68,15 +61,15 @@ namespace TransparentTwitchChatWPF.Chats
                                     return;
                                 }";
 
-                if (SettingsSingleton.Instance.genSettings.FilterAllowAllVIPs)
+                if (App.Settings.GeneralSettings.FilterAllowAllVIPs)
                     js += CustomJS_Defaults.VIP_Check;
 
-                if (SettingsSingleton.Instance.genSettings.FilterAllowAllMods)
+                if (App.Settings.GeneralSettings.FilterAllowAllMods)
                     js += CustomJS_Defaults.Mod_Check;
 
                 js += @"if (vips.includes(nick.toLowerCase()) || allowOther) {";
 
-                if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() != "none")
+                if (App.Settings.GeneralSettings.ChatNotificationSound.ToLower() != "none")
                     js += CustomJS_Defaults.Callback_PlaySound;
 
                 js += @"
@@ -93,10 +86,10 @@ namespace TransparentTwitchChatWPF.Chats
 
                 return js;
             }
-            else if (SettingsSingleton.Instance.genSettings.AllowedUsersOnlyChat)
+            else if (App.Settings.GeneralSettings.AllowedUsersOnlyChat)
             {
-                string[] vipList = new string[SettingsSingleton.Instance.genSettings.AllowedUsersList.Count];
-                SettingsSingleton.Instance.genSettings.AllowedUsersList.CopyTo(vipList, 0);
+                string[] vipList = new string[App.Settings.GeneralSettings.AllowedUsersList.Count];
+                App.Settings.GeneralSettings.AllowedUsersList.CopyTo(vipList, 0);
 
                 js += @"var oldChatInsert = Chat.insert;
                             Chat.insert = function(nick, tags, message) {
@@ -108,15 +101,15 @@ namespace TransparentTwitchChatWPF.Chats
                 js += @"'];
                                 var allowOther = false;";
 
-                if (SettingsSingleton.Instance.genSettings.FilterAllowAllVIPs)
+                if (App.Settings.GeneralSettings.FilterAllowAllVIPs)
                     js += CustomJS_Defaults.VIP_Check;
 
-                if (SettingsSingleton.Instance.genSettings.FilterAllowAllMods)
+                if (App.Settings.GeneralSettings.FilterAllowAllMods)
                     js += CustomJS_Defaults.Mod_Check;
 
                 js += @"if (vips.includes(nick.toLowerCase()) || (nick == 'Chat') || allowOther) {";
 
-                if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() != "none")
+                if (App.Settings.GeneralSettings.ChatNotificationSound.ToLower() != "none")
                     js += CustomJS_Defaults.Callback_PlaySound;
 
                 js += @"
@@ -126,7 +119,7 @@ namespace TransparentTwitchChatWPF.Chats
 
                 return js;
             }
-            else if (SettingsSingleton.Instance.genSettings.ChatNotificationSound.ToLower() != "none")
+            else if (App.Settings.GeneralSettings.ChatNotificationSound.ToLower() != "none")
             {
                 // Insert JS to play a sound on each chat message
                 js += @"var oldChatInsert = Chat.insert;
@@ -149,8 +142,8 @@ namespace TransparentTwitchChatWPF.Chats
 
                 return js;
             }
-            else if ((SettingsSingleton.Instance.genSettings.BlockedUsersList != null) &&
-                    (SettingsSingleton.Instance.genSettings.BlockedUsersList.Count > 0))
+            else if ((App.Settings.GeneralSettings.BlockedUsersList != null) &&
+                    (App.Settings.GeneralSettings.BlockedUsersList.Count > 0))
             {
                 // No other options were selected, we're just gonna check the block list only here
 
@@ -178,31 +171,31 @@ namespace TransparentTwitchChatWPF.Chats
         {
             string css = string.Empty;
 
-            if (string.IsNullOrEmpty(SettingsSingleton.Instance.genSettings.CustomCSS))
+            if (string.IsNullOrEmpty(App.Settings.GeneralSettings.CustomCSS))
             {
                 // Fix for KapChat so a long chat message doesn't wrap to a new line
                 css = @".message { display: inline !important; }";
 
                 // Highlight
-                Color c = SettingsSingleton.Instance.genSettings.ChatHighlightColor;
+                Color c = App.Settings.GeneralSettings.ChatHighlightColor;
                 float a = (c.A / 255f);
                 string rgba = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, a);
                 css += "\n .highlight { background-color: " + rgba + " !important; }";
 
                 // Mods Highlight
-                c = SettingsSingleton.Instance.genSettings.ChatHighlightModsColor;
+                c = App.Settings.GeneralSettings.ChatHighlightModsColor;
                 a = (c.A / 255f);
                 rgba = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, a);
                 css += "\n .highlightMod { background-color: " + rgba + " !important; }";
 
                 // VIPs Highlight
-                c = SettingsSingleton.Instance.genSettings.ChatHighlightVIPsColor;
+                c = App.Settings.GeneralSettings.ChatHighlightVIPsColor;
                 a = (c.A / 255f);
                 rgba = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, a);
                 css += "\n .highlightVIP { background-color: " + rgba + " !important; }";
             }
             else
-                css = SettingsSingleton.Instance.genSettings.CustomCSS;
+                css = App.Settings.GeneralSettings.CustomCSS;
 
             return css;
         }
