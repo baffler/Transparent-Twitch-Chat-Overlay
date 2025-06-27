@@ -6,8 +6,6 @@
 		<OutputType>WinExe</OutputType>
 		<StartupObject>TransparentTwitchChatWPF.App</StartupObject>
 		<UseWPF>true</UseWPF>
-		<!-- UseWindowsForms is needed for things like NotifyIcon -->
-		<UseWindowsForms>true</UseWindowsForms>
 		<ApplicationIcon>twitch_chat2.ico</ApplicationIcon>
 		<!-- This ensures platform-specific assets are handled correctly -->
 		<ImplicitUsings>enable</ImplicitUsings>

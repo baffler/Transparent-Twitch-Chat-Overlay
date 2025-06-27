@@ -114,18 +114,6 @@
             </ui:SimpleStackPanel>
         </Grid>
 
-        <!--<wv2:WebView2
-            Grid.Row="1" Grid.RowSpan="1"
-            Panel.ZIndex="0"
-            Name="webView" 
-            DefaultBackgroundColor="Transparent" 
-            CoreWebView2InitializationCompleted="webView_CoreWebView2InitializationCompleted"
-            ContentLoading="webView_ContentLoading"
-            NavigationStarting="webView_NavigationStarting"
-            NavigationCompleted="webView_NavigationCompleted"
-            WebMessageReceived="webView_WebMessageReceived"
-            />-->
-
         <Border Grid.Row="1" Name="overlay" Background="black" Opacity="0.01" Panel.ZIndex="1"/>
         <Border Name="FooterBar" Grid.Row="3" Opacity="0.1" Panel.ZIndex="2" Background="Black" />
     </Grid>

@@ -207,6 +207,24 @@ public class TwitchService : IHostedService, IDisposable
     private void InitEventSub()
     {
         if (_isEventSubInit) return; // Already initialized
+        if (App.Settings.GeneralSettings.RedemptionsEnabled == false)
+        {
+            _logger.LogInformation("EventSub is disabled in settings. Skipping initialization.");
+            return;
+        }
+        if (string.IsNullOrEmpty(App.Settings.GeneralSettings.ChannelID))
+        {
+            _logger.LogWarning("Channel ID is not set in App.Settings.GeneralSettings. Cannot initialize EventSub.");
+            Growl.Warning("Please setup the Twitch Connection in settings before enabling EventSub.");
+            return;
+        }
+        if (string.IsNullOrEmpty(App.Settings.GeneralSettings.OAuthToken))
+        {
+            _logger.LogWarning("OAuth Token is not set in App.Settings.GeneralSettings. Cannot initialize EventSub.");
+            Growl.Warning("Please setup the Twitch Connection in settings before enabling EventSub.");
+            return;
+        }
+
         _logger.LogInformation("Initializing Twitch EventSub WebSocket client for channel: " + App.Settings.GeneralSettings.ChannelID);
 
         // ensure no old subscriptions are hanging around
@@ -223,6 +241,21 @@ public class TwitchService : IHostedService, IDisposable
 
         _logger.LogInformation("Connecting to EventSub...");
         _ = StartAsync(CancellationToken.None);
+    }
+
+    public void DisableEventSub()
+    {
+        _logger.LogInformation("User requested disabling Event Sub.");
+
+        // Stop the active service (which disconnects the websocket)
+        _ = StopAsync(CancellationToken.None);
+
+        // Reset internal state flags
+        _isEventSubInit = false;
+        _userId = null;
+
+        // Unsubscribe from events now that we are disconnected
+        UnsubscribeFromEvents();
     }
 
     private async Task _eventSubWebsocketClient_ChannelChatMessage(object sender, ChannelChatMessageArgs args)
@@ -252,7 +285,7 @@ public class TwitchService : IHostedService, IDisposable
 
 
     // --- WebSocket Events -------------------------------------------------------------
-    private async Task OnWebsocketConnected(object? sender, WebsocketConnectedArgs e)
+    private async Task OnWebsocketConnected(object sender, WebsocketConnectedArgs e)
     {
         _logger.LogInformation($"Websocket {_eventSubWebsocketClient.SessionId} connected!");
         Growl.Info("Twitch EventSub connection established successfully.");
@@ -264,15 +297,27 @@ public class TwitchService : IHostedService, IDisposable
             // need BOTH broadcaster and moderator values or EventSub returns an Error!
             var condition = new Dictionary<string, string> { { "broadcaster_user_id", _userId }, { "moderator_user_id", _userId } };
             // Create and send EventSubscription
-            await _api.Helix.EventSub.CreateEventSubSubscriptionAsync("channel.channel_points_custom_reward_redemption.add", "1", condition, EventSubTransportMethod.Websocket,
-            _eventSubWebsocketClient.SessionId, accessToken: App.Settings.GeneralSettings.OAuthToken);
+            await _api.Helix.EventSub.CreateEventSubSubscriptionAsync(
+                    "channel.channel_points_custom_reward_redemption.add", 
+                    "1", 
+                    condition, 
+                    EventSubTransportMethod.Websocket,
+                    _eventSubWebsocketClient.SessionId, 
+                    accessToken: App.Settings.GeneralSettings.OAuthToken
+                );
 
             var conditionChatMessage = new Dictionary<string, string> {
-                { "broadcaster_user_id", "128440061" },
+                { "broadcaster_user_id", _userId },
                 { "user_id", _userId }
             };
-            await _api.Helix.EventSub.CreateEventSubSubscriptionAsync("channel.chat.message", "1", conditionChatMessage, EventSubTransportMethod.Websocket,
-                _eventSubWebsocketClient.SessionId, accessToken: App.Settings.GeneralSettings.OAuthToken);
+            await _api.Helix.EventSub.CreateEventSubSubscriptionAsync(
+                    "channel.chat.message", 
+                    "1", 
+                    conditionChatMessage, 
+                    EventSubTransportMethod.Websocket,
+                    _eventSubWebsocketClient.SessionId, 
+                    accessToken: App.Settings.GeneralSettings.OAuthToken
+                );
 
             //await _twitchApi.Helix.EventSub.CreateEventSubSubscriptionAsync("channel.channel_points_automatic_reward_redemption.add", "2", condition, EventSubTransportMethod.Websocket,
             //_eventSubWebsocketClient.SessionId, accessToken: App.SettingsObject.GeneralSettings.OAuthToken);
@@ -281,7 +326,7 @@ public class TwitchService : IHostedService, IDisposable
         }
     }
 
-    private async Task OnWebsocketDisconnected(object? sender, EventArgs e)
+    private async Task OnWebsocketDisconnected(object sender, EventArgs e)
     {
         _logger.LogWarning($"[Twitch EventSub] Websocket {_eventSubWebsocketClient.SessionId} disconnected!");
 
@@ -325,16 +370,16 @@ public class TwitchService : IHostedService, IDisposable
         _logger.LogWarning($"[Twitch EventSub] Websocket {_eventSubWebsocketClient.SessionId} failed to reconnect after {MaxReconnectAttempts} attempts. Stopping retry efforts for this disconnection event.");
         // TODO: At this point, notify the user, log a more critical error, or transition to an offline state.
 
-        Growl.Error("Twitch EventSub connection lost. Please check your internet connection or Twitch settings.");
+        Growl.Error("Twitch EventSub connection lost. Please check your internet connection or Twitch Connection settings.");
     }
 
-    private async Task OnWebsocketReconnected(object? sender, EventArgs e)
+    private async Task OnWebsocketReconnected(object sender, EventArgs e)
     {
         _logger.LogInformation($"Websocket {_eventSubWebsocketClient.SessionId} reconnected");
         Growl.Info("Twitch EventSub connection re-established successfully.");
     }
 
-    private async Task OnErrorOccurred(object? sender, ErrorOccuredArgs e)
+    private async Task OnErrorOccurred(object sender, ErrorOccuredArgs e)
     {
         //LogService.Instance.ChannelChatStatus.IsConnected = true;
 

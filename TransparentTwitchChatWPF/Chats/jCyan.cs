@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Web;
 using System.Windows.Media;
 using TwitchLib.Api.Helix;
 using Color = System.Windows.Media.Color;
@@ -17,11 +18,49 @@ namespace TransparentTwitchChatWPF.Chats
         }
 
         public override string PushNewChatMessage(string message = "", string nick = "", string color = "") {
-            return "";
+            string safeNickForJs = string.IsNullOrEmpty(nick) ? "null" : JsonSerializer.Serialize(nick);
+
+            string js;
+
+            if (string.IsNullOrEmpty(color))
+            {
+                string safeMessageForJs = JsonSerializer.Serialize(message);
+                js = $"Chat.write({safeNickForJs}, null, {safeMessageForJs});";
+            }
+            else
+            {
+                string safeColorForJs = JsonSerializer.Serialize(color);
+
+                // Escape ONLY the user-provided message content.
+                // JavaScriptStringEncode will handle quotes, backslashes, etc., inside the message.
+                string escapedMessage = HttpUtility.JavaScriptStringEncode(message);
+
+                // Manually construct the final JavaScript string literal.
+                // We add the \x01 characters and the outer quotes. Because the content
+                // is already escaped, this is now safe.
+                string finalActionArgument = $"\"\\x01ACTION {escapedMessage}\\x01\"";
+
+                js = $"var ttags = {{ color: {safeColorForJs} }};\n" +
+                     $"Chat.write({safeNickForJs}, ttags, {finalActionArgument});";
+            }
+
+            return js;
         }
 
         public override string PushNewMessage(string message = "") {
-            return $"Chat.info.lines.push(\"<div class=\\\"chat_line\\\" data-time=\\\"{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}\\\">{message}</div>\");";
+            // Encode the message to be safe for insertion into HTML.
+            // This turns characters like '<' and '>' into '&lt;' and '&gt;'.
+            string safeHtmlMessage = HttpUtility.HtmlEncode(message);
+
+            // Construct the full HTML string
+            string htmlString = $"<div class=\"chat_line\" data-time=\"{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}\">{safeHtmlMessage}</div>";
+
+            // Serialize the entire HTML string to make it a valid JavaScript string literal.
+            // This handles all quotes and backslashes, and wraps it in quotes for JavaScript.
+            string finalJsArgument = JsonSerializer.Serialize(htmlString);
+
+            // Push the safe, serialized string.
+            return $"Chat.info.lines.push({finalJsArgument});";
         }
         
         public override string SetupJavascript() {

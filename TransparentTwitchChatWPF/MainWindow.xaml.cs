@@ -107,6 +107,7 @@ using Point = System.Windows.Point;
 namespace TransparentTwitchChatWPF;
 
 using Chats;
+using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
 using ModernWpf.Controls;
@@ -121,6 +122,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Navigation;
 using System.Windows.Threading;
+using TransparentTwitchChatWPF.Twitch;
 using TransparentTwitchChatWPF.Utils;
 using Velopack;
 
@@ -129,6 +131,9 @@ using Velopack;
 /// </summary>
 public partial class MainWindow : Window, BrowserWindow
 {
+    private readonly ILogger<MainWindow> _logger;
+    private readonly TwitchService _twitchService;
+
     private WebView2 webView;
     private bool hasWebView2Runtime = false;
 
@@ -151,10 +156,14 @@ public partial class MainWindow : Window, BrowserWindow
     private Chat _currentChat;
     private Button _closeButton;
 
-    public MainWindow()
+    public MainWindow(ILogger<MainWindow> logger, TwitchService twitchService)
     {
         InitializeComponent();
         DataContext = this;
+
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _twitchService = twitchService ?? throw new ArgumentNullException(nameof(twitchService));
+        _twitchService.ChannelPointsRewardRedeemed += OnChannelPointsRewardRedeemed;
 
         _currentChat = new CustomURLChat(ChatTypes.CustomURL); // TODO: initializing here needed?
 
@@ -178,6 +187,25 @@ public partial class MainWindow : Window, BrowserWindow
 
         LocalHtmlHelper.EnsureLocalBrowserFiles();
         InitializeWebViewAsync();
+    }
+
+    private void OnChannelPointsRewardRedeemed(object sender, TwitchLib.EventSub.Websockets.Core.EventArgs.Channel.ChannelPointsCustomRewardRedemptionArgs e)
+    {
+        _logger.LogInformation("Channel Points Reward Redeemed");
+
+        var payloadEvent = e.Notification.Payload.Event;
+
+        _logger.LogInformation($"{payloadEvent.UserName} redeemed '{payloadEvent.Reward.Title}' ({payloadEvent.Reward.Cost} points)");
+        PushNewChatMessageDispatcherInvoke(
+            $"redeemed '{payloadEvent.Reward.Title}' ({payloadEvent.Reward.Cost} points)",
+            payloadEvent.UserName, "#a1b3c4");
+
+        if (!string.IsNullOrEmpty(payloadEvent.UserInput))
+        {
+            PushNewChatMessageDispatcherInvoke(
+                $"{payloadEvent.UserInput}", 
+                payloadEvent.UserName, "#a1b3c4");
+        }
     }
 
     private void OnSettingsWindowActive(bool isActive)
@@ -790,7 +818,7 @@ public partial class MainWindow : Window, BrowserWindow
         // Pub Sub
         if (App.Settings.GeneralSettings.RedemptionsEnabled)
         {
-            //SetupPubSubRedemptions();
+            _ = _twitchService.InitializeAsync();
         }
     }
 
@@ -1074,8 +1102,8 @@ public partial class MainWindow : Window, BrowserWindow
 
                 if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.Username))
                 {
-                    // TODO: Disable Event Sub
-                    //if (!config.RedemptionsEnabled) DisablePubSubRedemptions();
+                    if (!config.RedemptionsEnabled)
+                        _twitchService.DisableEventSub();
 
                     SetChatAddress(App.Settings.GeneralSettings.Username);
                 }
@@ -1105,8 +1133,8 @@ public partial class MainWindow : Window, BrowserWindow
 
                 if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.Username))
                 {
-                    // TODO: Disable Event Sub
-                    //if (!config.RedemptionsEnabled) DisablePubSubRedemptions();
+                    if (!config.RedemptionsEnabled)
+                        _twitchService.DisableEventSub();
 
                     if (string.IsNullOrEmpty(App.Settings.GeneralSettings.jChatURL))
                     {
@@ -1559,7 +1587,7 @@ public partial class MainWindow : Window, BrowserWindow
                 this.webView.ExecuteScriptAsync(js);
             });
         }
-    }   
+    }
 
     /*private void EventSubConnectedInit()
     {

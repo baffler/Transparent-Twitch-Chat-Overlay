@@ -22,22 +22,22 @@ namespace TransparentTwitchChatWPF.Chats
 
         public virtual string PushNewChatMessage(string message = "", string nick = "", string color = "")
         {
-            return String.Empty;
+            return string.Empty;
         }
 
         public virtual string PushNewMessage(string message = "")
         {
-            return String.Empty;
+            return string.Empty;
         }
 
         public virtual string SetupJavascript()
         {
-            return String.Empty;
+            return string.Empty;
         }
 
         public virtual string SetupCustomCSS()
         {
-            return String.Empty;
+            return string.Empty;
         }
     }
 }

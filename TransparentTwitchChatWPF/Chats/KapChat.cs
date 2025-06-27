@@ -1,4 +1,6 @@
-﻿using Color = System.Windows.Media.Color;
+﻿using System.Text.Json;
+using System.Web;
+using Color = System.Windows.Media.Color;
 
 namespace TransparentTwitchChatWPF.Chats
 {
@@ -10,17 +12,31 @@ namespace TransparentTwitchChatWPF.Chats
 
         public override string PushNewChatMessage(string message = "", string nick = "", string color = "")
         {
-            if (string.IsNullOrEmpty(nick))
-                nick = "null";
-            else
-                nick = $"\"{nick}\"";
+            string safeNickForJs = string.IsNullOrEmpty(nick) ? "null" : JsonSerializer.Serialize(nick);
 
-            string js = $"Chat.insert({nick}, null, \"{message}\");";
+            string js;
 
-            if (!string.IsNullOrEmpty(color))
+            if (string.IsNullOrEmpty(color))
             {
-                js = "var ttags = { color : \"" + color + "\", };\n";
-                js += $"Chat.insert({nick}, ttags, \"\\x01ACTION {message}\\x01\");";
+                string safeMessageForJs = JsonSerializer.Serialize(message);
+                js = $"Chat.write({safeNickForJs}, null, {safeMessageForJs});";
+            }
+            else
+            {
+                string safeColorForJs = JsonSerializer.Serialize(color);
+
+                // Step 1: Escape ONLY the user-provided message content.
+                // JavaScriptStringEncode will handle quotes, backslashes, etc., inside the message.
+                // Importantly, it will leave the \x01 characters alone if they were in the message.
+                string escapedMessage = HttpUtility.JavaScriptStringEncode(message);
+
+                // Step 2: Manually construct the final JavaScript string literal.
+                // We add the \x01 characters and the outer quotes. Because the content
+                // is already escaped, this is now safe.
+                string finalActionArgument = $"\"\\x01ACTION {escapedMessage}\\x01\"";
+
+                js = $"var ttags = {{ color: {safeColorForJs} }};\n" +
+                     $"Chat.insert({safeNickForJs}, ttags, {finalActionArgument});";
             }
 
             return js;
@@ -28,7 +44,11 @@ namespace TransparentTwitchChatWPF.Chats
 
         public override string PushNewMessage(string message = "")
         {
-            return $"Chat.insert(null, null, \"{message}\");";
+            // Serialize the message to make it a valid JavaScript string literal.
+            // This handles quotes, backslashes, newlines, etc.
+            string safeJsMessage = JsonSerializer.Serialize(message);
+
+            return $"Chat.insert(null, null, {safeJsMessage});";
         }
 
         public override string SetupJavascript()

@@ -1,12 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Shell;
+using TransparentTwitchChatWPF.Twitch;
+using TwitchLib.EventSub.Websockets.Extensions;
 using Velopack;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
@@ -107,7 +105,10 @@ namespace TransparentTwitchChatWPF
             ConfigureServices((context, services) =>
             {
                 services.AddSingleton<MainWindow>();
-                // Register other services here
+                
+                services.AddTwitchLibEventSubWebsockets();
+                services.AddSingleton<TwitchService>();
+                services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<TwitchService>());
             })
             .ConfigureLogging(logging =>
             {
@@ -139,7 +140,6 @@ namespace TransparentTwitchChatWPF
             {
                 Title = "Toggle Borders",
                 CustomCategory = "Actions",
-                //ApplicationPath = Assembly.GetEntryAssembly().Location,
                 Arguments = "/toggleborders"
             });
 
@@ -147,7 +147,6 @@ namespace TransparentTwitchChatWPF
             {
                 Title = "Show Settings",
                 CustomCategory = "Actions",
-                //ApplicationPath = Assembly.GetEntryAssembly().Location,
                 Arguments = "/settings"
             });
 
@@ -155,7 +154,6 @@ namespace TransparentTwitchChatWPF
             {
                 Title = "Reset Window",
                 CustomCategory = "Actions",
-                //ApplicationPath = Assembly.GetEntryAssembly().Location,
                 Arguments = "/resetwindow"
             });
 

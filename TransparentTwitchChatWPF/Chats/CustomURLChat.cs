@@ -15,7 +15,7 @@ namespace TransparentTwitchChatWPF.Chats
 
         public override string SetupJavascript()
         {
-            return String.Empty;
+            return string.Empty;
         }
 
         public override string SetupCustomCSS()
