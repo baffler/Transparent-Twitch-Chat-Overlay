@@ -177,7 +177,7 @@ public partial class MainWindow : Window, BrowserWindow
         App.Settings.Tracker.Track(this);
 
         _timerTick = 0;
-        _timerCheckForegroundFocus = new System.Windows.Threading.DispatcherTimer();
+        _timerCheckForegroundFocus = new DispatcherTimer();
         _timerCheckForegroundFocus.Interval = TimeSpan.FromSeconds(1);
         _timerCheckForegroundFocus.Tick += _timer_Tick;
         _timerCheckForegroundFocus.Start();
@@ -1270,9 +1270,10 @@ public partial class MainWindow : Window, BrowserWindow
             //MessageBox.Show($"Failed to hide close button: {ex.Message}");
         }
 
-        if (App.Settings.GeneralSettings.CheckForUpdates)
+        if (App.Settings.GeneralSettings.CheckForUpdates
+            && (DateTime.Now.Date > App.Settings.GeneralSettings.LastUpdateCheck.Date))
         {
-            Task.Run(() => CheckForUpdateAsync());
+            _ = CheckForUpdateAsync();
         }
     }
 
@@ -1287,85 +1288,41 @@ public partial class MainWindow : Window, BrowserWindow
         }
     }
 
-    private async void CheckForUpdateAsync()
+    private async Task CheckForUpdateAsync()
     {
-        var mgr = new UpdateManager(new GithubSource("https://github.com/baffler/Transparent-Twitch-Chat-Overlay", null, false));
+#if !DEBUG
+        _logger.LogInformation("Checking for updates...");
 
-        if (!mgr.IsInstalled)
-        {
-            MessageBox.Show("Portable version. Don't check for update");
-            return;
-        }
+        var mgr = new UpdateManager(new GithubSource("https://github.com/baffler/Transparent-Twitch-Chat-Overlay", null, true));
 
         try
         {
             var newVersion = await mgr.CheckForUpdatesAsync();
+
+            App.Settings.GeneralSettings.LastUpdateCheck = DateTime.Now;
+            App.Settings.Persist(); // Save the last update check time
+
             if (newVersion == null)
             {
-                MessageBox.Show("No update available.");
+                _logger.LogInformation("No updates available.");
                 return; // no update available
             }
 
-            MessageBox.Show("New update available: " + newVersion.TargetFullRelease.Version + "\n" + newVersion.TargetFullRelease.NotesMarkdown);
-
-            // download new version
-            //await mgr.DownloadUpdatesAsync(newVersion);
-
-            // install new version and restart app
-            //mgr.ApplyUpdatesAndRestart(newVersion);
+            if (MessageBox.Show($"New Version [v{newVersion.TargetFullRelease.Version}] is available.\n(Currently on [v{newVersion.BaseRelease.Version}])\n\nWould you like to update now?",
+                        "New Version Available",
+                        MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes)
+            {
+                _logger.LogInformation($"Downloading and applying update to version {newVersion.TargetFullRelease.Version}...");
+                await mgr.DownloadUpdatesAsync(newVersion);
+                mgr.ApplyUpdatesAndRestart(newVersion);
+            }
         }
         catch (Exception ex)
         {
-            // It's a good practice to wrap the check in a try/catch
-            MessageBox.Show($"Error checking for updates: {ex.Message}");
+            _logger.LogError(ex, "Error checking for updates");
+            MessageBox.Show("Error checking for updates:\n" + ex.Message, "Error while Checking for Update", MessageBoxButton.OK, MessageBoxImage.Error);
         }
-
-        /*try
-        {
-            using (var updateManager = await UpdateManager.GitHubUpdateManager(@"https://github.com/baffler/Transparent-Twitch-Chat-Overlay"))
-            {
-                var updateInfo = await updateManager.CheckForUpdate();
-
-                if (updateInfo.ReleasesToApply.Count > 0)
-                {
-                    string currentVersion = "0.0.0";
-
-                    if (updateInfo.CurrentlyInstalledVersion == null)
-                    {
-                        Version version = Assembly.GetExecutingAssembly().GetName().Version;
-                        currentVersion = $"{version.Major}.{version.Minor}.{version.Build}";
-                    }
-                    else
-                        currentVersion = updateInfo.CurrentlyInstalledVersion.Version.ToString();
-
-                    currentVersion = string.IsNullOrEmpty(currentVersion) ? "0.0.0" : currentVersion;
-
-                    string nextVersion = updateInfo.FutureReleaseEntry.Version.ToString();
-                    nextVersion = string.IsNullOrEmpty(nextVersion) ? "0.0.0" : nextVersion;
-
-                    if (string.Equals(currentVersion, nextVersion)) return;
-
-                    if (MessageBox.Show($"New Version [v{nextVersion}] is available.\n(Currently on [v{currentVersion}])\n\nWould you like to update now?",
-                        "New Version Available",
-                        MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes)
-                    {
-                        try
-                        {
-                            await updateManager.UpdateApp();
-                            MessageBox.Show("Updated successfully! You will need to restart the app to apply the update.", "Update Complete", MessageBoxButton.OK, MessageBoxImage.Information);
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show("Failed to update:\n" + ex.Message, "Error while Updating", MessageBoxButton.OK, MessageBoxImage.Error);
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception)
-        {
-            //MessageBox.Show("Couldn't check for update:\n" + ex.Message, "Error while Checking for Update", MessageBoxButton.OK, MessageBoxImage.Error);
-        }*/
+#endif
     }
 
     private void webView_ContentLoading(object sender, Microsoft.Web.WebView2.Core.CoreWebView2ContentLoadingEventArgs e)

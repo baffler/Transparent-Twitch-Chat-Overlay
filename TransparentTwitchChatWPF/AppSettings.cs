@@ -151,6 +151,7 @@ public class GeneralSettings
     public bool FrankerFaceZ { get; set; } = false;
     public string jChatURL { get; set; } = string.Empty;
     public bool CheckForUpdates { get; set; } = true;
+    public DateTime LastUpdateCheck { get; set; } = DateTime.MinValue;
     public Color ChatHighlightColor { get; set; } = Color.FromArgb(150, 245, 245, 0); // Yellow
     public Color ChatHighlightModsColor { get; set; } = Color.FromArgb(150, 0, 173, 3); // Green
     public Color ChatHighlightVIPsColor { get; set; } = Color.FromArgb(150, 219, 51, 179); // Purple
