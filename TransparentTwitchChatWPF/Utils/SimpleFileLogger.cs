@@ -12,6 +12,7 @@ public static class SimpleFileLogger
 
     public static void Log(string message)
     {
+#if DEBUG
         try
         {
             lock (_lock)
@@ -25,6 +26,7 @@ public static class SimpleFileLogger
         {
             // Failsafe in case of logging errors
         }
+#endif
     }
 
     public static void ClearLog()

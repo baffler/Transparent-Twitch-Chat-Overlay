@@ -11,14 +11,15 @@ using Point = System.Windows.Point;
 
 /*
  * v1.1.1
- * > Widget inclusion in Bring to top Hotkey
- * > Memory leak with settings window?
- * > Link to sample CSS for custom CSS for the different chat types
+ * - Fixed widget settings not being saved
+ * - Added BTTV, FFZ, and 7TV emotes to KapChat
+ * - Fixed alert sounds not showing up in the settings
+ * - Widget inclusion in Bring to top Hotkey
  * 
  * v1.1.0
  * - Updated to .net8.0 and updated many dependencies
- * > Get velopack working to replace Squirrel
- * > Fix twitch integration
+ * - Get velopack working to replace Squirrel
+ * - Fix twitch integration
  * 
  * v1.0.5
  * - Replaced jChat with jCyan
@@ -91,6 +92,8 @@ using Point = System.Windows.Point;
  * 
  * TODO:
  * > Custom CSS for widgets
+ * > Memory leak with settings window?
+ * > Link to sample CSS for custom CSS for the different chat types
  * Add opacity and zoom levels into the General settings
  * Save and load different css files
  * Fade out the chat when there's not been a message for awhile (useful if opacity is set high)
@@ -459,6 +462,9 @@ public partial class MainWindow : Window, BrowserWindow
         IntPtr foregroundWindow = GetForegroundWindow();
         var hwnd = new WindowInteropHelper(this).Handle;
 
+        foreach (BrowserWindow win in this.windows)
+            win.SetTopMost(true);
+
         if (foregroundWindow != hwnd)
             WindowHelper.SetWindowPosTopMost(hwnd);
     }
@@ -798,9 +804,39 @@ public partial class MainWindow : Window, BrowserWindow
         if (App.Settings.GeneralSettings.ChatType == (int)ChatTypes.TwitchPopout)
             TwitchPopoutSetup();
 
+        _logger.LogInformation("_currentChat.ChatType = " + _currentChat.ChatType.ToString());
+        if (_currentChat.ChatType == ChatTypes.KapChat)
+        {
+            _logger.LogInformation("Setting up KapChat emotes and scripts.");
+            string browserPath = Path.Combine(AppContext.BaseDirectory, "browser");
+            if (Directory.Exists(browserPath))
+            {
+                string emoteBundlePath = Path.Combine(browserPath, "emote-bundle.js");
+                if (File.Exists(emoteBundlePath))
+                {
+                    _logger.LogInformation("Loading emote bundle script from: " + emoteBundlePath);
+                    string emoteBundleScript = File.ReadAllText(emoteBundlePath);
+                    //_logger.LogInformation(emoteBundleScript);
+
+                    await this.webView.ExecuteScriptAsync(emoteBundleScript);
+
+                    //await this.webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(emoteBundleScript);
+                }
+                else
+                {
+                    _logger.LogWarning("Emote bundle script not found at: " + emoteBundlePath);
+                }
+            }
+            else
+            {
+                _logger.LogWarning("Browser path does not exist: " + browserPath);
+            }
+        }
+
         string js = this._currentChat.SetupJavascript();
         if (!string.IsNullOrEmpty(js))
             await this.webView.ExecuteScriptAsync(js);
+        //await this.webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(js);
 
         // Custom CSS
         string script = string.Empty;
@@ -998,16 +1034,29 @@ public partial class MainWindow : Window, BrowserWindow
     private string GetSoundClipsFolder()
     {
         string path = App.Settings.GeneralSettings.SoundClipsFolder;
-        if (path == "Default")
+
+        string baseDirectory = AppContext.BaseDirectory;
+        string defaultAssetsPath = Path.Combine(baseDirectory, "assets");
+
+        if (path == "Default" || !Directory.Exists(path))
         {
-            path = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\assets\\";
-        }
-        else if (!Directory.Exists(path))
-        {
-            path = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\assets\\";
+            path = defaultAssetsPath;
         }
 
-        if (!path.EndsWith("\\")) path += "\\";
+        if (!Directory.Exists(path))
+        {
+            try
+            {
+                Directory.CreateDirectory(path);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to create directory '{path}': {ex.Message}");
+                // Handle the error appropriately, maybe fall back to a known good path or show a message
+            }
+        }
+
+        Debug.WriteLine($"Sound Clips Folder: '{path}'");
 
         return path;
     }
@@ -1113,7 +1162,7 @@ public partial class MainWindow : Window, BrowserWindow
                     this.jsCallbackFunctions.MediaFile = string.Empty;
                 else
                 {
-                    string file = GetSoundClipsFolder() + App.Settings.GeneralSettings.ChatNotificationSound;
+                    string file = Path.Combine(GetSoundClipsFolder(), App.Settings.GeneralSettings.ChatNotificationSound);
                     if (System.IO.File.Exists(file))
                     {
                         this.jsCallbackFunctions.MediaFile = file;
@@ -1160,7 +1209,7 @@ public partial class MainWindow : Window, BrowserWindow
                     this.jsCallbackFunctions.MediaFile = string.Empty;
                 else
                 {
-                    string file = GetSoundClipsFolder() + App.Settings.GeneralSettings.ChatNotificationSound;
+                    string file = Path.Combine(GetSoundClipsFolder(), App.Settings.GeneralSettings.ChatNotificationSound);
                     if (System.IO.File.Exists(file))
                     {
                         this.jsCallbackFunctions.MediaFile = file;
@@ -1347,7 +1396,7 @@ public partial class MainWindow : Window, BrowserWindow
 
         if (App.Settings.GeneralSettings.ChatNotificationSound.ToLower() != "none")
         {
-            string file = GetSoundClipsFolder() + App.Settings.GeneralSettings.ChatNotificationSound;
+            string file = Path.Combine(GetSoundClipsFolder(), App.Settings.GeneralSettings.ChatNotificationSound);
             if (System.IO.File.Exists(file))
             {
                 this.jsCallbackFunctions.MediaFile = file;
@@ -1649,6 +1698,16 @@ public partial class MainWindow : Window, BrowserWindow
         }
     }
 
+    public void SetTopMost(bool topMost)
+    {
+        if (this.WindowState == WindowState.Minimized)
+        {
+            this.WindowState = WindowState.Normal;
+        }
+
+        var hwnd = new WindowInteropHelper(this).Handle;
+        WindowHelper.SetWindowPosTopMost(hwnd);
+    }
 }
 
 [ClassInterface(ClassInterfaceType.AutoDual)]

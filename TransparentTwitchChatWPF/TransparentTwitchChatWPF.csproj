@@ -44,6 +44,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Remove="browser\emote-bundle.js" />
 		<None Remove="icons\twitch_chat.ico" />
 		<Resource Include="icons\twitch_chat.ico" />
 		<None Remove="icons\twitch_chat2.ico" />
@@ -57,6 +58,9 @@
 		</Content>
 		<Content Include="browser\*.html">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="browser\emote-bundle.js">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 		<Content Include="twitch_chat2.ico" />
 		<ApplicationDefinition Remove="App.xaml" />

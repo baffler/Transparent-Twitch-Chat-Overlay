@@ -1,43 +1,36 @@
 ﻿using Jot;
 using Microsoft.Web.WebView2.Core;
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Controls;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 using Brushes = System.Windows.Media.Brushes;
 using Point = System.Windows.Point;
+using TransparentTwitchChatWPF.Utils;
 
 namespace TransparentTwitchChatWPF
 {
-    using Jot.Configuration;
-    using System.Windows.Controls;
-
     /// <summary>
     /// Interaction logic for CustomWindow.xaml
     /// </summary>
-    public partial class CustomWindow : Window, BrowserWindow, ITrackingAware
+    public partial class CustomWindow : Window, BrowserWindow
     {
 
         MainWindow mainWindow;
         Thickness noBorderThickness = new Thickness(0);
         Thickness borderThickness = new Thickness(4);
-        System.Windows.Media.Color borderColor = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#5D077F");
+        Color borderColor = (Color)ColorConverter.ConvertFromString("#5D077F");
 
         bool hiddenBorders = false;
         string customURL = "";
         string hashCode = "";
 
-        TrackingConfiguration trackingConfig;
-
         private Button _closeButton;
 
         // Tracked properties
-        public Tracker Tracker = new Tracker();
         public double ZoomLevel { get; set; }
         public string customCSS { get; set; }
         public string customJS { get; set; }
@@ -52,34 +45,28 @@ namespace TransparentTwitchChatWPF
 
             InitializeComponent();
 
-            hashCode = String.Format("{0:X}", this.customURL.GetHashCode());
-            Tracker //= Services.Tracker.Configure(this).IdentifyAs(hashCode);
-                .Configure<CustomWindow>()
-                .Id(w => w.hashCode)
+            hashCode = Hasher.Create64BitHash(this.customURL);
+            App.Settings.Tracker.Configure<CustomWindow>()
+                .Id(w => w.hashCode, null, false)
                 .Properties(cw => new
                 {
-                    cw.customURL,
                     cw.ZoomLevel,
                     cw.customCSS,
-                    cw.customJS
+                    cw.customJS,
+                    cw.Top, cw.Width, cw.Height, cw.Left, cw.WindowState
                 })
                 .PersistOn(nameof(Window.Closing))
                 .StopTrackingOn(nameof(Window.Closing));
-
+            App.Settings.Tracker.Track(this);
 
             if (ZoomLevel <= 0) ZoomLevel = 1;
 
             InitializeWebViewAsync();
         }
 
-        public void ConfigureTracking(TrackingConfiguration configuration)
-        {
-            throw new NotImplementedException();
-        }
-
         public void Persist()
         {
-            Tracker.Persist(this);
+            App.Settings.Tracker.Persist(this);
         }
 
         async void InitializeWebViewAsync()
@@ -355,6 +342,17 @@ namespace TransparentTwitchChatWPF
             {
                 //MessageBox.Show($"Failed to hide close button: {ex.Message}");
             }
+        }
+
+        public void SetTopMost(bool topMost)
+        {
+            if (this.WindowState == WindowState.Minimized)
+            {
+                this.WindowState = WindowState.Normal;
+            }
+
+            var hwnd = new WindowInteropHelper(this).Handle;
+            WindowHelper.SetWindowPosTopMost(hwnd);
         }
     }
 }

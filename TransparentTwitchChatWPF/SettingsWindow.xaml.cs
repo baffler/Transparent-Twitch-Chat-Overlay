@@ -8,6 +8,7 @@ using System.IO;
 using TransparentTwitchChatWPF.Twitch;
 using Brushes = System.Windows.Media.Brushes;
 using MessageBox = System.Windows.MessageBox;
+using System.Diagnostics;
 
 namespace TransparentTwitchChatWPF
 {
@@ -68,16 +69,29 @@ namespace TransparentTwitchChatWPF
         private string GetSoundClipsFolder()
         {
             string path = tbSoundClipsFolder.Text;
-            if (path == "Default")
+
+            string baseDirectory = AppContext.BaseDirectory;
+            string defaultAssetsPath = Path.Combine(baseDirectory, "assets");
+
+            if (path == "Default" || !Directory.Exists(path))
             {
-                path = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\assets\\";
-            }
-            else if (!Directory.Exists(path))
-            {
-                path = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\assets\\";
+                path = defaultAssetsPath;
             }
 
-            if (!path.EndsWith("\\")) path += "\\";
+            if (!Directory.Exists(path))
+            {
+                try
+                {
+                    Directory.CreateDirectory(path);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Failed to create directory '{path}': {ex.Message}");
+                    // Handle the error appropriately, maybe fall back to a known good path or show a message
+                }
+            }
+
+            Debug.WriteLine($"Sound Clips Folder: '{path}'");
 
             return path;
         }
@@ -591,16 +605,14 @@ namespace TransparentTwitchChatWPF
 
         private void comboChatSound_DropDownClosed(object sender, EventArgs e)
         {
-            string file = GetSoundClipsFolder();
-            file += this.comboChatSound.SelectedValue.ToString();
+            string file = Path.Combine(GetSoundClipsFolder(), this.comboChatSound.SelectedValue.ToString());
 
             PlayAudioFile(file);
         }
 
         private void comboChatSound_DropDownClosed2(object sender, EventArgs e)
         {
-            string file = GetSoundClipsFolder();
-            file += this.comboChatSound2.SelectedValue.ToString();
+            string file = Path.Combine(GetSoundClipsFolder(), this.comboChatSound2.SelectedValue.ToString());
 
             PlayAudioFile(file);
         }
