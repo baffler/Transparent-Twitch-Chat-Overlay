@@ -9,6 +9,7 @@ using TransparentTwitchChatWPF.Twitch;
 using Brushes = System.Windows.Media.Brushes;
 using MessageBox = System.Windows.MessageBox;
 using System.Diagnostics;
+using TransparentTwitchChatWPF.Utils;
 
 namespace TransparentTwitchChatWPF
 {
@@ -536,7 +537,7 @@ namespace TransparentTwitchChatWPF
 
         private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(e.Uri.AbsoluteUri));
+            ShellHelper.OpenUrl(e.Uri.AbsoluteUri);
             e.Handled = true;
         }
 

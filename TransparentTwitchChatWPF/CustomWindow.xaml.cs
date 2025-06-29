@@ -205,7 +205,8 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItem_VisitWebsite(object sender, RoutedEventArgs e)
         {
-            Process.Start("https://github.com/baffler/Transparent-Twitch-Chat-Overlay/releases");
+            ShellHelper.OpenUrl("https://github.com/baffler/Transparent-Twitch-Chat-Overlay/releases");
+            e.Handled = true;
         }
 
         private void MenuItem_ZoomIn(object sender, RoutedEventArgs e)

@@ -363,11 +363,7 @@ public partial class MainWindow : Window, BrowserWindow
 
     private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
     {
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = e.Uri.AbsoluteUri,
-            UseShellExecute = true
-        });
+        ShellHelper.OpenUrl(e.Uri.AbsoluteUri);
         e.Handled = true;
     }
 
@@ -730,11 +726,8 @@ public partial class MainWindow : Window, BrowserWindow
 
     private void MenuItem_VisitWebsite(object sender, RoutedEventArgs e)
     {
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = "https://github.com/baffler/Transparent-Twitch-Chat-Overlay/releases/latest",
-            UseShellExecute = true
-        });
+        ShellHelper.OpenUrl("https://github.com/baffler/Transparent-Twitch-Chat-Overlay/releases/latest");
+        e.Handled = true;
     }
 
     private void btnHide_Click(object sender, RoutedEventArgs e)
@@ -981,25 +974,7 @@ public partial class MainWindow : Window, BrowserWindow
     public void OpenSettingsFolder()
     {
         string folderPath = (App.Settings.Tracker.Store as Jot.Storage.JsonFileStore).FolderPath;
-        try
-        {
-            if (Directory.Exists(folderPath))
-                Process.Start("explorer.exe", folderPath);
-            else
-                MessageBox.Show($"'{folderPath}' does not exist!");
-        }
-        catch (Win32Exception winEx)
-        {
-            // This specifically catches "Access is denied" and other OS-level errors.
-            MessageBox.Show($"Windows could not open the folder. Please check your permissions for this location.\n\nPath: {folderPath}\n\nError: {winEx.Message}",
-                            "Access Denied", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-        catch (Exception ex)
-        {
-            // Catch any other unexpected errors
-            MessageBox.Show($"An unexpected error occurred while trying to open the folder.\n\nError: {ex.Message}",
-                            "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
+        ShellHelper.OpenFolder(folderPath);
     }
 
     public void CreateNewWindow(string URL, string CustomCSS)
@@ -1073,11 +1048,7 @@ public partial class MainWindow : Window, BrowserWindow
                             )
                 == MessageBoxResult.OK)
             {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = "https://go.microsoft.com/fwlink/p/?LinkId=2124703",
-                    UseShellExecute = true
-                });
+                ShellHelper.OpenUrl("https://go.microsoft.com/fwlink/p/?LinkId=2124703");
             }
 
             return;
@@ -1342,7 +1313,7 @@ public partial class MainWindow : Window, BrowserWindow
 #if !DEBUG
         _logger.LogInformation("Checking for updates...");
 
-        var mgr = new UpdateManager(new GithubSource("https://github.com/baffler/Transparent-Twitch-Chat-Overlay", null, true));
+        var mgr = new UpdateManager(new GithubSource("https://github.com/baffler/Transparent-Twitch-Chat-Overlay", null, false));
 
         try
         {
@@ -1357,7 +1328,19 @@ public partial class MainWindow : Window, BrowserWindow
                 return; // no update available
             }
 
-            if (MessageBox.Show($"New Version [v{newVersion.TargetFullRelease.Version}] is available.\n(Currently on [v{newVersion.BaseRelease.Version}])\n\nWould you like to update now?",
+            string currentVersion = "0.0.0";
+            if (mgr.CurrentVersion != null)
+            {
+                currentVersion = mgr.CurrentVersion.ToString();
+            }
+
+            string newVersionString = "?.?.?";
+            if (newVersion.TargetFullRelease != null)
+            {
+                newVersionString = newVersion.TargetFullRelease.Version.ToString();
+            }
+
+            if (MessageBox.Show($"New Version [v{newVersionString}] is available.\n(Currently on [v{currentVersion}])\n\nWould you like to update now?",
                         "New Version Available",
                         MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes)
             {
@@ -1368,8 +1351,22 @@ public partial class MainWindow : Window, BrowserWindow
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error checking for updates");
-            MessageBox.Show("Error checking for updates:\n" + ex.Message, "Error while Checking for Update", MessageBoxButton.OK, MessageBoxImage.Error);
+            _logger.LogError(ex, "Error checking for updates (Outer Exception)");
+
+            if (ex.InnerException != null)
+            {
+                _logger.LogError(ex.InnerException, "INNER EXCEPTION DETAILS");
+            }
+
+            // For debugging, show the full details in the message box
+            string fullErrorDetails = ex.ToString();
+            if (ex.InnerException != null)
+            {
+                fullErrorDetails += "\n\nINNER EXCEPTION:\n" + ex.InnerException.ToString();
+            }
+
+            MessageBox.Show("Error checking for updates:\n" + fullErrorDetails, 
+                "Error while Checking for Update", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 #endif
     }

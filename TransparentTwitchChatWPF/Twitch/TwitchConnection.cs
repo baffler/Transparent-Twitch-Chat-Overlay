@@ -6,6 +6,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using TransparentTwitchChatWPF.Utils;
 
 namespace TransparentTwitchChatWPF.Twitch;
 
@@ -70,12 +71,7 @@ public class TwitchConnection
         string scopes = HttpUtility.UrlEncode("user_read user:read:broadcast user:read:chat bits:read chat:read channel:read:redemptions channel:read:subscriptions");
         string url = $"https://id.twitch.tv/oauth2/authorize?response_type=token&client_id={clientId}&redirect_uri={redirectUri}&force_verify=true&state={state}&scope={scopes}";
 
-        var processStartInfo = new ProcessStartInfo(url)
-        {
-            Verb = "open",
-            UseShellExecute = true
-        };
-        Process.Start(processStartInfo);
+        ShellHelper.OpenUrl(url);
 
         string accessToken = await StartWebListener();
 
