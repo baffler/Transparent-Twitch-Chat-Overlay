@@ -9,6 +9,11 @@
 		<ApplicationIcon>twitch_chat2.ico</ApplicationIcon>
 		<!-- This ensures platform-specific assets are handled correctly -->
 		<ImplicitUsings>enable</ImplicitUsings>
+
+		<PublishSingleFile>true</PublishSingleFile>
+		<SelfContained>true</SelfContained>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 	</PropertyGroup>
 
 	<!-- property group for a specific build configuration -->
@@ -20,9 +25,6 @@
 	<!-- NuGet package dependencies -->
 	<ItemGroup>
 		<PackageReference Include="AvalonEdit" Version="6.3.1.120" />
-		<PackageReference Include="Costura.Fody" Version="6.0.0">
-			<PrivateAssets>all</PrivateAssets>
-		</PackageReference>
 		<PackageReference Include="Extended.Wpf.Toolkit" Version="4.7.25104.5739" />
 		<PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
 		<PackageReference Include="Jot" Version="2.1.17" />
@@ -35,6 +37,7 @@
 		<PackageReference Include="NHotkey.Wpf" Version="3.0.0" />
 		<PackageReference Include="SharpCompress" Version="0.40.0" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.6" />
+		<PackageReference Include="System.Private.Uri" Version="4.3.2" />
 		<PackageReference Include="System.Text.Json" Version="9.0.6" />
 		<PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
 		<PackageReference Include="TwitchLib.Api" Version="3.10.0-preview-e47ba7f" />
@@ -66,18 +69,12 @@
 		<ApplicationDefinition Remove="App.xaml" />
 	</ItemGroup>
 
-	<!-- Fody, which handles embedding DLLs at build time -->
-	<ItemGroup>
-		<Resource Include="FodyWeavers.xml" />
-		<EmbeddedResource Include="Costura-win-x64\Microsoft.Web.WebView2.Core.dll" />
-		<EmbeddedResource Include="Costura-win-x64\Microsoft.Web.WebView2.Wpf.dll" />
-		<EmbeddedResource Include="Costura-win-x64\WebView2Loader.dll" />
-		<EmbeddedResource Include="Costura-win-x86\Microsoft.Web.WebView2.Core.dll" />
-		<EmbeddedResource Include="Costura-win-x86\Microsoft.Web.WebView2.Wpf.dll" />
-		<EmbeddedResource Include="Costura-win-x86\WebView2Loader.dll" />
-	</ItemGroup>
 	<ItemGroup>
 	  <Page Include="App.xaml" />
 	</ItemGroup>
+
+	<Target Name="CopyInstallerAfterPublish" AfterTargets="Publish">
+		<Copy SourceFiles="$(ProjectDir)MicrosoftEdgeWebview2Setup.exe" DestinationFolder="$(PublishDir)" />
+	</Target>
 
 </Project>

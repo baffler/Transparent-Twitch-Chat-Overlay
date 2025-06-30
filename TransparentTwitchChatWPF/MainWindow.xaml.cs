@@ -320,45 +320,48 @@ public partial class MainWindow : Window, BrowserWindow
         InitializeWebViewAsync();
     }
 
-    private void ShowWebViewDownloadLink()
+    private void ShowWebViewInstallUI()
     {
         hasWebView2Runtime = false;
+        PlaceholderOverlay.Visibility = Visibility.Visible;
+    }
 
-        if (_timerCheckWebView2Install == null)
+    private async void InstallButton_Click(object sender, RoutedEventArgs e)
+    {
+        var installButton = sender as Button;
+        installButton.IsEnabled = false; // Disable button to prevent multiple clicks
+        installButton.Content = "Installing...";
+
+        string installerPath = Path.Combine(AppContext.BaseDirectory, "MicrosoftEdgeWebview2Setup.exe");
+        if (!File.Exists(installerPath))
         {
-            _timerCheckWebView2Install = new System.Windows.Threading.DispatcherTimer();
-            _timerCheckWebView2Install.Interval = TimeSpan.FromSeconds(2.5);
-            _timerCheckWebView2Install.Tick += CheckWebView2Timer_Tick;
-            _timerCheckWebView2Install.Start();
+            MessageBox.Show("The WebView2 installer is missing. Please reinstall the application.", "Error");
+            return;
         }
 
-        this.overlay.Opacity = 1;
-        TextBlock textBlock = new TextBlock
+        try
         {
-            Text = "Please download and install the WebView2 Runtime to use this app.\nThe app will refresh after install.\n\n",
-            TextWrapping = TextWrapping.Wrap,
-            HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            FontSize = 16,
-            FontWeight = FontWeights.Bold,
-            Foreground = Brushes.White,
-            Background = Brushes.Black,
-            Padding = new Thickness(20),
-            Margin = new Thickness(20),
-        };
+            // Run the installer and wait for it to finish.
+            var process = Process.Start(new ProcessStartInfo(installerPath) { UseShellExecute = true });
+            await process.WaitForExitAsync();
 
-        Hyperlink link = new Hyperlink
+            installButton.Content = "Installation Complete";
+            PlaceHolderOverlayText.Text = "WebView2 Runtime Installed Successfully! The app will refresh automatically after installation.";
+
+            if (_timerCheckWebView2Install == null)
+            {
+                _timerCheckWebView2Install = new DispatcherTimer();
+                _timerCheckWebView2Install.Interval = TimeSpan.FromSeconds(2.5);
+                _timerCheckWebView2Install.Tick += CheckWebView2Timer_Tick;
+                _timerCheckWebView2Install.Start();
+            }
+        }
+        catch (Exception ex)
         {
-            NavigateUri = new Uri("https://go.microsoft.com/fwlink/p/?LinkId=2124703"),
-            Foreground = Brushes.White,
-            FontSize = 20,
-            FontWeight = FontWeights.Bold,
-        };
-        link.Inlines.Add("https://go.microsoft.com/fwlink/p/?LinkId=2124703");
-        link.RequestNavigate += Hyperlink_RequestNavigate;
-
-        textBlock.Inlines.Add(link);
-        overlay.Child = textBlock;
+            MessageBox.Show($"An error occurred during installation: {ex.Message}\n{ex.InnerException}", "Installation Failed");
+            installButton.IsEnabled = true;
+            installButton.Content = "Install WebView2 Runtime";
+        }
     }
 
     private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
@@ -377,13 +380,13 @@ public partial class MainWindow : Window, BrowserWindow
         }
         catch (Exception ex)
         {
-            ShowWebViewDownloadLink();
+            ShowWebViewInstallUI();
             return;
         }
 
         if (string.IsNullOrEmpty(version))
         {
-            ShowWebViewDownloadLink();
+            ShowWebViewInstallUI();
             return;
         }
 
@@ -401,7 +404,8 @@ public partial class MainWindow : Window, BrowserWindow
             _timerCheckWebView2Install = null;
         }
 
-        this.overlay.Child = null;
+        // Make sure the placeholder overlay is hidden
+        PlaceholderOverlay.Visibility = Visibility.Collapsed;
 
         webView.CoreWebView2InitializationCompleted += webView_CoreWebView2InitializationCompleted;
         webView.ContentLoading += webView_ContentLoading;
@@ -550,7 +554,7 @@ public partial class MainWindow : Window, BrowserWindow
         this.webView.SetValue(Grid.RowSpanProperty, 1);
         this.BorderBrush = Brushes.Black;
         this.BorderThickness = this.borderThickness;
-        this.ResizeMode = System.Windows.ResizeMode.CanResizeWithGrip;
+        this.ResizeMode = ResizeMode.CanResizeWithGrip;
 
         _hiddenBorders = false;
 
