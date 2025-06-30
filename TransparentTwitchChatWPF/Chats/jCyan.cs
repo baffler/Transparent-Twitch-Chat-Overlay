@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -164,6 +164,13 @@ namespace TransparentTwitchChatWPF.Chats
                     let highlightSuffix = '';
                     let isVip = false;
                     let isMod = false;
+                    let isSharedChat = false;
+
+                    if (tags["source-room-id"] && tags["source-room-id"] == tags["room-id"]) {
+                        // This is a message from a user in your own channel during a shared chat.
+                        isSharedChat = true;
+                        logToWebViewConsole('warn', `source-room-id ${tags["source-room-id"]} room-id ${tags["room-id"]}`);
+                    }
 
                     if (tags && typeof(tags.badges) === 'string') {
                         tags.badges.split(',').forEach(badgeStr => {
@@ -200,7 +207,7 @@ namespace TransparentTwitchChatWPF.Chats
                         }
                     }
                     
-                    if (shouldHighlight) {
+                    if (shouldHighlight || isSharedChat) {
                         const originalLinesPush = Chat.info.lines.push;
                         let capturedChatLineHtml = '';
                         Chat.info.lines.push = (html) => { capturedChatLineHtml = html; };
@@ -215,7 +222,15 @@ namespace TransparentTwitchChatWPF.Chats
                             const chatLine = tempDiv.firstElementChild;
 
                             if (chatLine) {
-                                chatLine.classList.add(`highlight${highlightSuffix}`);
+                                if (shouldHighlight) {
+                                    chatLine.classList.add(`highlight${highlightSuffix}`);
+                                }
+
+                                // Add the 'home-chatter' class if it's from your own community during a shared chat
+                                if (isSharedChat) {
+                                    chatLine.classList.add('home-chatter');
+                                }
+
                                 const modifiedHtml = chatLine.outerHTML;
                                 Chat.info.lines.push.call(Chat.info.lines, modifiedHtml);
                             } else {
@@ -249,21 +264,63 @@ namespace TransparentTwitchChatWPF.Chats
             {
                 // Highlight
                 Color c = App.Settings.GeneralSettings.ChatHighlightColor;
-                float a = (c.A / 255f);
-                string rgba = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, a);
-                css = ".highlight { background-color: " + rgba + " !important; }";
+                float aL = 0.1f;
+                float aR = (c.A / 255f);
+                string rgbaL = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, aL);
+                string rgbaR = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, aR);
+                css = $$"""
+                    .highlight {
+                        background: linear-gradient(to right, {{rgbaL}}, {{rgbaR}});
+                        border-radius: 4px;
+                    }
+                    """;
+
 
                 // Mods Highlight
                 c = App.Settings.GeneralSettings.ChatHighlightModsColor;
-                a = (c.A / 255f);
-                rgba = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, a);
-                css += "\n .highlightMod { background-color: " + rgba + " !important; }";
+                aL = 0.1f;
+                aR = (c.A / 255f);
+                rgbaL = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, aL);
+                rgbaR = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, aR);
+                css += $$"""
+                    .highlightMod { 
+                        background: linear-gradient(to right, {{rgbaL}}, {{rgbaR}});
+                        border-radius: 4px;
+                    }
+                    """;
 
                 // VIPs Highlight
                 c = App.Settings.GeneralSettings.ChatHighlightVIPsColor;
-                a = (c.A / 255f);
-                rgba = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, a);
-                css += "\n .highlightVIP { background-color: " + rgba + " !important; }";
+                aL = 0.1f;
+                aR = (c.A / 255f);
+                rgbaL = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, aL);
+                rgbaR = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, aR);
+                css += $$"""
+                    .highlightVIP {
+                        background: linear-gradient(to right, {{rgbaL}}, {{rgbaR}});
+                        border-radius: 4px;
+                    }
+                    """;
+
+                // Adds a subtle purple accent bar on the left
+                css += $$"""
+                    .chat_line.home-chatter { 
+                        border-left: 5px solid #a970ff; padding-left: 3px; 
+                        border-top-left-radius: 4px;
+                        border-bottom-left-radius: 4px;
+                    }
+                    """;
+
+                css += $$"""
+                    .home-chatter::before {
+                      content: '★';
+                      color: #a970ff;
+                      margin-right: 5px; /* Space between the star and the first real badge */
+                      font-size: 0.8em; /* Make the star slightly smaller */
+                      vertical-align: middle;
+                      opacity: 0.9;
+                    }
+                    """;
             }
 
             return css;
