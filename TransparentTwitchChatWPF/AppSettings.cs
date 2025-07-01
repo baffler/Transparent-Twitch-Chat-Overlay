@@ -58,7 +58,6 @@ public class AppSettings
         }
         else
         {
-            Debug.WriteLine("Default GeneralSettings");
             // Defaults are within the class constructor now
             this.GeneralSettings = new GeneralSettings();
 

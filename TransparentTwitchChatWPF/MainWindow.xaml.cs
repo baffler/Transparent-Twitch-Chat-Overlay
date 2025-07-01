@@ -114,6 +114,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
 using ModernWpf.Controls;
+using NAudio;
 using NAudio.Wave;
 using NHotkey;
 using NHotkey.Wpf;
@@ -1138,8 +1139,9 @@ public partial class MainWindow : Window, BrowserWindow
                 else
                 {
                     string file = Path.Combine(GetSoundClipsFolder(), App.Settings.GeneralSettings.ChatNotificationSound);
-                    if (System.IO.File.Exists(file))
+                    if (File.Exists(file))
                     {
+                        this.jsCallbackFunctions.OnAudioDeviceChanged();
                         this.jsCallbackFunctions.MediaFile = file;
                     }
                     else
@@ -1185,8 +1187,9 @@ public partial class MainWindow : Window, BrowserWindow
                 else
                 {
                     string file = Path.Combine(GetSoundClipsFolder(), App.Settings.GeneralSettings.ChatNotificationSound);
-                    if (System.IO.File.Exists(file))
+                    if (File.Exists(file))
                     {
+                        this.jsCallbackFunctions.OnAudioDeviceChanged();
                         this.jsCallbackFunctions.MediaFile = file;
                     }
                     else
@@ -1398,8 +1401,9 @@ public partial class MainWindow : Window, BrowserWindow
         if (App.Settings.GeneralSettings.ChatNotificationSound.ToLower() != "none")
         {
             string file = Path.Combine(GetSoundClipsFolder(), App.Settings.GeneralSettings.ChatNotificationSound);
-            if (System.IO.File.Exists(file))
+            if (File.Exists(file))
             {
+                this.jsCallbackFunctions.OnAudioDeviceChanged();
                 this.jsCallbackFunctions.MediaFile = file;
             }
             else
@@ -1708,134 +1712,5 @@ public partial class MainWindow : Window, BrowserWindow
 
         var hwnd = new WindowInteropHelper(this).Handle;
         WindowHelper.SetWindowPosTopMost(hwnd);
-    }
-}
-
-[ClassInterface(ClassInterfaceType.AutoDual)]
-[ComVisible(true)]
-public class JsCallbackFunctions
-{
-    private string _mediaFile;
-    private AudioFileReader _audioFileReader;
-    private WaveOutEvent _waveOutDevice;
-
-    public string MediaFile
-    {
-        get { return _mediaFile; }
-        set
-        {
-            _mediaFile = value;
-            InitAudio();
-        }
-    }
-
-    public JsCallbackFunctions()
-    {
-        this._mediaFile = "";
-    }
-
-    private void VerifyOutputDevice()
-    {
-        var deviceId = App.Settings.GeneralSettings.DeviceID;
-
-        if (deviceId < 0)
-        {
-            App.Settings.GeneralSettings.DeviceName = "Default";
-            return;
-        }
-
-        if (deviceId >= WaveOut.DeviceCount)
-        {
-            App.Settings.GeneralSettings.DeviceID = -1;
-            App.Settings.GeneralSettings.DeviceName = "Default";
-            return;
-        }
-
-        var capabilities = WaveOut.GetCapabilities(deviceId);
-        if (!App.Settings.GeneralSettings.DeviceName.StartsWith(capabilities.ProductName))
-        {
-            App.Settings.GeneralSettings.DeviceID = -1;
-            App.Settings.GeneralSettings.DeviceName = "Default";
-        }
-    }
-
-    private void InitAudio()
-    {
-        if (_waveOutDevice != null)
-        {
-            _waveOutDevice.Stop();
-            _waveOutDevice = null;
-        }
-
-        if (_audioFileReader != null)
-        {
-            _audioFileReader.Dispose();
-            _audioFileReader = null;
-        }
-
-        if (string.IsNullOrEmpty(_mediaFile) || string.Equals(_mediaFile.ToLower(), "none")) return;
-
-        _audioFileReader = new AudioFileReader(_mediaFile);
-        _audioFileReader.Volume = App.Settings.GeneralSettings.OutputVolume;
-        _waveOutDevice = new WaveOutEvent();
-
-        VerifyOutputDevice();
-        if (App.Settings.GeneralSettings.DeviceID >= 0)
-            _waveOutDevice.DeviceNumber = App.Settings.GeneralSettings.DeviceID;
-
-        _waveOutDevice.Init(_audioFileReader);
-    }
-
-    public void playSound()
-    {
-        try
-        {
-            if (!string.IsNullOrEmpty(_mediaFile))
-            {
-                if ((_waveOutDevice != null) && (_audioFileReader != null))
-                {
-                    _audioFileReader.Position = 0;
-                    _waveOutDevice.Play();
-                }
-            }
-        }
-        catch (Exception ex) { MessageBox.Show(ex.Message); }
-    }
-
-    public async Task playSoundAsync()
-    {
-        try
-        {
-            if (!string.IsNullOrEmpty(_mediaFile))
-            {
-                if ((_waveOutDevice != null) && (_audioFileReader != null))
-                {
-                    _audioFileReader.Position = 0;
-                    _waveOutDevice.Play();
-                }
-            }
-            Console.WriteLine("[C# Host] PlaySoundAsync called.");
-            // throw new InvalidOperationException("Test sound error from C#");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[C# Host ERROR] Exception in PlaySoundAsync: {ex.Message}\n{ex.StackTrace}");
-            // Re-throw to make JS see it as a rejected promise,
-            throw;
-        }
-    }
-
-    public void logMessage(string msg)
-    {
-        Console.WriteLine($"[JS] {msg}");
-    }
-
-    public void showMessageBox(string msg)
-    {
-        try
-        {
-            MessageBox.Show(msg);
-        }
-        catch { }
     }
 }
