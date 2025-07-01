@@ -114,6 +114,11 @@ public class AppSettings
     {
         this.Tracker.Persist(this);
     }
+
+    public void RevertChanges()
+    {
+        this.Tracker.Track(this);
+    }
 }
 
 public class GeneralSettings
@@ -162,4 +167,9 @@ public class GeneralSettings
     public Hotkey ToggleInteractableHotkey { get; set; } = new Hotkey(Key.F7, ModifierKeys.Control | ModifierKeys.Alt);
     public Hotkey BringToTopHotkey { get; set; } = new Hotkey(Key.F8, ModifierKeys.Control | ModifierKeys.Alt);
     public bool AllowMultipleInstances { get; set; } = false;
+
+    internal GeneralSettings Clone()
+    {
+        throw new NotImplementedException();
+    }
 }

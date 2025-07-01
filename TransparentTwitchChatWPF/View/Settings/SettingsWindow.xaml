@@ -1,0 +1,114 @@
+﻿<Window x:Class="TransparentTwitchChatWPF.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TransparentTwitchChatWPF"
+        mc:Ignorable="d"
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        ui:WindowHelper.UseModernWindowStyle="True"
+        ui:ThemeManager.RequestedTheme="Dark"
+        ui:TitleBar.ExtendViewIntoTitleBar="False"
+        Title="Settings"
+        WindowStyle="ToolWindow"
+        Height="500" Width="550" Topmost="True" WindowStartupLocation="CenterScreen" Closing="Window_Closing" SourceInitialized="Window_SourceInitialized">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="110"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0" Background="#121212">
+            <ListView Name="lvSettings" FontSize="16" SelectionChanged="ListView_SelectionChanged">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="Margin" Value="4"/>
+                        <Setter Property="Padding" Value="4"/>
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListViewItem>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Chat" VerticalAlignment="Center" />
+                    </StackPanel>
+                </ListViewItem>
+                <ListViewItem>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="General" VerticalAlignment="Center" />
+                    </StackPanel>
+                </ListViewItem>
+                <ListViewItem>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Connections" VerticalAlignment="Center" />
+                    </StackPanel>
+                </ListViewItem>
+                <ListViewItem>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Widgets" VerticalAlignment="Center" />
+                    </StackPanel>
+                </ListViewItem>
+                <ListViewItem>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="About" VerticalAlignment="Center" />
+                    </StackPanel>
+                </ListViewItem>
+            </ListView>
+        </Grid>
+
+        <Grid Name="settingsContent" Grid.Column="1" Background="#222">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <ContentControl Name="SettingsContentControl" Grid.Row="0"/>
+
+            <Border Grid.Row="1" BorderBrush="#999" BorderThickness="0,1,0,0">
+                <Grid Grid.Row="1" Margin="3">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <ComboBox
+                            Name="comboChatType"
+                            Grid.Column="0"
+                            SelectionChanged="comboChatType_SelectionChanged"
+                            HorizontalAlignment="Left" 
+                            VerticalAlignment="Bottom" 
+                            Width="170"
+                            Margin="0,0,0,5">
+                        <ComboBoxItem Content="KapChat (Default)" />
+                        <ComboBoxItem Content="Twitch Popout" />
+                        <ComboBoxItem Content="Custom URL" />
+                        <ComboBoxItem Content="jCyan (Beta)" />
+                    </ComboBox>
+            
+                    <Button
+                        Name="OKButton"
+                        Grid.Column="1"
+                        Content="Save"
+                        Height="32"
+                        HorizontalAlignment="Right" 
+                        Margin="0,0,5,5"
+                        VerticalAlignment="Bottom" 
+                        Width="75" 
+                        Click="OKButton_Click"
+                        IsDefault="True" />
+
+                    <Button
+                        Name="CancelButton"
+                        Grid.Column="2"
+                        Content="Cancel" 
+                        Height="32" 
+                        HorizontalAlignment="Right" 
+                        Margin="0,0,5,5"
+                        VerticalAlignment="Bottom"
+                        Width="75" 
+                        IsCancel="True" />
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

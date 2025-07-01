@@ -1,0 +1,121 @@
+﻿<UserControl x:Class="TransparentTwitchChatWPF.View.Settings.GeneralSettingsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TransparentTwitchChatWPF.View.Settings"
+             xmlns:ttc="clr-namespace:TransparentTwitchChatWPF"
+             xmlns:ui="http://schemas.modernwpf.com/2019"
+             ui:ThemeManager.RequestedTheme="Dark"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid Name="generalGrid" Visibility="Visible" Grid.Row="0">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,10,0,20">
+                <CheckBox 
+                Name="cbAutoHideBorders"
+                Content="Auto-Hide Borders"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="20,5"
+                />
+                <CheckBox 
+                Name="cbInteraction"
+                Content="Allow Interaction (When Borders Shown)"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="20,5"
+                />
+                <CheckBox 
+                Name="cbCheckForUpdates"
+                Content="Check For Updates"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="20,5"
+                />
+
+                <CheckBox 
+                Name="cbEnableTrayIcon"
+                Content="Show Tray Icon"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="20,5,0,0"
+                IsEnabled="false"
+                />
+                <Label 
+                FontStyle="Italic"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="35,0">
+                    <Hyperlink NavigateUri = "https://github.com/baffler/Transparent-Twitch-Chat-Overlay/wiki/Using-the-Tray-Icon"
+                   Hyperlink.RequestNavigate = "Hyperlink_RequestNavigate" >
+                        <TextBlock Text="Click this link to find out how to use the Tray Icon" />
+                    </Hyperlink>
+                </Label>
+
+                <CheckBox 
+                Name="cbTaskbar"
+                Content="Hide Taskbar Icon"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="20,10,0,3"
+                Checked="cbTaskbar_Checked"
+                Unchecked="cbTaskbar_Unchecked"
+                />
+                <TextBlock Text="*Note: Hiding the taskbar icon will require you to use the Tray Icon to interact with the menus for the app."
+                FontStyle="Italic"
+                TextWrapping="Wrap"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="40,0"/>
+
+                <CheckBox 
+                Visibility="Visible"
+                Name="cbMultiInstance"
+                Content="Allow Multiple Instances (beta)"
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="20,10,0,0"
+                Checked="cbMultiInstance_Checked"
+                Unchecked="cbMultiInstance_Unchecked"
+                />
+
+                <Rectangle Height="2" Fill="Gray" Margin="10 5 25 5" />
+
+                <Label Margin="15,5,0,0" HorizontalAlignment="Left" Content="Global Hotkeys" FontWeight="Bold" />
+                <Label Margin="15,5,0,0" HorizontalAlignment="Left" FontStyle="Italic" Content="To unset, click Capture Hotkey and press Esc, Delete, or Backspace" />
+                <Label Margin="15,5,0,0" HorizontalAlignment="Left" FontStyle="Italic" Content="Since hotkeys are global, consider using modifier keys" />
+                <Label Margin="15,5,0,0" HorizontalAlignment="Left" FontStyle="Italic" Content="Otherwise you can't use that key in other apps!" />
+
+                <Label Margin="15,15,0,0" HorizontalAlignment="Left" Content="Toggle Borders Hotkey"  />
+                <StackPanel Orientation="Horizontal">
+                    <ttc:HotkeyEditorControl x:Name="hotkeyInputToggleBorders" Margin="15,5,0,0" Width="250" HorizontalAlignment="Left" />
+                    <Button Margin="15,5,0,0" Name="btCaptureHotkeyToggleBorders" Content="Capture Hotkey" Click="setHotkeyToggleBorders_Click" />
+                </StackPanel>
+
+                <Label Content="Toggle Interactable Hotkey" Margin="15,15,0,0" HorizontalAlignment="Left" />
+                <StackPanel Orientation="Horizontal">
+                    <ttc:HotkeyEditorControl x:Name="hotkeyInputToggleInteractable" Margin="15,5,0,0" Width="250" HorizontalAlignment="Left" />
+                    <Button Margin="15,5,0,0" Name="btCaptureHotkeyInteractable" Content="Capture Hotkey" Click="setHotkeyToggleInteractable_Click" />
+                </StackPanel>
+
+                <Label Margin="15,15,0,0" HorizontalAlignment="Left" Content="Bring To Top Hotkey"  />
+                <StackPanel Orientation="Horizontal">
+                    <ttc:HotkeyEditorControl x:Name="hotkeyInputBringToTop" Margin="15,5,0,0" Width="250" HorizontalAlignment="Left" />
+                    <Button Margin="15,5,0,0" Name="btCaptureHotkeyBringToTop" Content="Capture Hotkey" Click="setHotkeyBringToTop_Click" />
+                </StackPanel>
+
+                <Rectangle Height="2" Fill="Gray" Margin="10 15 25 5" />
+                <Label Content="Sound Output Device" Margin="15,5,0,0" FontWeight="Bold"/>
+                <ComboBox x:Name="DevicesComboBox" Margin="20,5,20,10" />
+                <Label Content="Volume For Sound Clips" Margin="15,0,0,0" FontWeight="Bold"/>
+                <Slider x:Name="OutputVolumeSlider" Value="100" IsSnapToTickEnabled="False" AutoToolTipPlacement="TopLeft" TickPlacement="BottomRight" TickFrequency="5" Minimum="0" Maximum="100" Margin="20,5,20,10" />
+                <Label Content="Sound Clips Folder" Margin="15,0,0,0" FontWeight="Bold"/>
+                <TextBlock Name="tbSoundClipsFolder" Margin="20,5,20,10" TextWrapping="WrapWithOverflow"  Text="Default" />
+                <Button Name="btChangeSoundClipsFolder" Width="100" HorizontalAlignment="Left" Margin="20,5,20,0" Content="Change" Click="btChangeSoundClipsFolder_Click" />
+                <Button Name="btDefaultSoundClipsFolder" Width="100" HorizontalAlignment="Left" Margin="20,5,20,10" Content="Reset" Click="btDefaultSoundClipsFolder_Click" />
+                <CheckBox Visibility="Hidden" Name="cbPlayRandom" Margin="20,5,20,10" Content="Play Random Clip From Folder" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

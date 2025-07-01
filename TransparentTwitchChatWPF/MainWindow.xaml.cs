@@ -1083,7 +1083,7 @@ public partial class MainWindow : Window, BrowserWindow
             FrankerFaceZ = App.Settings.GeneralSettings.FrankerFaceZ,
         };
 
-        SettingsWindow settingsWindow = new SettingsWindow(this, config);
+        SettingsWindow settingsWindow = new SettingsWindow(this);
 
         if (settingsWindow.ShowDialog() == true)
         {
