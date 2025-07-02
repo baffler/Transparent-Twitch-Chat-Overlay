@@ -1070,9 +1070,12 @@ public partial class MainWindow : Window, BrowserWindow
 
         var settingsWindow = _serviceProvider.GetRequiredService<SettingsWindow>();
 
-        // Subscribe to the event from the SettingsWindow.
         settingsWindow.CreateWidgetRequested += (url, css) => {
             this.CreateNewWindow(url, css);
+        };
+
+        settingsWindow.CheckForUpdateRequested += () => {
+            _ = CheckForUpdateAsync(notifyIfNoUpdate: true);
         };
 
         // Settings were saved
@@ -1285,7 +1288,7 @@ public partial class MainWindow : Window, BrowserWindow
         }
     }
 
-    private async Task CheckForUpdateAsync()
+    private async Task CheckForUpdateAsync(bool notifyIfNoUpdate = false)
     {
 #if !DEBUG
         _logger.LogInformation("Checking for updates...");
@@ -1302,6 +1305,10 @@ public partial class MainWindow : Window, BrowserWindow
             if (newVersion == null)
             {
                 _logger.LogInformation("No updates available.");
+                if (notifyIfNoUpdate)
+                {
+                    MessageBox.Show("No updates available at this time.", "No Updates", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
                 return; // no update available
             }
 

@@ -11,6 +11,7 @@ namespace TransparentTwitchChatWPF.View.Settings;
 public partial class GeneralSettingsPage : UserControl
 {
     public event Action SoundClipsFolderChanged;
+    public event Action CheckForUpdateRequested;
 
     public GeneralSettingsPage()
     {
@@ -178,5 +179,10 @@ public partial class GeneralSettingsPage : UserControl
     private void cbMultiInstance_Unchecked(object sender, RoutedEventArgs e)
     {
         App.Settings.GeneralSettings.AllowMultipleInstances = false;
+    }
+
+    private void btnCheckForUpdatesNow_Click(object sender, RoutedEventArgs e)
+    {
+        CheckForUpdateRequested?.Invoke();
     }
 }

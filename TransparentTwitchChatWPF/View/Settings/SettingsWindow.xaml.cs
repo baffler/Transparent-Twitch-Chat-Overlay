@@ -12,6 +12,7 @@ namespace TransparentTwitchChatWPF;
 public partial class SettingsWindow : Window
 {
     public event Action<string, string> CreateWidgetRequested;
+    public event Action CheckForUpdateRequested;
 
     private readonly ChatSettingsPage _chatSettingsPage;
     private readonly GeneralSettingsPage _generalSettingsPage;
@@ -34,6 +35,11 @@ public partial class SettingsWindow : Window
         _widgetSettingsPage = widgetPage;
         _aboutSettingsPage = aboutPage;
 
+        _generalSettingsPage.CheckForUpdateRequested += () => {
+            // When the GeneralSettingsPage requests a check for updates, fire this window's own event.
+            CheckForUpdateRequested?.Invoke();
+        };
+
         // Subscribe to the page's event and bubble it up.
         _widgetSettingsPage.WidgetCreationRequested += (url, css) => {
             // When the page requests a widget, fire this window's own event.
@@ -42,8 +48,6 @@ public partial class SettingsWindow : Window
 
         // Set the initial page
         SettingsContentControl.Content = _chatSettingsPage;
-
-        //SettingsWindowActive?.Invoke(true);
     }
 
     private void OKButton_Click(object sender, RoutedEventArgs e)
@@ -61,7 +65,6 @@ public partial class SettingsWindow : Window
     {
         this.comboChatType.SelectedIndex = App.Settings.GeneralSettings.ChatType;
     }
-
 
     private void Window_SourceInitialized(object sender, EventArgs e)
     {

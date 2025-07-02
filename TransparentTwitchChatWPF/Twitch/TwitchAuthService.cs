@@ -14,7 +14,7 @@ public class TwitchAuthService : ITwitchAuthService
 
     private HttpListener _listener;
     private string _state = string.Empty;
-    private bool _isConnecting = false; // Flag to prevent re-entrancy
+    private bool _isConnecting = false;
     private readonly string _prefix = "http://localhost:8981/";
 
     // --- Public Interface Method ---

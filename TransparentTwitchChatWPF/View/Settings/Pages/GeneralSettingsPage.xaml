@@ -13,40 +13,44 @@
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="0,10,0,20">
                 <CheckBox 
-                Name="cbAutoHideBorders"
-                Content="Auto-Hide Borders"
-                HorizontalAlignment="Left" 
-                VerticalAlignment="Top"
-                Margin="20,5"
-                />
+                    Name="cbAutoHideBorders"
+                    Content="Auto-Hide Borders"
+                    HorizontalAlignment="Left" 
+                    VerticalAlignment="Top"
+                    Margin="20,5"
+                    />
                 <CheckBox 
-                Name="cbInteraction"
-                Content="Allow Interaction (When Borders Shown)"
-                HorizontalAlignment="Left" 
-                VerticalAlignment="Top"
-                Margin="20,5"
-                />
+                    Name="cbInteraction"
+                    Content="Allow Interaction (When Borders Shown)"
+                    HorizontalAlignment="Left" 
+                    VerticalAlignment="Top"
+                    Margin="20,5"
+                    />
                 <CheckBox 
-                Name="cbCheckForUpdates"
-                Content="Check For Updates"
-                HorizontalAlignment="Left" 
-                VerticalAlignment="Top"
-                Margin="20,5"
-                />
-
+                    Name="cbCheckForUpdates"
+                    Content="Check For Updates (Daily)"
+                    HorizontalAlignment="Left" 
+                    VerticalAlignment="Top"
+                    Margin="20,5"
+                    />
+                <Button 
+                    Name="btnCheckForUpdatesNow" 
+                    Content="Check For Update Now" 
+                    Margin="20,5"
+                    Click="btnCheckForUpdatesNow_Click"/>
                 <CheckBox 
-                Name="cbEnableTrayIcon"
-                Content="Show Tray Icon"
-                HorizontalAlignment="Left" 
-                VerticalAlignment="Top"
-                Margin="20,5,0,0"
-                IsEnabled="false"
-                />
+                    Name="cbEnableTrayIcon"
+                    Content="Show Tray Icon"
+                    HorizontalAlignment="Left" 
+                    VerticalAlignment="Top"
+                    Margin="20,5,0,0"
+                    IsEnabled="false"
+                    />
                 <Label 
-                FontStyle="Italic"
-                HorizontalAlignment="Left" 
-                VerticalAlignment="Top"
-                Margin="35,0">
+                    FontStyle="Italic"
+                    HorizontalAlignment="Left" 
+                    VerticalAlignment="Top"
+                    Margin="35,0">
                     <Hyperlink NavigateUri = "https://github.com/baffler/Transparent-Twitch-Chat-Overlay/wiki/Using-the-Tray-Icon"
                    Hyperlink.RequestNavigate = "Hyperlink_RequestNavigate" >
                         <TextBlock Text="Click this link to find out how to use the Tray Icon" />
@@ -54,31 +58,32 @@
                 </Label>
 
                 <CheckBox 
-                Name="cbTaskbar"
-                Content="Hide Taskbar Icon"
-                HorizontalAlignment="Left" 
-                VerticalAlignment="Top"
-                Margin="20,10,0,3"
-                Checked="cbTaskbar_Checked"
-                Unchecked="cbTaskbar_Unchecked"
-                />
-                <TextBlock Text="*Note: Hiding the taskbar icon will require you to use the Tray Icon to interact with the menus for the app."
-                FontStyle="Italic"
-                TextWrapping="Wrap"
-                HorizontalAlignment="Left" 
-                VerticalAlignment="Top"
-                Margin="40,0"/>
+                    Name="cbTaskbar"
+                    Content="Hide Taskbar Icon"
+                    HorizontalAlignment="Left" 
+                    VerticalAlignment="Top"
+                    Margin="20,10,0,3"
+                    Checked="cbTaskbar_Checked"
+                    Unchecked="cbTaskbar_Unchecked"
+                    />
+                <TextBlock 
+                    Text="*Note: Hiding the taskbar icon will require you to use the Tray Icon to interact with the menus for the app."
+                    FontStyle="Italic"
+                    TextWrapping="Wrap"
+                    HorizontalAlignment="Left" 
+                    VerticalAlignment="Top"
+                    Margin="40,0"/>
 
                 <CheckBox 
-                Visibility="Visible"
-                Name="cbMultiInstance"
-                Content="Allow Multiple Instances (beta)"
-                HorizontalAlignment="Left" 
-                VerticalAlignment="Top"
-                Margin="20,10,0,0"
-                Checked="cbMultiInstance_Checked"
-                Unchecked="cbMultiInstance_Unchecked"
-                />
+                    Visibility="Visible"
+                    Name="cbMultiInstance"
+                    Content="Allow Multiple Instances (beta)"
+                    HorizontalAlignment="Left" 
+                    VerticalAlignment="Top"
+                    Margin="20,10,0,0"
+                    Checked="cbMultiInstance_Checked"
+                    Unchecked="cbMultiInstance_Unchecked"
+                    />
 
                 <Rectangle Height="2" Fill="Gray" Margin="10 5 25 5" />
 
