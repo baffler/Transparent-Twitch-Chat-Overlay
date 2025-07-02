@@ -110,6 +110,7 @@ using Point = System.Windows.Point;
 namespace TransparentTwitchChatWPF;
 
 using Chats;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
@@ -135,6 +136,7 @@ using Velopack;
 /// </summary>
 public partial class MainWindow : Window, BrowserWindow
 {
+    private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<MainWindow> _logger;
     private readonly TwitchService _twitchService;
 
@@ -160,11 +162,12 @@ public partial class MainWindow : Window, BrowserWindow
     private Chat _currentChat;
     private Button _closeButton;
 
-    public MainWindow(ILogger<MainWindow> logger, TwitchService twitchService)
+    public MainWindow(IServiceProvider serviceProvider, ILogger<MainWindow> logger, TwitchService twitchService)
     {
         InitializeComponent();
         DataContext = this;
 
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _twitchService = twitchService ?? throw new ArgumentNullException(nameof(twitchService));
         _twitchService.ChannelPointsRewardRedeemed += OnChannelPointsRewardRedeemed;
@@ -1065,7 +1068,7 @@ public partial class MainWindow : Window, BrowserWindow
         // Disable hotkeys while settings window is open
         HotkeyManager.Current.IsEnabled = false;
 
-        SettingsWindow settingsWindow = new SettingsWindow();
+        var settingsWindow = _serviceProvider.GetRequiredService<SettingsWindow>();
 
         // Subscribe to the event from the SettingsWindow.
         settingsWindow.CreateWidgetRequested += (url, css) => {

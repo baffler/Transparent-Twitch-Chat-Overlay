@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using TransparentTwitchChatWPF.Helpers;
 using TransparentTwitchChatWPF.Twitch;
 using TwitchLib.Api;
 using TwitchLib.Api.Auth;
@@ -27,18 +28,23 @@ public partial class ConnectionSettingsPage : UserControl
 {
     public event Action<TwitchConnectionStatus> TwitchConnectionStatusChanged;
 
+    private readonly ITwitchAuthService _twitchAuthService;
     private TwitchAPI _api;
-    private TwitchConnection _twitchConnection;
 
-    public ConnectionSettingsPage()
+    public ConnectionSettingsPage(ITwitchAuthService twitchAuthService)
     {
         InitializeComponent();
+        _twitchAuthService = twitchAuthService;
+        // Subscribe to the instance event.
+        _twitchAuthService.AccessTokenReceived += OnAccessTokenReceived;
+
+        // Unsubscribe to prevent memory leaks
+        this.Unloaded += (s, e) => {
+            _twitchAuthService.AccessTokenReceived -= OnAccessTokenReceived;
+        };
 
         _api = new TwitchAPI();
         _api.Settings.ClientId = "yv4bdnndvd4gwsfw7jnfixp0mnofn7";
-
-        this._twitchConnection = new TwitchConnection();
-        TwitchConnection.AccessTokenResponse += TwitchConnection_AccessTokenResponse;
     }
 
     public void SetupValues()
@@ -46,10 +52,35 @@ public partial class ConnectionSettingsPage : UserControl
         ValidateTwitchConnection();
     }
 
-    private void btConnect_Click(object sender, RoutedEventArgs e)
+    private async void btConnect_Click(object sender, RoutedEventArgs e)
     {
-        this._twitchConnection.ConnectTwitchAccount();
-        MessageBox.Show("Please check your default browser. A new tab should have opened and you can authorize the app to be connected there.", "Twitch Connection", MessageBoxButton.OK, MessageBoxImage.Information);
+        // Give the user initial info and disable the button to prevent re-clicks.
+        MessageBox.Show("Please check your default browser to authorize the application.", "Twitch Connection", MessageBoxButton.OK, MessageBoxImage.Information);
+        btConnect.IsEnabled = false;
+
+        try
+        {
+            // Await the async operation. The UI will remain responsive.
+            await _twitchAuthService.ConnectAsync();
+
+            // Show a success message if it completes without errors.
+            //MessageBox.Show("Connection successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (TimeoutException)
+        {
+            // Catch specific, expected errors.
+            MessageBox.Show("The connection timed out. Please try again.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        catch (Exception ex)
+        {
+            // Catch any other unexpected errors.
+            MessageBox.Show($"An unexpected error occurred: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            // ALWAYS re-enable the button, even if an error occurred.
+            btConnect.IsEnabled = true;
+        }
     }
 
     private void btDisconnect_Click(object sender, RoutedEventArgs e)
@@ -75,7 +106,7 @@ public partial class ConnectionSettingsPage : UserControl
         }
     }
 
-    private void TwitchConnection_AccessTokenResponse(object sender, string e)
+    private void OnAccessTokenReceived(object sender, string e)
     {
         App.Settings.GeneralSettings.OAuthToken = e;
         _api.Settings.AccessToken = e;
@@ -107,7 +138,7 @@ public partial class ConnectionSettingsPage : UserControl
 
         App.Settings.GeneralSettings.ChannelID = userID;
 
-        var bitmap = TwitchConnectionUtils.LoadImageFromUrl(profileImageUrl);
+        var bitmap = ImageHelpers.LoadFromUrl(profileImageUrl);
         imgTwitch.Source = bitmap;
     }
 

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Windows;
 using System.Windows.Shell;
 using TransparentTwitchChatWPF.Twitch;
+using TransparentTwitchChatWPF.View.Settings;
 using TwitchLib.EventSub.Websockets.Extensions;
 using Velopack;
 using Application = System.Windows.Application;
@@ -109,6 +110,17 @@ namespace TransparentTwitchChatWPF
                 services.AddTwitchLibEventSubWebsockets();
                 services.AddSingleton<TwitchService>();
                 services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<TwitchService>());
+                services.AddSingleton<ITwitchAuthService, TwitchAuthService>();
+
+                // Settings pages
+                services.AddTransient<ConnectionSettingsPage>();
+                services.AddTransient<ChatSettingsPage>();
+                services.AddTransient<GeneralSettingsPage>();
+                services.AddTransient<WidgetSettingsPage>();
+                services.AddTransient<AboutSettingsPage>();
+
+                // Main settings window
+                services.AddTransient<SettingsWindow>();
             })
             .ConfigureLogging(logging =>
             {

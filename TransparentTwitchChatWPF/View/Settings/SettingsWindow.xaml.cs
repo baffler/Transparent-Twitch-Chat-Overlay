@@ -13,15 +13,26 @@ public partial class SettingsWindow : Window
 {
     public event Action<string, string> CreateWidgetRequested;
 
-    private readonly ChatSettingsPage _chatSettingsPage = new ChatSettingsPage();
-    private readonly GeneralSettingsPage _generalSettingsPage = new GeneralSettingsPage();
-    private readonly ConnectionSettingsPage _connectionSettingsPage = new ConnectionSettingsPage();
-    private readonly WidgetSettingsPage _widgetSettingsPage = new WidgetSettingsPage();
-    private readonly AboutSettingsPage _aboutSettingsPage = new AboutSettingsPage();
+    private readonly ChatSettingsPage _chatSettingsPage;
+    private readonly GeneralSettingsPage _generalSettingsPage;
+    private readonly ConnectionSettingsPage _connectionSettingsPage;
+    private readonly WidgetSettingsPage _widgetSettingsPage;
+    private readonly AboutSettingsPage _aboutSettingsPage;
 
-    public SettingsWindow()
+    public SettingsWindow(
+        ConnectionSettingsPage connectionPage,
+        ChatSettingsPage chatPage,
+        GeneralSettingsPage generalPage,
+        WidgetSettingsPage widgetPage,
+        AboutSettingsPage aboutPage)
     {
         InitializeComponent();
+
+        _connectionSettingsPage = connectionPage;
+        _chatSettingsPage = chatPage;
+        _generalSettingsPage = generalPage;
+        _widgetSettingsPage = widgetPage;
+        _aboutSettingsPage = aboutPage;
 
         // Subscribe to the page's event and bubble it up.
         _widgetSettingsPage.WidgetCreationRequested += (url, css) => {

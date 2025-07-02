@@ -18,6 +18,7 @@ using TwitchLib.EventSub.Websockets.Client;
 using TwitchLib.EventSub.Websockets.Core.EventArgs;
 using TwitchLib.EventSub.Websockets.Core.EventArgs.Channel;
 using TransparentTwitchChatWPF.Utils;
+using TransparentTwitchChatWPF.Helpers;
 
 namespace TransparentTwitchChatWPF.Twitch;
 
@@ -62,8 +63,6 @@ public class TwitchService : IHostedService, IDisposable
         _api = new TwitchAPI();
         // Initialize Twitch API settings (Client ID and Access Token)
         _api.Settings.ClientId = "yv4bdnndvd4gwsfw7jnfixp0mnofn7";
-
-        TwitchConnection.AccessTokenResponse += TwitchConnection_AccessTokenResponse;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -153,7 +152,7 @@ public class TwitchService : IHostedService, IDisposable
         string profileImageUrl = e.Users[0].ProfileImageUrl;
 
         TwitchConnectionStatus = $"Connected as {userName} ({userID})";
-        ProfileImage = TwitchConnectionUtils.LoadImageFromUrl(profileImageUrl);
+        ProfileImage = ImageHelpers.LoadFromUrl(profileImageUrl);
 
         App.Settings.GeneralSettings.ChannelID = userID;
 
@@ -418,7 +417,6 @@ public class TwitchService : IHostedService, IDisposable
     private void UnsubscribeFromEvents()
     {
         _logger.LogTrace("Unsubscribing from TwitchService events.");
-        TwitchConnection.AccessTokenResponse -= TwitchConnection_AccessTokenResponse;
 
         if (_eventSubWebsocketClient != null)
         {
