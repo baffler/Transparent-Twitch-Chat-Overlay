@@ -1,0 +1,48 @@
+name: Create Velopack Release
+
+# This workflow runs when a new tag is pushed that starts with 'v'
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-pack:
+    # Use the latest Windows runner
+    runs-on: windows-latest
+
+    steps:
+      # 1. Check out the code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Set up the .NET SDK on the runner
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x' # Use the .NET version your project needs
+
+      # 3. Restore project's dependencies
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # 4. Build application for release
+      - name: Build and publish application
+        run: dotnet publish -c Release -o publish -r win-x64 --self-contained true
+        
+      # 5. Get the version number from the Git tag
+      - name: Get version from tag
+        id: get-version
+        run: echo "version=${{ github.ref_name }}" | ForEach-Object { $_.replace("v", "") } | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf-8 -Append
+        shell: pwsh
+
+      # 6. Download, Pack, and Upload with Velopack
+      - name: Create and Upload Velopack Release
+        run: |
+          dotnet tool install -g vpk
+          vpk download github --repoUrl https://github.com/${{ github.repository }}
+          vpk pack -u TransparentTwitchChat -v ${{ steps.get-version.outputs.version }} -p publish --mainExe TransparentTwitchChatWPF.exe
+          vpk upload github --repoUrl https://github.com/${{ github.repository }} --publish --releaseName "Release v${{ steps.get-version.outputs.version }}" --tag ${{ github.ref_name }}
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
