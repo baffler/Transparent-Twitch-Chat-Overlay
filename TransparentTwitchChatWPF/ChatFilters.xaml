@@ -200,7 +200,7 @@
         <Grid Grid.Column="1">
             <Button
                 Name="OKButton"
-                Content="Save"
+                Content="Okay"
                 Height="32"
                 HorizontalAlignment="Right" 
                 Margin="0,0,93,12"

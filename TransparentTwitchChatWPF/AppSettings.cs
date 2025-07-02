@@ -1,14 +1,9 @@
 ﻿using Jot;
 using Jot.Storage;
-using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Configuration;
 using System.Diagnostics;
 using System.IO;
-using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
 using TransparentTwitchChatWPF.Helpers;
 using Application = System.Windows.Application;
 using Color = System.Windows.Media.Color;
@@ -60,53 +55,6 @@ public class AppSettings
         {
             // Defaults are within the class constructor now
             this.GeneralSettings = new GeneralSettings();
-
-            /*
-            this.GeneralSettings = new GeneralSettings
-            {
-                CustomWindows = new StringCollection(),
-                Username = string.Empty,
-                FadeChat = false,
-                FadeTime = "120",
-                BlockBotActivity = true,
-                ChatNotificationSound = "None",
-                ThemeIndex = 1,
-                ChatType = 0,
-                CustomURL = string.Empty,
-                ZoomLevel = 1,
-                OpacityLevel = 0,
-                AutoHideBorders = false,
-                EnableTrayIcon = true,
-                ConfirmClose = true,
-                HideTaskbarIcon = false,
-                AllowInteraction = true,
-                VersionTracker = 0.96,
-                HighlightUsersChat = false,
-                AllowedUsersOnlyChat = false,
-                FilterAllowAllMods = false,
-                FilterAllowAllVIPs = false,
-                AllowedUsersList = new StringCollection(),
-                BlockedUsersList = new StringCollection(),
-                RedemptionsEnabled = false,
-                ChannelID = string.Empty,
-                BetterTtv = false,
-                FrankerFaceZ = false,
-                jChatURL = string.Empty,
-                CustomCSS = string.Empty,
-                TwitchPopoutCSS = string.Empty,
-                OAuthToken = string.Empty,
-                CheckForUpdates = true,
-                ChatHighlightColor = Color.FromArgb(150, 245, 245, 0), // Yellow
-                ChatHighlightModsColor = Color.FromArgb(150, 0, 173, 3), // Green
-                ChatHighlightVIPsColor = Color.FromArgb(150, 219, 51, 179), // Purple
-                OutputVolume = 1.0f,
-                DeviceName = "",
-                DeviceID = -1,
-                SoundClipsFolder = "Default",
-                ToggleBordersHotkey = new Hotkey(Key.F9, ModifierKeys.Control | ModifierKeys.Alt),
-                ToggleInteractableHotkey = new Hotkey(Key.F7, ModifierKeys.Control | ModifierKeys.Alt),
-                BringToTopHotkey = new Hotkey(Key.F8, ModifierKeys.Control | ModifierKeys.Alt)
-            };*/
         }
     }
 
@@ -167,9 +115,4 @@ public class GeneralSettings
     public Hotkey ToggleInteractableHotkey { get; set; } = new Hotkey(Key.F7, ModifierKeys.Control | ModifierKeys.Alt);
     public Hotkey BringToTopHotkey { get; set; } = new Hotkey(Key.F8, ModifierKeys.Control | ModifierKeys.Alt);
     public bool AllowMultipleInstances { get; set; } = false;
-
-    internal GeneralSettings Clone()
-    {
-        throw new NotImplementedException();
-    }
 }

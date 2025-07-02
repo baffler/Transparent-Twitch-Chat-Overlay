@@ -35,6 +35,149 @@ public partial class ChatSettingsPage : UserControl
             this.comboChatSound.SelectedIndex = this.comboChatSound.Items.IndexOf(comboxBoxItem);
 
         this.comboChatSound2.SelectedIndex = this.comboChatSound.SelectedIndex;
+
+        this.tbUsername.Text = App.Settings.GeneralSettings.Username;
+        this.tb_jChatURL.Text = App.Settings.GeneralSettings.jChatURL;
+        this.tbUsername2.Text = App.Settings.GeneralSettings.Username;
+        this.tbTwitchPopoutUsername.Text = App.Settings.GeneralSettings.Username;
+        this.cbRedemptions.IsChecked = App.Settings.GeneralSettings.RedemptionsEnabled;
+        this.cbRedemptions2.IsChecked = App.Settings.GeneralSettings.RedemptionsEnabled;
+        this.btGetChannelID.IsEnabled = App.Settings.GeneralSettings.RedemptionsEnabled;
+        this.btGetChannelID2.IsEnabled = App.Settings.GeneralSettings.RedemptionsEnabled;
+        this.tbUsername2.IsEnabled = App.Settings.GeneralSettings.RedemptionsEnabled;
+        this.cbFade.IsChecked = App.Settings.GeneralSettings.FadeChat;
+        this.tbFadeTime.Text = App.Settings.GeneralSettings.FadeTime;
+        this.tbFadeTime.IsEnabled = App.Settings.GeneralSettings.FadeChat;
+
+        //this.cbBotActivity.IsChecked = App.Settings.GeneralSettings.ShowBotActivity;
+        this.comboTheme.SelectedIndex = App.Settings.GeneralSettings.ThemeIndex;
+
+        if (Enum.IsDefined(typeof(ChatTypes), App.Settings.GeneralSettings.ChatType))
+        {
+            var chatType = (ChatTypes)App.Settings.GeneralSettings.ChatType;
+
+            if (chatType == ChatTypes.CustomURL)
+            {
+                this.kapChatGrid.Visibility = Visibility.Hidden;
+                this.twitchPopoutChat.Visibility = Visibility.Hidden;
+                this.customURLGrid.Visibility = Visibility.Visible;
+                this.jChatGrid.Visibility = Visibility.Hidden;
+
+                this.tbURL.Text = App.Settings.GeneralSettings.CustomURL;
+                this.tbCSS2.Text = App.Settings.GeneralSettings.CustomCSS;
+            }
+            else if (chatType == ChatTypes.TwitchPopout)
+            {
+                this.kapChatGrid.Visibility = Visibility.Hidden;
+                this.twitchPopoutChat.Visibility = Visibility.Visible;
+                this.customURLGrid.Visibility = Visibility.Hidden;
+                this.jChatGrid.Visibility = Visibility.Hidden;
+
+                if (string.IsNullOrEmpty(App.Settings.GeneralSettings.TwitchPopoutCSS))
+                    this.tbPopoutCSS.Text = CustomCSS_Defaults.TwitchPopoutChat;
+                else
+                    this.tbPopoutCSS.Text = App.Settings.GeneralSettings.TwitchPopoutCSS;
+
+                this.cbBetterTtv.IsChecked = App.Settings.GeneralSettings.BetterTtv;
+                this.cbFfz.IsChecked = App.Settings.GeneralSettings.FrankerFaceZ;
+            }
+            else if (chatType == ChatTypes.KapChat)
+            {
+                this.kapChatGrid.Visibility = Visibility.Visible;
+                this.twitchPopoutChat.Visibility = Visibility.Hidden;
+                this.customURLGrid.Visibility = Visibility.Hidden;
+                this.jChatGrid.Visibility = Visibility.Hidden;
+
+                this.tbURL.Text = string.Empty;
+
+                if (string.IsNullOrEmpty(App.Settings.GeneralSettings.CustomCSS))
+                {
+                    this.tbCSS.Text = CustomCSS_Defaults.NoneTheme_CustomCSS;
+                }
+                else
+                {
+                    this.tbCSS.Text = App.Settings.GeneralSettings.CustomCSS;
+                }
+            }
+            else if (chatType == ChatTypes.KapChat)
+            {
+                this.kapChatGrid.Visibility = Visibility.Hidden;
+                this.twitchPopoutChat.Visibility = Visibility.Hidden;
+                this.customURLGrid.Visibility = Visibility.Hidden;
+                this.jChatGrid.Visibility = Visibility.Visible;
+
+                this.tbURL.Text = string.Empty;
+            }
+        }
+    }
+
+    public void SaveValues()
+    {
+        //this.config.RedemptionsEnabled = false;
+
+        if (Enum.IsDefined(typeof(ChatTypes), App.Settings.GeneralSettings.ChatType))
+        {
+            var chatType = (ChatTypes)App.Settings.GeneralSettings.ChatType;
+
+            if (chatType == ChatTypes.CustomURL)
+            {
+                App.Settings.GeneralSettings.CustomURL = this.tbURL.Text;
+
+                if (!string.IsNullOrWhiteSpace(this.tbCSS2.Text) && !string.IsNullOrEmpty(this.tbCSS2.Text)
+                    && (this.tbCSS2.Text.ToLower() != "css"))
+                {
+                    App.Settings.GeneralSettings.CustomCSS = this.tbCSS2.Text;
+                }
+                else
+                    App.Settings.GeneralSettings.CustomCSS = string.Empty;
+            }
+            else if (chatType == ChatTypes.TwitchPopout)
+            {
+                if (string.IsNullOrEmpty(this.tbTwitchPopoutUsername.Text) || string.IsNullOrWhiteSpace(this.tbTwitchPopoutUsername.Text))
+                {
+                    this.tbTwitchPopoutUsername.Text = "username";
+                }
+                App.Settings.GeneralSettings.Username = this.tbTwitchPopoutUsername.Text;
+
+                if (!string.IsNullOrWhiteSpace(this.tbPopoutCSS.Text) && !string.IsNullOrEmpty(this.tbPopoutCSS.Text)
+                    && (this.tbPopoutCSS.Text.ToLower() != "css"))
+                {
+                    App.Settings.GeneralSettings.TwitchPopoutCSS = this.tbPopoutCSS.Text;
+                }
+                else
+                {
+                    App.Settings.GeneralSettings.TwitchPopoutCSS = CustomCSS_Defaults.TwitchPopoutChat;
+                }
+
+                App.Settings.GeneralSettings.BetterTtv = this.cbBetterTtv.IsChecked ?? false;
+                App.Settings.GeneralSettings.FrankerFaceZ = this.cbFfz.IsChecked ?? false;
+            }
+            else if (chatType == (int)ChatTypes.KapChat)
+            {
+                App.Settings.GeneralSettings.CustomURL = string.Empty;
+                App.Settings.GeneralSettings.Username = this.tbUsername.Text;
+                App.Settings.GeneralSettings.RedemptionsEnabled = this.cbRedemptions.IsChecked ?? false;
+                App.Settings.GeneralSettings.FadeChat = this.cbFade.IsChecked ?? false;
+                App.Settings.GeneralSettings.FadeTime = this.tbFadeTime.Text;
+                //App.Settings.GeneralSettings.ShowBotActivity = this.cbBotActivity.IsChecked ?? false;
+                App.Settings.GeneralSettings.ChatNotificationSound = this.comboChatSound.SelectedValue.ToString();
+                App.Settings.GeneralSettings.ThemeIndex = this.comboTheme.SelectedIndex;
+
+                if (App.Settings.GeneralSettings.ThemeIndex == 0)
+                {
+                    App.Settings.GeneralSettings.CustomCSS = this.tbCSS.Text;
+                }
+            }
+            else if (chatType == ChatTypes.jCyan)
+            {
+                App.Settings.GeneralSettings.CustomURL = string.Empty;
+                App.Settings.GeneralSettings.jChatURL = this.tb_jChatURL.Text;
+                App.Settings.GeneralSettings.RedemptionsEnabled = this.cbRedemptions2.IsChecked ?? false;
+                if (App.Settings.GeneralSettings.RedemptionsEnabled)
+                    App.Settings.GeneralSettings.Username = this.tbUsername2.Text;
+                App.Settings.GeneralSettings.ChatNotificationSound = this.comboChatSound2.SelectedValue.ToString();
+            }
+        }
     }
 
     public void OnTwitchConnectionStatusChanged(TwitchConnectionStatus twitchConnectionStatus)
@@ -162,6 +305,8 @@ public partial class ChatSettingsPage : UserControl
 
     public void ChatTypeChanged(ChatTypes chatType)
     {
+        App.Settings.GeneralSettings.ChatType = (int)chatType;
+
         switch (chatType)
         {
             case ChatTypes.KapChat:

@@ -22,6 +22,47 @@ public partial class GeneralSettingsPage : UserControl
         LoadDevices();
 
         tbSoundClipsFolder.Text = App.Settings.GeneralSettings.SoundClipsFolder;
+
+        this.cbAutoHideBorders.IsChecked = App.Settings.GeneralSettings.AutoHideBorders;
+        this.cbEnableTrayIcon.IsChecked = true; //TODO: Temp fix for a bug ~ this.config.EnableTrayIcon;
+        //this.cbConfirmClose.IsChecked = App.Settings.GeneralSettings.ConfirmClose;
+        this.cbTaskbar.IsChecked = App.Settings.GeneralSettings.HideTaskbarIcon;
+        this.cbInteraction.IsChecked = App.Settings.GeneralSettings.AllowInteraction;
+        this.cbCheckForUpdates.IsChecked = App.Settings.GeneralSettings.CheckForUpdates;
+        this.cbMultiInstance.IsChecked = App.Settings.GeneralSettings.AllowMultipleInstances;
+
+        this.hotkeyInputToggleBorders.Hotkey = App.Settings.GeneralSettings.ToggleBordersHotkey;
+        this.hotkeyInputToggleInteractable.Hotkey = App.Settings.GeneralSettings.ToggleInteractableHotkey;
+        this.hotkeyInputBringToTop.Hotkey = App.Settings.GeneralSettings.BringToTopHotkey;
+
+        this.OutputVolumeSlider.Value = App.Settings.GeneralSettings.OutputVolume * 100;
+    }
+
+    public void SaveValues()
+    {
+        App.Settings.GeneralSettings.AutoHideBorders = this.cbAutoHideBorders.IsChecked ?? false;
+        App.Settings.GeneralSettings.EnableTrayIcon = this.cbEnableTrayIcon.IsChecked ?? false;
+        //App.Settings.GeneralSettings.ConfirmClose     = this.cbConfirmClose.IsChecked ?? false;
+        App.Settings.GeneralSettings.HideTaskbarIcon = this.cbTaskbar.IsChecked ?? false;
+        App.Settings.GeneralSettings.AllowInteraction = this.cbInteraction.IsChecked ?? false;
+        App.Settings.GeneralSettings.CheckForUpdates = this.cbCheckForUpdates.IsChecked ?? false;
+
+        // Hotkeys
+        App.Settings.GeneralSettings.ToggleBordersHotkey = hotkeyInputToggleBorders.Hotkey;
+        App.Settings.GeneralSettings.ToggleInteractableHotkey = hotkeyInputToggleInteractable.Hotkey;
+        App.Settings.GeneralSettings.BringToTopHotkey = hotkeyInputBringToTop.Hotkey;
+
+        App.Settings.GeneralSettings.DeviceID = (int)DevicesComboBox.SelectedValue;
+        App.Settings.GeneralSettings.DeviceName = DevicesComboBox.Text;
+
+        double ClampBetween0And1(double value)
+        {
+            double s = Math.Round((value * 0.01), 2);
+            return Math.Max(0, Math.Min(1, s));
+        }
+
+        App.Settings.GeneralSettings.OutputVolume = (float)ClampBetween0And1(this.OutputVolumeSlider.Value);
+        App.Settings.GeneralSettings.SoundClipsFolder = this.tbSoundClipsFolder.Text;
     }
 
     private void LoadDevices()

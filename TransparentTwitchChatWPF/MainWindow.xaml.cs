@@ -1059,167 +1059,121 @@ public partial class MainWindow : Window, BrowserWindow
             return;
         }
 
-        WindowSettings config = new WindowSettings
-        {
-            Title = "Main Window",
-            ChatType = App.Settings.GeneralSettings.ChatType,
-            URL = App.Settings.GeneralSettings.CustomURL,
-            jChatURL = App.Settings.GeneralSettings.jChatURL,
-            Username = App.Settings.GeneralSettings.Username,
-            ChatFade = App.Settings.GeneralSettings.FadeChat,
-            FadeTime = App.Settings.GeneralSettings.FadeTime,
-            //ShowBotActivity = App.Settings.GeneralSettings.ShowBotActivity,
-            ChatNotificationSound = App.Settings.GeneralSettings.ChatNotificationSound,
-            Theme = App.Settings.GeneralSettings.ThemeIndex,
-            CustomCSS = App.Settings.GeneralSettings.CustomCSS,
-            AutoHideBorders = App.Settings.GeneralSettings.AutoHideBorders,
-            ConfirmClose = App.Settings.GeneralSettings.ConfirmClose,
-            EnableTrayIcon = App.Settings.GeneralSettings.EnableTrayIcon,
-            HideTaskbarIcon = App.Settings.GeneralSettings.HideTaskbarIcon,
-            AllowInteraction = App.Settings.GeneralSettings.AllowInteraction,
-            RedemptionsEnabled = App.Settings.GeneralSettings.RedemptionsEnabled,
-            ChannelID = App.Settings.GeneralSettings.ChannelID,
-            BetterTtv = App.Settings.GeneralSettings.BetterTtv,
-            FrankerFaceZ = App.Settings.GeneralSettings.FrankerFaceZ,
-        };
-
         SettingsWindow settingsWindow = new SettingsWindow(this);
 
+        // Settings were saved
         if (settingsWindow.ShowDialog() == true)
         {
-            App.Settings.GeneralSettings.ChatType = config.ChatType;
-
-            if (config.ChatType == (int)ChatTypes.CustomURL)
+            if (Enum.IsDefined(typeof(ChatTypes), App.Settings.GeneralSettings.ChatType))
             {
-                this._currentChat = new CustomURLChat(ChatTypes.CustomURL);
-                App.Settings.GeneralSettings.CustomURL = config.URL;
-                App.Settings.GeneralSettings.CustomCSS = config.CustomCSS;
+                var chatType = (ChatTypes)App.Settings.GeneralSettings.ChatType;
 
-                if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.CustomURL))
-                    SetCustomChatAddress(App.Settings.GeneralSettings.CustomURL);
-            }
-            else if (config.ChatType == (int)ChatTypes.TwitchPopout)
-            {
-                this._currentChat = new CustomURLChat(ChatTypes.TwitchPopout);
-                App.Settings.GeneralSettings.Username = config.Username;
-
-                if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.Username))
-                    SetCustomChatAddress("https://www.twitch.tv/popout/" + App.Settings.GeneralSettings.Username + "/chat?popout=");
-
-                App.Settings.GeneralSettings.BetterTtv = config.BetterTtv;
-                App.Settings.GeneralSettings.FrankerFaceZ = config.FrankerFaceZ;
-            }
-            else if (config.ChatType == (int)ChatTypes.KapChat)
-            {
-                this._currentChat = new Chats.KapChat();
-                App.Settings.GeneralSettings.Username = config.Username;
-                App.Settings.GeneralSettings.FadeChat = config.ChatFade;
-                App.Settings.GeneralSettings.FadeTime = config.FadeTime;
-                //App.Settings.GeneralSettings.ShowBotActivity = config.ShowBotActivity;
-                App.Settings.GeneralSettings.ChatNotificationSound = config.ChatNotificationSound;
-                App.Settings.GeneralSettings.ThemeIndex = config.Theme;
-
-                if (App.Settings.GeneralSettings.ThemeIndex == 0)
-                    App.Settings.GeneralSettings.CustomCSS = config.CustomCSS;
-                else
-                    App.Settings.GeneralSettings.CustomCSS = string.Empty;
-
-
-                if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.Username))
+                if (chatType == ChatTypes.CustomURL)
                 {
-                    if (!config.RedemptionsEnabled)
-                        _twitchService.DisableEventSub();
+                    this._currentChat = new CustomURLChat(ChatTypes.CustomURL);
 
-                    SetChatAddress(App.Settings.GeneralSettings.Username);
+                    if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.CustomURL))
+                        SetCustomChatAddress(App.Settings.GeneralSettings.CustomURL);
                 }
-
-
-                if (App.Settings.GeneralSettings.ChatNotificationSound.ToLower() == "none")
-                    this.jsCallbackFunctions.MediaFile = string.Empty;
-                else
+                else if (chatType == ChatTypes.TwitchPopout)
                 {
-                    string file = Path.Combine(GetSoundClipsFolder(), App.Settings.GeneralSettings.ChatNotificationSound);
-                    if (File.Exists(file))
+                    this._currentChat = new CustomURLChat(ChatTypes.TwitchPopout);
+
+                    if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.Username))
+                        SetCustomChatAddress("https://www.twitch.tv/popout/" + App.Settings.GeneralSettings.Username + "/chat?popout=");
+                }
+                else if (chatType == ChatTypes.KapChat)
+                {
+                    this._currentChat = new Chats.KapChat();
+
+                    if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.Username))
                     {
-                        this.jsCallbackFunctions.OnAudioDeviceChanged();
-                        this.jsCallbackFunctions.MediaFile = file;
+                        if (!App.Settings.GeneralSettings.RedemptionsEnabled)
+                            _twitchService.DisableEventSub();
+
+                        SetChatAddress(App.Settings.GeneralSettings.Username);
                     }
-                    else
-                    {
+
+
+                    if (App.Settings.GeneralSettings.ChatNotificationSound.ToLower() == "none")
                         this.jsCallbackFunctions.MediaFile = string.Empty;
-                    }
-                }
-            }
-
-            else if (config.ChatType == (int)ChatTypes.jCyan)
-            {
-                this._currentChat = new jCyan();
-                App.Settings.GeneralSettings.jChatURL = config.jChatURL;
-                App.Settings.GeneralSettings.ChatNotificationSound = config.ChatNotificationSound;
-
-                if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.Username))
-                {
-                    if (!config.RedemptionsEnabled)
-                        _twitchService.DisableEventSub();
-
-                    if (string.IsNullOrEmpty(App.Settings.GeneralSettings.jChatURL))
-                    {
-                        string localIndex = LocalHtmlHelper.GetIndexHtmlPath();
-                        webView.CoreWebView2.Navigate(new Uri(localIndex).AbsoluteUri);
-                    }
                     else
-                        SetCustomChatAddress(App.Settings.GeneralSettings.jChatURL);
-                }
-                else
-                {
-                    if (string.IsNullOrEmpty(App.Settings.GeneralSettings.jChatURL))
                     {
-                        string localIndex = LocalHtmlHelper.GetIndexHtmlPath();
-                        webView.CoreWebView2.Navigate(new Uri(localIndex).AbsoluteUri);
+                        string file = Path.Combine(GetSoundClipsFolder(), App.Settings.GeneralSettings.ChatNotificationSound);
+                        if (File.Exists(file))
+                        {
+                            this.jsCallbackFunctions.OnAudioDeviceChanged();
+                            this.jsCallbackFunctions.MediaFile = file;
+                        }
+                        else
+                        {
+                            this.jsCallbackFunctions.MediaFile = string.Empty;
+                        }
                     }
-                    else
-                        SetCustomChatAddress(App.Settings.GeneralSettings.jChatURL);
                 }
 
-
-                if (App.Settings.GeneralSettings.ChatNotificationSound.ToLower() == "none")
-                    this.jsCallbackFunctions.MediaFile = string.Empty;
-                else
+                else if (chatType == ChatTypes.jCyan)
                 {
-                    string file = Path.Combine(GetSoundClipsFolder(), App.Settings.GeneralSettings.ChatNotificationSound);
-                    if (File.Exists(file))
+                    this._currentChat = new jCyan();
+
+                    if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.Username))
                     {
-                        this.jsCallbackFunctions.OnAudioDeviceChanged();
-                        this.jsCallbackFunctions.MediaFile = file;
+                        if (!App.Settings.GeneralSettings.RedemptionsEnabled)
+                            _twitchService.DisableEventSub();
+
+                        if (string.IsNullOrEmpty(App.Settings.GeneralSettings.jChatURL))
+                        {
+                            string localIndex = LocalHtmlHelper.GetIndexHtmlPath();
+                            webView.CoreWebView2.Navigate(new Uri(localIndex).AbsoluteUri);
+                        }
+                        else
+                            SetCustomChatAddress(App.Settings.GeneralSettings.jChatURL);
                     }
                     else
                     {
+                        if (string.IsNullOrEmpty(App.Settings.GeneralSettings.jChatURL))
+                        {
+                            string localIndex = LocalHtmlHelper.GetIndexHtmlPath();
+                            webView.CoreWebView2.Navigate(new Uri(localIndex).AbsoluteUri);
+                        }
+                        else
+                            SetCustomChatAddress(App.Settings.GeneralSettings.jChatURL);
+                    }
+
+
+                    if (App.Settings.GeneralSettings.ChatNotificationSound.ToLower() == "none")
                         this.jsCallbackFunctions.MediaFile = string.Empty;
+                    else
+                    {
+                        string file = Path.Combine(GetSoundClipsFolder(), App.Settings.GeneralSettings.ChatNotificationSound);
+                        if (File.Exists(file))
+                        {
+                            this.jsCallbackFunctions.OnAudioDeviceChanged();
+                            this.jsCallbackFunctions.MediaFile = file;
+                        }
+                        else
+                        {
+                            this.jsCallbackFunctions.MediaFile = string.Empty;
+                        }
                     }
                 }
             }
-
-            App.Settings.GeneralSettings.AutoHideBorders = config.AutoHideBorders;
-            App.Settings.GeneralSettings.ConfirmClose = config.ConfirmClose;
-            App.Settings.GeneralSettings.EnableTrayIcon = config.EnableTrayIcon;
-            App.Settings.GeneralSettings.HideTaskbarIcon = config.HideTaskbarIcon;
-            App.Settings.GeneralSettings.AllowInteraction = config.AllowInteraction;
-            App.Settings.GeneralSettings.RedemptionsEnabled = config.RedemptionsEnabled;
 
             this.taskbarControl.Visibility = Visibility.Visible; //config.EnableTrayIcon ? Visibility.Visible : Visibility.Hidden;
-            this.ShowInTaskbar = !config.HideTaskbarIcon;
+            this.ShowInTaskbar = !App.Settings.GeneralSettings.HideTaskbarIcon;
 
             if (!this._hiddenBorders)
             {
                 this.webView.Focusable = true;
-                if (config.AllowInteraction)
+                if (App.Settings.GeneralSettings.AllowInteraction)
                     SetInteractable(true);
             }
 
             SetupOrReplaceHotkeys();
-
-            // Save the new changes for the General Settings
-            App.Settings.Persist();
+        }
+        else // Cancel changes and revert settings back
+        {
+            App.Settings.RevertChanges();
         }
     }
 
