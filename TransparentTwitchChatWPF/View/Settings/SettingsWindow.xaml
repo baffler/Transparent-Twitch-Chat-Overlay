@@ -12,7 +12,7 @@
         ui:TitleBar.ExtendViewIntoTitleBar="False"
         Title="Settings"
         WindowStyle="ToolWindow"
-        Height="500" Width="550" Topmost="True" WindowStartupLocation="CenterScreen" Closing="Window_Closing" SourceInitialized="Window_SourceInitialized">
+        Height="500" Width="550" Topmost="True" WindowStartupLocation="CenterScreen" SourceInitialized="Window_SourceInitialized">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="110"/>

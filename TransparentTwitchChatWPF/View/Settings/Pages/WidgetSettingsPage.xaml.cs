@@ -9,6 +9,8 @@ namespace TransparentTwitchChatWPF.View.Settings;
 /// </summary>
 public partial class WidgetSettingsPage : UserControl
 {
+    public event Action<string, string> WidgetCreationRequested;
+
     public WidgetSettingsPage()
     {
         InitializeComponent();
@@ -18,9 +20,8 @@ public partial class WidgetSettingsPage : UserControl
 
     private void NewWidgetButton_Click(object sender, RoutedEventArgs e)
     {
-        // TODO: create a new widget window with the provided URL and custom CSS.
-        //this._main.CreateNewWindow(this.tbUrlForWidget.Text, this.tbWidgetCustomCSS.Text);
         this.tbUrlForWidget.Text = string.Empty;
+        WidgetCreationRequested?.Invoke(this.tbUrlForWidget.Text, this.tbWidgetCustomCSS.Text);
     }
 
     private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)

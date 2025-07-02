@@ -187,7 +187,7 @@ public partial class MainWindow : Window, BrowserWindow
         _timerCheckForegroundFocus.Start();
 
         SetupOrReplaceHotkeys();
-        SettingsWindow.SettingsWindowActive += OnSettingsWindowActive;
+        //SettingsWindow.SettingsWindowActive += OnSettingsWindowActive;
 
         LocalHtmlHelper.EnsureLocalBrowserFiles();
         InitializeWebViewAsync();
@@ -210,11 +210,6 @@ public partial class MainWindow : Window, BrowserWindow
                 $"{payloadEvent.UserInput}", 
                 payloadEvent.UserName, "#a1b3c4");
         }
-    }
-
-    private void OnSettingsWindowActive(bool isActive)
-    {
-        HotkeyManager.Current.IsEnabled = !isActive;
     }
 
     private void SetupOrReplaceHotkeys()
@@ -1059,7 +1054,15 @@ public partial class MainWindow : Window, BrowserWindow
             return;
         }
 
-        SettingsWindow settingsWindow = new SettingsWindow(this);
+        // Disable hotkeys while settings window is open
+        HotkeyManager.Current.IsEnabled = false;
+
+        SettingsWindow settingsWindow = new SettingsWindow();
+        
+        // Subscribe to the event from the SettingsWindow.
+        settingsWindow.CreateWidgetRequested += (url, css) => {
+            this.CreateNewWindow(url, css);
+        };
 
         // Settings were saved
         if (settingsWindow.ShowDialog() == true)
@@ -1170,10 +1173,12 @@ public partial class MainWindow : Window, BrowserWindow
             }
 
             SetupOrReplaceHotkeys();
+            HotkeyManager.Current.IsEnabled = true;
         }
         else // Cancel changes and revert settings back
         {
             App.Settings.RevertChanges();
+            HotkeyManager.Current.IsEnabled = true;
         }
     }
 

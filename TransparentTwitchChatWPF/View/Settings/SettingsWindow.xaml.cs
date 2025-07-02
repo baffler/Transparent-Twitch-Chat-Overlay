@@ -3,8 +3,6 @@ using System.Windows;
 using System.Windows.Controls;
 using TransparentTwitchChatWPF.Utils;
 using TransparentTwitchChatWPF.View.Settings;
-using Brushes = System.Windows.Media.Brushes;
-using MessageBox = System.Windows.MessageBox;
 
 namespace TransparentTwitchChatWPF;
 
@@ -13,33 +11,28 @@ namespace TransparentTwitchChatWPF;
 /// </summary>
 public partial class SettingsWindow : Window
 {
-    public static event Action<bool> SettingsWindowActive;
+    public event Action<string, string> CreateWidgetRequested;
 
-    // Create instances of your pages. 
-    // You can do this once to preserve state if the user switches back and forth.
     private readonly ChatSettingsPage _chatSettingsPage = new ChatSettingsPage();
     private readonly GeneralSettingsPage _generalSettingsPage = new GeneralSettingsPage();
     private readonly ConnectionSettingsPage _connectionSettingsPage = new ConnectionSettingsPage();
     private readonly WidgetSettingsPage _widgetSettingsPage = new WidgetSettingsPage();
     private readonly AboutSettingsPage _aboutSettingsPage = new AboutSettingsPage();
 
-    // This will hold the TEMPORARY "draft" copy of the settings.
-    //private readonly GeneralSettings _draftSettings;
-
-    private MainWindow _main;
-
-    public SettingsWindow(MainWindow mainWindow)
+    public SettingsWindow()
     {
         InitializeComponent();
+
+        // Subscribe to the page's event and bubble it up.
+        _widgetSettingsPage.WidgetCreationRequested += (url, css) => {
+            // When the page requests a widget, fire this window's own event.
+            CreateWidgetRequested?.Invoke(url, css);
+        };
 
         // Set the initial page
         SettingsContentControl.Content = _chatSettingsPage;
 
-        //_draftSettings = App.Settings.GeneralSettings.Clone();
-
-        this._main = mainWindow;
-
-        SettingsWindowActive?.Invoke(true);
+        //SettingsWindowActive?.Invoke(true);
     }
 
     private void OKButton_Click(object sender, RoutedEventArgs e)
@@ -119,10 +112,5 @@ public partial class SettingsWindow : Window
         {
             Debug.WriteLine("Invalid chat type selected. Index = " + index.ToString());
         }
-    }
-
-    private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-    {
-        SettingsWindowActive?.Invoke(false);
     }
 }
