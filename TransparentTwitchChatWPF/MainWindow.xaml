@@ -34,17 +34,21 @@
             </Grid.RowDefinitions>
 
             <tb:TaskbarIcon
-            Name="taskbarControl"
-            IconSource="/icons/twitch_chat2.ico"
-            ToolTipText="Twitch Chat Overlay">
-                <!-- Set a simple context menu  -->
+                Name="taskbarControl"
+                IconSource="/icons/twitch_chat2.ico"
+                ToolTipText="Twitch Chat Overlay">
+                
                 <tb:TaskbarIcon.ContextMenu>
                     <ContextMenu ui:ThemeManager.RequestedTheme="Dark" x:Name="contextMenu">
                         <MenuItem Header="Twitch Chat Overlay" IsEnabled="False" />
                         <MenuItem Header="Hide/Show Border" Click="MenuItem_ToggleBorderVisible" />
-                        <MenuItem Header="Settings" Click="MenuItem_SettingsClick" />
-                        <MenuItem Header="Reset Window" Click="MenuItem_ResetWindowClick" />
+                        <MenuItem Header="Toggle Interactable" Click="MenuItem_ToggleInteractable" />
+                        <MenuItem Header="Bring To Top" Click="MenuItem_BringToTopTimer" />
+                        <Separator />
                         <MenuItem Header="Dev Tools" Click="MenuItem_DevToolsClick" />
+                        <MenuItem Header="Settings" Click="MenuItem_SettingsClick" />
+                        <Separator />
+                        <MenuItem Header="Reset Window" Click="MenuItem_ResetWindowClick" />
                         <Separator />
                         <MenuItem Header="GitHub latest release" Click="MenuItem_VisitWebsite" />
                         <MenuItem Header="Exit" Click="MenuItem_Exit" />
@@ -52,23 +56,20 @@
                 </tb:TaskbarIcon.ContextMenu>
             </tb:TaskbarIcon>
 
-            <Grid
-            x:Name="AppTitleBar"
-            Background="#000"
-            ui:ThemeManager.RequestedTheme="Dark">
+            <Grid x:Name="AppTitleBar"
+                  Background="#000"
+                  ui:ThemeManager.RequestedTheme="Dark">
 
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <ui:SimpleStackPanel
-                Grid.Column="0"
-                Orientation="Horizontal">
+                <ui:SimpleStackPanel Grid.Column="0" Orientation="Horizontal">
                     <ui:TitleBarButton
-                    x:Name="btnSettings"
-                    MouseRightButtonUp="btnSettings_MouseRightButtonUp"
-                    Click="btnSettings_Click">
+                        x:Name="btnSettings"
+                        MouseRightButtonUp="btnSettings_MouseRightButtonUp"
+                        Click="btnSettings_Click">
                         <ui:TitleBarButton.ContextMenu>
                             <ContextMenu x:Name="settingsBtnContextMenu" ui:ThemeManager.RequestedTheme="Dark">
                                 <MenuItem Header="Twitch Chat Overlay" IsEnabled="False" />
@@ -100,8 +101,8 @@
                         </Grid>
                     </ui:TitleBarButton>
                     <ui:TitleBarButton
-                    x:Name="btnHide"
-                    Click="btnHide_Click">
+                        x:Name="btnHide"
+                        Click="btnHide_Click">
                         <Grid>
                             <Ellipse
                             Margin="0"

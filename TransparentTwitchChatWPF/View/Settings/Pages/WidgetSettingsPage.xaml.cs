@@ -20,8 +20,8 @@ public partial class WidgetSettingsPage : UserControl
 
     private void NewWidgetButton_Click(object sender, RoutedEventArgs e)
     {
-        this.tbUrlForWidget.Text = string.Empty;
         WidgetCreationRequested?.Invoke(this.tbUrlForWidget.Text, this.tbWidgetCustomCSS.Text);
+        this.tbUrlForWidget.Text = string.Empty;
     }
 
     private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)

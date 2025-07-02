@@ -979,6 +979,12 @@ public partial class MainWindow : Window, BrowserWindow
 
     public void CreateNewWindow(string URL, string CustomCSS)
     {
+        if (string.IsNullOrEmpty(URL))
+        {
+            MessageBox.Show("Empty or Invalid URL.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
         if (App.Settings.GeneralSettings.CustomWindows.Contains(URL))
         {
             MessageBox.Show("That URL already exists as a window.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -986,6 +992,8 @@ public partial class MainWindow : Window, BrowserWindow
         else
         {
             App.Settings.GeneralSettings.CustomWindows.Add(URL);
+            Debug.WriteLine("Creating new window with URL: " + URL);
+            Debug.WriteLine("Custom CSS: " + CustomCSS);
             OpenNewCustomWindow(URL, CustomCSS);
         }
     }
@@ -1058,7 +1066,7 @@ public partial class MainWindow : Window, BrowserWindow
         HotkeyManager.Current.IsEnabled = false;
 
         SettingsWindow settingsWindow = new SettingsWindow();
-        
+
         // Subscribe to the event from the SettingsWindow.
         settingsWindow.CreateWidgetRequested += (url, css) => {
             this.CreateNewWindow(url, css);
