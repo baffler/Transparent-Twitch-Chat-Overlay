@@ -33,7 +33,9 @@ jobs:
       # 5. Get the version number from the Git tag
       - name: Get version from tag
         id: get-version
-        run: echo "version=${{ github.ref_name }}" | ForEach-Object { $_.replace("v", "") } | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf-8 -Append
+        run: |
+            $version = "${{ github.ref_name }}".Substring(1)
+            echo "version=$version" >> $env:GITHUB_OUTPUT
         shell: pwsh
 
       # 6. Download, Pack, and Upload with Velopack
@@ -41,7 +43,7 @@ jobs:
         run: |
           dotnet tool install -g vpk
           vpk download github --repoUrl https://github.com/${{ github.repository }}
-          vpk pack -u TransparentTwitchChat -v ${{ steps.get-version.outputs.version }} -p publish --mainExe TransparentTwitchChatWPF.exe
+          vpk pack -u TransparentTwitchChat -v ${{ steps.get-version.outputs.version }} --packDir publish --mainExe TransparentTwitchChatWPF.exe
           vpk upload github --repoUrl https://github.com/${{ github.repository }} --publish --releaseName "Release v${{ steps.get-version.outputs.version }}" --tag ${{ github.ref_name }}
         shell: pwsh
         env:
