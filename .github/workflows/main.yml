@@ -10,6 +10,9 @@ jobs:
   build-and-pack:
     # Use the latest Windows runner
     runs-on: windows-latest
+    # To allow github to upload the release files
+    permissions:
+      contents: write
 
     steps:
       # 1. Check out the code from the repository
