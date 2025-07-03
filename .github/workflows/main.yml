@@ -44,7 +44,7 @@ jobs:
           dotnet tool install -g vpk
           vpk download github --repoUrl https://github.com/${{ github.repository }}
           vpk pack -u TransparentTwitchChat -v ${{ steps.get-version.outputs.version }} --packDir publish --mainExe TransparentTwitchChatWPF.exe
-          vpk upload github --repoUrl https://github.com/${{ github.repository }} --publish --releaseName "Release v${{ steps.get-version.outputs.version }}" --tag ${{ github.ref_name }}
+          vpk upload github --repoUrl https://github.com/${{ github.repository }} --publish --releaseName "Release v${{ steps.get-version.outputs.version }}" --tag ${{ github.ref_name }} --token ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
