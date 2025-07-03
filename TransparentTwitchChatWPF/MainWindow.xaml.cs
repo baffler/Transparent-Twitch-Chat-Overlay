@@ -370,31 +370,22 @@ public partial class MainWindow : Window, BrowserWindow
         e.Handled = true;
     }
 
-    async void InitializeWebViewAsync()
+    private async void InitializeWebViewAsync()
     {
-        string version = "";
-
         try
         {
-            version = CoreWebView2Environment.GetAvailableBrowserVersionString();
+            string version = CoreWebView2Environment.GetAvailableBrowserVersionString();
+            if (string.IsNullOrEmpty(version))
+            {
+                ShowWebViewInstallUI();
+                return;
+            }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             ShowWebViewInstallUI();
             return;
         }
-
-        if (string.IsNullOrEmpty(version))
-        {
-            ShowWebViewInstallUI();
-            return;
-        }
-
-        // setup webview
-        webView = new WebView2
-        {
-            DefaultBackgroundColor = System.Drawing.Color.Transparent
-        };
 
         hasWebView2Runtime = true;
         if (_timerCheckWebView2Install != null)
@@ -407,28 +398,83 @@ public partial class MainWindow : Window, BrowserWindow
         // Make sure the placeholder overlay is hidden
         PlaceholderOverlay.Visibility = Visibility.Collapsed;
 
-        webView.CoreWebView2InitializationCompleted += webView_CoreWebView2InitializationCompleted;
-        webView.ContentLoading += webView_ContentLoading;
-        webView.NavigationStarting += webView_NavigationStarting;
-        webView.NavigationCompleted += webView_NavigationCompleted;
-        webView.WebMessageReceived += webView_WebMessageReceived;
+        await SetupWebViewAsync();
+    }
 
+    private async Task SetupWebViewAsync()
+    {
+        // Create and configure.
+        webView = new WebView2
+        {
+            DefaultBackgroundColor = System.Drawing.Color.Transparent
+        };
+
+        var options = new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required")
+        {
+            AdditionalBrowserArguments = "--disable-background-timer-throttling"
+        };
+        string userDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF");
+        CoreWebView2Environment cwv2Environment = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
+
+        // Add to visual tree.
         Grid.SetRow(webView, 1);
         Grid.SetRowSpan(webView, 1);
         Grid.SetZIndex(webView, 0);
-
         this.mainWindowGrid.Children.Add(webView);
 
-        var options = new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required");
-        options.AdditionalBrowserArguments = "--disable-background-timer-throttling";
-        string userDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF");
-        CoreWebView2Environment cwv2Environment = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
+        // Initialize and subscribe to events.
         await webView.EnsureCoreWebView2Async(cwv2Environment);
 
+        webView.CoreWebView2InitializationCompleted += webView_CoreWebView2InitializationCompleted;
+        webView.NavigationCompleted += webView_NavigationCompleted;
+        webView.WebMessageReceived += webView_WebMessageReceived;
+        webView.CoreWebView2.ProcessFailed += webView_CoreWebView2ProcessFailed;
+
+        // Finalize setup.
         this.jsCallbackFunctions = new JsCallbackFunctions();
         webView.CoreWebView2.AddHostObjectToScript("jsCallbackFunctions", this.jsCallbackFunctions);
 
         SetupBrowser();
+    }
+
+    private async void webView_CoreWebView2ProcessFailed(object sender, CoreWebView2ProcessFailedEventArgs e)
+    {
+        // It's safest to perform UI updates and re-initialization on the UI thread.
+        await Dispatcher.InvokeAsync(async () =>
+        {
+            MessageBox.Show("The web component crashed and will be reloaded.", "WebView2 Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+            // --- Clean up old instance ---
+            if (webView != null)
+            {
+                // Unsubscribe from every event to prevent memory leaks
+                webView.CoreWebView2InitializationCompleted -= webView_CoreWebView2InitializationCompleted;
+                webView.NavigationCompleted -= webView_NavigationCompleted;
+                webView.WebMessageReceived -= webView_WebMessageReceived;
+
+                // The CoreWebView2 might be null if it failed very early
+                if (webView.CoreWebView2 != null)
+                {
+                    webView.CoreWebView2.ProcessFailed -= webView_CoreWebView2ProcessFailed;
+                }
+
+                // Remove the failed control from the UI and dispose it
+                this.mainWindowGrid.Children.Remove(webView);
+                webView.Dispose();
+                webView = null;
+            }
+
+            // --- Re-create using the helper function ---
+            try
+            {
+                await SetupWebViewAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Fatal error: Could not recover the WebView2 component. {ex.Message} The application will now close.", "Recovery Failed", MessageBoxButton.OK, MessageBoxImage.Stop);
+                Application.Current.Shutdown();
+            }
+        });
     }
 
     private void webView_CoreWebView2InitializationCompleted(object sender, CoreWebView2InitializationCompletedEventArgs e)
@@ -638,9 +684,18 @@ public partial class MainWindow : Window, BrowserWindow
         this.Width = 320;
     }
 
-    private void SetCustomChatAddress(string url)
+    private void NavigateToUrl(string url)
     {
-        this.webView.CoreWebView2.Navigate(url);
+        try
+        {
+            this.webView.CoreWebView2.Navigate(url);
+        }
+        catch (Exception ex)
+        {
+            string urlStatus = string.IsNullOrEmpty(url) ? "<Empty>" : url;
+            _logger.LogError(ex, "Failed to navigate to custom chat URL: " + urlStatus);
+            MessageBox.Show($"Cannot navigate to that URL.\nError:{ex.Message}\nUrl: '{urlStatus}'", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private void SetChatAddress(string chatChannel)
@@ -662,7 +717,8 @@ public partial class MainWindow : Window, BrowserWindow
         url += @"&fade=" + fade;
         url += @"&bot_activity=" + (!App.Settings.GeneralSettings.BlockBotActivity).ToString();
         url += @"&prevent_clipping=false";
-        this.webView.CoreWebView2.Navigate(url);
+
+        NavigateToUrl(url);
     }
 
     public void ShowInputFadeDialogBox()
@@ -1096,14 +1152,14 @@ public partial class MainWindow : Window, BrowserWindow
                     this._currentChat = new CustomURLChat(ChatTypes.CustomURL);
 
                     if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.CustomURL))
-                        SetCustomChatAddress(App.Settings.GeneralSettings.CustomURL);
+                        NavigateToUrl(App.Settings.GeneralSettings.CustomURL);
                 }
                 else if (chatType == ChatTypes.TwitchPopout)
                 {
                     this._currentChat = new CustomURLChat(ChatTypes.TwitchPopout);
 
                     if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.Username))
-                        SetCustomChatAddress("https://www.twitch.tv/popout/" + App.Settings.GeneralSettings.Username + "/chat?popout=");
+                        NavigateToUrl("https://www.twitch.tv/popout/" + App.Settings.GeneralSettings.Username + "/chat?popout=");
                 }
                 else if (chatType == ChatTypes.KapChat)
                 {
@@ -1147,20 +1203,20 @@ public partial class MainWindow : Window, BrowserWindow
                         if (string.IsNullOrEmpty(App.Settings.GeneralSettings.jChatURL))
                         {
                             string localIndex = LocalHtmlHelper.GetIndexHtmlPath();
-                            webView.CoreWebView2.Navigate(new Uri(localIndex).AbsoluteUri);
+                            NavigateToUrl(new Uri(localIndex).AbsoluteUri);
                         }
                         else
-                            SetCustomChatAddress(App.Settings.GeneralSettings.jChatURL);
+                            NavigateToUrl(App.Settings.GeneralSettings.jChatURL);
                     }
                     else
                     {
                         if (string.IsNullOrEmpty(App.Settings.GeneralSettings.jChatURL))
                         {
                             string localIndex = LocalHtmlHelper.GetIndexHtmlPath();
-                            webView.CoreWebView2.Navigate(new Uri(localIndex).AbsoluteUri);
+                            NavigateToUrl(new Uri(localIndex).AbsoluteUri);
                         }
                         else
-                            SetCustomChatAddress(App.Settings.GeneralSettings.jChatURL);
+                            NavigateToUrl(App.Settings.GeneralSettings.jChatURL);
                     }
 
 
@@ -1420,12 +1476,12 @@ public partial class MainWindow : Window, BrowserWindow
         if ((App.Settings.GeneralSettings.ChatType == (int)ChatTypes.CustomURL) && (!string.IsNullOrWhiteSpace(App.Settings.GeneralSettings.CustomURL)))
         {
             this._currentChat = new CustomURLChat(ChatTypes.CustomURL);
-            SetCustomChatAddress(App.Settings.GeneralSettings.CustomURL);
+            NavigateToUrl(App.Settings.GeneralSettings.CustomURL);
         }
         else if ((App.Settings.GeneralSettings.ChatType == (int)ChatTypes.TwitchPopout) && (!string.IsNullOrEmpty(App.Settings.GeneralSettings.Username)))
         {
             this._currentChat = new CustomURLChat(ChatTypes.TwitchPopout);
-            SetCustomChatAddress("https://www.twitch.tv/popout/" + App.Settings.GeneralSettings.Username + "/chat?popout=");
+            NavigateToUrl("https://www.twitch.tv/popout/" + App.Settings.GeneralSettings.Username + "/chat?popout=");
         }
         else if (!string.IsNullOrWhiteSpace(App.Settings.GeneralSettings.Username))
         { // TODO: need to clean this up to determine which type of chat to load better
@@ -1439,18 +1495,18 @@ public partial class MainWindow : Window, BrowserWindow
                 if (string.IsNullOrEmpty(App.Settings.GeneralSettings.jChatURL))
                 {
                     string localIndex = LocalHtmlHelper.GetJChatIndexPath();
-                    webView.CoreWebView2.Navigate(new Uri(localIndex).AbsoluteUri);
+                    NavigateToUrl(new Uri(localIndex).AbsoluteUri);
                 }
                 else
                 {
                     this._currentChat = new jCyan();
-                    SetCustomChatAddress(App.Settings.GeneralSettings.jChatURL);
+                    NavigateToUrl(App.Settings.GeneralSettings.jChatURL);
                 }
             }
             else
             {
                 string localIndex = LocalHtmlHelper.GetIndexHtmlPath();
-                webView.CoreWebView2.Navigate(new Uri(localIndex).AbsoluteUri);
+                NavigateToUrl(new Uri(localIndex).AbsoluteUri);
             }
         }
         else if (App.Settings.GeneralSettings.ChatType == (int)ChatTypes.jCyan)
@@ -1458,18 +1514,18 @@ public partial class MainWindow : Window, BrowserWindow
             if (string.IsNullOrEmpty(App.Settings.GeneralSettings.jChatURL))
             {
                 string localIndex = LocalHtmlHelper.GetJChatIndexPath();
-                webView.CoreWebView2.Navigate(new Uri(localIndex).AbsoluteUri);
+                NavigateToUrl(new Uri(localIndex).AbsoluteUri);
             }
             else
             {
                 this._currentChat = new jCyan();
-                SetCustomChatAddress(App.Settings.GeneralSettings.jChatURL);
+                NavigateToUrl(App.Settings.GeneralSettings.jChatURL);
             }
         }
         else
         {
             string localIndex = LocalHtmlHelper.GetIndexHtmlPath();
-            webView.CoreWebView2.Navigate(new Uri(localIndex).AbsoluteUri);
+            NavigateToUrl(new Uri(localIndex).AbsoluteUri);
 
             //CefSharp.WebBrowserExtensions.LoadHtml(Browser1,
             //"<html><body style=\"font-size: x-large; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; \">Load a channel to connect to by right-clicking the tray icon.<br /><br />You can move and resize the window, then press the [o] button to hide borders, or use the tray icon menu.</body></html>");

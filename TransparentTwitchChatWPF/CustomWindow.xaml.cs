@@ -1,10 +1,11 @@
 ﻿using Jot;
-using Microsoft.Web.WebView2.Core;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Controls;
+using Microsoft.Web.WebView2.Core;
+using Microsoft.Web.WebView2.Wpf;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 using Brushes = System.Windows.Media.Brushes;
@@ -29,6 +30,8 @@ namespace TransparentTwitchChatWPF
         private readonly string _hashCode = "";
 
         private Button _closeButton;
+        private WebView2 webView;
+        private bool hasWebView2Runtime = false;
 
         // Tracked properties
         public double ZoomLevel { get; set; }
@@ -64,7 +67,7 @@ namespace TransparentTwitchChatWPF
 
             if (ZoomLevel <= 0) ZoomLevel = 1;
 
-            _ = InitializeWebViewAsync();
+            InitializeWebViewAsync();
         }
 
         public void Persist()
@@ -72,19 +75,105 @@ namespace TransparentTwitchChatWPF
             App.Settings.Tracker.Persist(this);
         }
 
-        private async Task InitializeWebViewAsync()
+        private async void InitializeWebViewAsync()
         {
-            var options = new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required");
-            options.AdditionalBrowserArguments = "--disable-background-timer-throttling";
-            string userDataFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF");
+            try
+            {
+                string version = CoreWebView2Environment.GetAvailableBrowserVersionString();
+                if (string.IsNullOrEmpty(version))
+                {
+                    hasWebView2Runtime = false;
+                    PlaceholderOverlay.Visibility = Visibility.Visible;
+                    return;
+                }
+            }
+            catch (Exception)
+            {
+                hasWebView2Runtime = false;
+                PlaceholderOverlay.Visibility = Visibility.Visible;
+                return;
+            }
 
+            hasWebView2Runtime = true;
+
+            // Make sure the placeholder overlay is hidden
+            PlaceholderOverlay.Visibility = Visibility.Collapsed;
+
+            await SetupWebViewAsync();
+        }
+
+        private async Task SetupWebViewAsync()
+        {
+            // Create and configure.
+            webView = new WebView2
+            {
+                DefaultBackgroundColor = System.Drawing.Color.Transparent
+            };
+
+            var options = new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required")
+            {
+                AdditionalBrowserArguments = "--disable-background-timer-throttling"
+            };
+            string userDataFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF");
             CoreWebView2Environment cwv2Environment = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
+
+            // Add to visual tree.
+            Grid.SetRow(webView, 1);
+            Grid.SetRowSpan(webView, 1);
+            Grid.SetZIndex(webView, 0);
+            this.mainWindowGrid.Children.Add(webView);
+
+            // Initialize and subscribe to events.
             await webView.EnsureCoreWebView2Async(cwv2Environment);
 
+            //webView.CoreWebView2InitializationCompleted += webView_CoreWebView2InitializationCompleted;
+            webView.NavigationCompleted += webView_NavigationCompleted;
+            webView.CoreWebView2.ProcessFailed += webView_CoreWebView2ProcessFailed;
+
+            // Finalize setup.
             //this.jsCallbackFunctions = new JsCallbackFunctions();
             //webView.CoreWebView2.AddHostObjectToScript("jsCallbackFunctions", this.jsCallbackFunctions);
 
             SetupBrowser();
+        }
+
+        private async void webView_CoreWebView2ProcessFailed(object sender, CoreWebView2ProcessFailedEventArgs e)
+        {
+            // It's safest to perform UI updates and re-initialization on the UI thread.
+            await Dispatcher.InvokeAsync(async () =>
+            {
+                MessageBox.Show("The web component crashed and will be reloaded.", "WebView2 Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                // --- Clean up old instance ---
+                if (webView != null)
+                {
+                    // Unsubscribe from every event to prevent memory leaks
+                    //webView.CoreWebView2InitializationCompleted -= webView_CoreWebView2InitializationCompleted;
+                    webView.NavigationCompleted -= webView_NavigationCompleted;
+
+                    // The CoreWebView2 might be null if it failed very early
+                    if (webView.CoreWebView2 != null)
+                    {
+                        webView.CoreWebView2.ProcessFailed -= webView_CoreWebView2ProcessFailed;
+                    }
+
+                    // Remove the failed control from the UI and dispose it
+                    this.mainWindowGrid.Children.Remove(webView);
+                    webView.Dispose();
+                    webView = null;
+                }
+
+                // --- Re-create using the helper function ---
+                try
+                {
+                    await SetupWebViewAsync();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Fatal error: Could not recover the WebView2 component. {ex.Message} The window will now close.", "Recovery Failed", MessageBoxButton.OK, MessageBoxImage.Stop);
+                    this.Close();
+                }
+            });
         }
 
         private void btnHide_Click(object sender, RoutedEventArgs e)
@@ -179,22 +268,24 @@ namespace TransparentTwitchChatWPF
             
             if (!string.IsNullOrWhiteSpace(this._customUrl))
             {
-                SetCustomAddress(this._customUrl);
+                NavigateToUrl(this._customUrl);
             }
         }
 
-        private void SetCustomAddress(string url)
+        private void NavigateToUrl(string url)
         {
             try
             {
-                webView.CoreWebView2.Navigate(url);
+                this.webView.CoreWebView2.Navigate(url);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message + "\n\nThis likely means the URL is invalid.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                string urlStatus = string.IsNullOrEmpty(url) ? "<Empty>" : url;
+                Debug.WriteLine($"Failed to navigate to custom chat URL: {urlStatus}\n{ex.Message}\n{ex.StackTrace}");
+                MessageBox.Show($"Failed to navigate to the custom chat URL. Please check the URL and try again.\n\nUrl: '{urlStatus}'", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        
+
         private void SetBackgroundOpacity(int opacity)
         {
             double Remap(int inputValue)

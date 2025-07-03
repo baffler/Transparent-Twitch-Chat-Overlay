@@ -28,17 +28,16 @@
     </Window.Resources>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="18"/>
-        </Grid.RowDefinitions>
+        <Grid Name="mainWindowGrid">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="18"/>
+            </Grid.RowDefinitions>
 
-        <Grid>
-            <Grid
-                x:Name="AppTitleBar"
-                Background="#5D077F"
-                ui:ThemeManager.RequestedTheme="Dark">
+            <Grid x:Name="AppTitleBar"
+                  Background="#5D077F"
+                  ui:ThemeManager.RequestedTheme="Dark">
 
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -51,7 +50,7 @@
                     <ui:TitleBarButton
                         x:Name="btnSettings"
                         Click="btnSettings_Click">
-                        
+
                         <ui:TitleBarButton.ContextMenu>
                             <ContextMenu x:Name="settingsBtnContextMenu" ui:ThemeManager.RequestedTheme="Dark">
                                 <MenuItem Header="Twitch Chat Overlay" IsEnabled="False" />
@@ -88,19 +87,44 @@
                                 Fill="Transparent"
                                 Stroke="White"
                                 StrokeThickness="2" />
-                                <Line X1="1" Y1="1" X2="17" Y2="17" Stroke="White" StrokeThickness="2" />
+                            <Line X1="1" Y1="1" X2="17" Y2="17" Stroke="White" StrokeThickness="2" />
                         </Grid>
                     </ui:TitleBarButton>
                 </ui:SimpleStackPanel>
             </Grid>
+
+            <Border Grid.Row="1" Name="overlay" Background="black" Opacity="0.01" Panel.ZIndex="1"/>
+            <Border Name="FooterBar" Grid.Row="3" Opacity="0.1" Panel.ZIndex="2" Background="Black" />
+
+            <Grid x:Name="PlaceholderOverlay" Background="#80000000" Visibility="Collapsed">
+
+                <Border HorizontalAlignment="Center" 
+            VerticalAlignment="Center"
+            Background="#FF2D2D30"
+            CornerRadius="8"
+            MaxWidth="400"
+            Padding="25">
+                    <Border.Effect>
+                        <DropShadowEffect ShadowDepth="0" BlurRadius="15" Opacity="0.5" Color="Black"/>
+                    </Border.Effect>
+
+                    <StackPanel>
+                        <TextBlock Text="Additional Component Required"
+                           Foreground="White"
+                           FontSize="20"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"/>
+
+                        <TextBlock x:Name="PlaceHolderOverlayText"
+                           Text="To display web content, this application needs the free WebView2 Runtime from Microsoft. Please check the main window for more info."
+                           Foreground="#DDFFFFFF"
+                           FontSize="14"
+                           TextWrapping="Wrap"
+                           Margin="0,15,0,25"
+                           TextAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Grid>
-        
-        <wv2:WebView2
-            Grid.Row="1"
-            Name="webView" 
-            DefaultBackgroundColor="Transparent"
-            NavigationCompleted="webView_NavigationCompleted" />
-        <Border Grid.Row="1" Name="overlay" Background="black" Opacity="0.01" Panel.ZIndex="1"/>
-        <Border Name="FooterBar" Grid.Row="3" Opacity="0.1" Panel.ZIndex="2" Background="Black" />
     </Grid>
 </Window>
