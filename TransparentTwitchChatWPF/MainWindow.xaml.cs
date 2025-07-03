@@ -129,6 +129,7 @@ using System.Windows.Navigation;
 using System.Windows.Threading;
 using TransparentTwitchChatWPF.Twitch;
 using TransparentTwitchChatWPF.Utils;
+using TransparentTwitchChatWPF.View;
 using Velopack;
 
 /// <summary>
@@ -733,6 +734,11 @@ public partial class MainWindow : Window, BrowserWindow
         e.Handled = true;
     }
 
+    private void MenuItem_CheckForUpdates(object sender, RoutedEventArgs e)
+    {
+        _ = CheckForUpdateAsync(notifyIfNoUpdate: true);
+    }
+
     private void btnHide_Click(object sender, RoutedEventArgs e)
     {
         if (!hasWebView2Runtime) return;
@@ -1075,7 +1081,7 @@ public partial class MainWindow : Window, BrowserWindow
         };
 
         settingsWindow.CheckForUpdateRequested += () => {
-            _ = CheckForUpdateAsync(notifyIfNoUpdate: true);
+            _ = CheckForUpdateAsync(notifyIfNoUpdate: true, settingsWindow);
         };
 
         // Settings were saved
@@ -1288,9 +1294,13 @@ public partial class MainWindow : Window, BrowserWindow
         }
     }
 
-    private async Task CheckForUpdateAsync(bool notifyIfNoUpdate = false)
+    private async Task CheckForUpdateAsync(bool notifyIfNoUpdate = false, Window? owner = null)
     {
-#if !DEBUG
+#if DEBUG
+        var dialog = new UpdateDialog("1.1.0", "1.1.5");
+        dialog.Owner = owner;
+        dialog.ShowDialog();
+#else
         _logger.LogInformation("Checking for updates...");
 
         var mgr = new UpdateManager(new GithubSource("https://github.com/baffler/Transparent-Twitch-Chat-Overlay", null, false));
@@ -1300,38 +1310,45 @@ public partial class MainWindow : Window, BrowserWindow
             var newVersion = await mgr.CheckForUpdatesAsync();
 
             App.Settings.GeneralSettings.LastUpdateCheck = DateTime.Now;
-            App.Settings.Persist(); // Save the last update check time
 
             if (newVersion == null)
             {
                 _logger.LogInformation("No updates available.");
                 if (notifyIfNoUpdate)
                 {
-                    MessageBox.Show("No updates available at this time.", "No Updates", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("You're up to date!", "No Updates", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 return; // no update available
             }
 
-            string currentVersion = "0.0.0";
-            if (mgr.CurrentVersion != null)
-            {
-                currentVersion = mgr.CurrentVersion.ToString();
-            }
+            string currentVersionStr = mgr.CurrentVersion?.ToString() ?? "0.0.0";
+            string newVersionStr = newVersion.TargetFullRelease.Version.ToString();
 
-            string newVersionString = "?.?.?";
-            if (newVersion.TargetFullRelease != null)
-            {
-                newVersionString = newVersion.TargetFullRelease.Version.ToString();
-            }
+            // Create and show the custom dialog
+            var dialog = new UpdateDialog(currentVersionStr, newVersionStr, newVersion.TargetFullRelease);
+            dialog.Owner = owner;
 
-            if (MessageBox.Show($"New Version [v{newVersionString}] is available.\n(Currently on [v{currentVersion}])\n\nWould you like to update now?",
-                        "New Version Available",
-                        MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.Yes) == MessageBoxResult.Yes)
+            // ShowDialog() pauses execution until the window is closed
+            if (dialog.ShowDialog() == true)
             {
-                _logger.LogInformation($"Downloading and applying update to version {newVersion.TargetFullRelease.Version}...");
+                // User clicked "Update Now"
+                _logger.LogInformation($"Downloading and applying update to version {newVersionStr}...");
                 await mgr.DownloadUpdatesAsync(newVersion);
                 mgr.ApplyUpdatesAndRestart(newVersion);
             }
+            else
+            {
+                // User clicked "Later" or closed the window.
+                // Now, check if they want to disable future updates.
+                if (dialog.ShouldDisableUpdates)
+                {
+                    _logger.LogInformation("User has disabled automatic update checks.");
+                    App.Settings.GeneralSettings.CheckForUpdates = false;
+                }
+            }
+
+            // Persist settings if they have changed
+            App.Settings.Persist();
         }
         catch (Exception ex)
         {

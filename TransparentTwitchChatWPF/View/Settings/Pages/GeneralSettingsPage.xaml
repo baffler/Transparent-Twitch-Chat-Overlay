@@ -35,7 +35,7 @@
                     />
                 <Button 
                     Name="btnCheckForUpdatesNow" 
-                    Content="Check For Update Now" 
+                    Content="Check For Updates Now" 
                     Margin="20,5"
                     Click="btnCheckForUpdatesNow_Click"/>
                 <CheckBox 

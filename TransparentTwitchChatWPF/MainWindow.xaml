@@ -50,6 +50,7 @@
                         <Separator />
                         <MenuItem Header="Reset Window" Click="MenuItem_ResetWindowClick" />
                         <Separator />
+                        <MenuItem Header="Check for updates" Click="MenuItem_CheckForUpdates" />
                         <MenuItem Header="GitHub latest release" Click="MenuItem_VisitWebsite" />
                         <MenuItem Header="Exit" Click="MenuItem_Exit" />
                     </ContextMenu>
@@ -92,6 +93,7 @@
                                 <MenuItem x:Name="menuItemBringToTop" Header="Bring To Top" Click="MenuItem_BringToTopTimer" />
                                 <Separator />
                                 <MenuItem Header="GitHub latest release" Click="MenuItem_VisitWebsite" />
+                                <MenuItem Header="Check for updates" Click="MenuItem_CheckForUpdates" />
                             </ContextMenu>
                         </ui:TitleBarButton.ContextMenu>
                         <Grid>

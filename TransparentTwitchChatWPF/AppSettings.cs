@@ -38,23 +38,29 @@ public class AppSettings
 
     public AppSettings()
     {
-        Tracker = new Tracker(new JsonFileStore(UserDataFolder));
-
-        //DisplaySettings = new DisplaySettings();
-
-        // Attempt to migrate settings from the old format.
-        var migratedSettings = SettingsMigrator.AttemptMigration(this.Tracker);
-
-        if (migratedSettings != null)
+        if (AppInfo.IsPortable)
         {
-            Debug.WriteLine("Migrate GeneralSettings");
-            // If migration was successful, use the migrated settings object.
-            this.GeneralSettings = migratedSettings;
+            UserDataFolder = Path.Combine(AppContext.BaseDirectory, "settings");
+            Tracker = new Tracker(new JsonFileStore(UserDataFolder));
+            this.GeneralSettings = new GeneralSettings();
         }
         else
         {
-            // Defaults are within the class constructor now
-            this.GeneralSettings = new GeneralSettings();
+            Tracker = new Tracker(new JsonFileStore(UserDataFolder));
+            // Attempt to migrate settings from the old format.
+            var migratedSettings = SettingsMigrator.AttemptMigration(this.Tracker);
+
+            if (migratedSettings != null)
+            {
+                Debug.WriteLine("Migrate GeneralSettings");
+                // If migration was successful, use the migrated settings object.
+                this.GeneralSettings = migratedSettings;
+            }
+            else
+            {
+                // Defaults are within the class constructor now
+                this.GeneralSettings = new GeneralSettings();
+            }
         }
     }
 

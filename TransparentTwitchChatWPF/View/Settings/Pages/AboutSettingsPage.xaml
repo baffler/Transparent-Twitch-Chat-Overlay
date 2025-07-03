@@ -8,43 +8,78 @@
              xmlns:ui="http://schemas.modernwpf.com/2019"
              ui:ThemeManager.RequestedTheme="Dark"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
-    <Grid Name="aboutGrid" Visibility="Visible" Margin="10,0,0,0" Grid.Row="0">
-        <Label 
-        Margin="0,10,0,0"
-        Content="Twitch Chat Overlay" />
-        <TextBlock Margin="5,30,0,0">Version
-            <Run Text="{x:Static ttc:SettingsSingleton.Version}" />
-        </TextBlock>
-        <Label 
-        Margin="0,50,0,0"
-        Content="Created by Baffler" />
-        <Label 
-        Margin="0,70,0,0">
-            <Hyperlink NavigateUri = "https://github.com/baffler/Transparent-Twitch-Chat-Overlay"
-                   Hyperlink.RequestNavigate = "Hyperlink_RequestNavigate" >
-                <TextBlock Text="https://github.com/baffler/Transparent-Twitch-Chat-Overlay" />
-            </Hyperlink>
-        </Label>
-        <Label 
-        Margin="0,110,0,0"
-        Content="Issues and/or Feature Requests" />
-        <Label 
-        Margin="0,130,0,0">
-            <Hyperlink NavigateUri = "https://github.com/baffler/Transparent-Twitch-Chat-Overlay/issues"
-                   Hyperlink.RequestNavigate = "Hyperlink_RequestNavigate" >
-                <TextBlock Text="https://github.com/baffler/Transparent-Twitch-Chat-Overlay/issues" />
-            </Hyperlink>
-        </Label>
-        <Label 
-        Margin="0,170,0,0"
-        Content="Wiki for usage and Frequently Asked Questions" />
-        <Label 
-        Margin="0,190,0,0">
-            <Hyperlink NavigateUri = "https://github.com/baffler/Transparent-Twitch-Chat-Overlay/wiki"
-                   Hyperlink.RequestNavigate = "Hyperlink_RequestNavigate" >
-                <TextBlock Text="https://github.com/baffler/Transparent-Twitch-Chat-Overlay/wiki" />
-            </Hyperlink>
-        </Label>
+             d:DesignHeight="500" d:DesignWidth="800">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+    </UserControl.Resources>
+
+    <Grid>
+        <Border MaxWidth="600"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="{ui:ThemeResource SystemControlPageBackgroundChromeLowBrush}"
+                CornerRadius="{ui:ThemeResource ControlCornerRadius}"
+                BorderBrush="{ui:ThemeResource SystemControlTransientBorderBrush}"
+                BorderThickness="1"
+                Padding="24">
+
+            <ui:SimpleStackPanel Spacing="12">
+
+                <ui:SimpleStackPanel Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center">
+                    <Viewbox Width="48" Height="48">
+                        <ui:SymbolIcon Foreground="{ui:ThemeResource SystemControlPageTextBaseMediumBrush}" Symbol="Comment"/>
+                    </Viewbox>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Twitch Chat Overlay" Style="{StaticResource TitleTextBlockStyle}" />
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Version " Foreground="{ui:ThemeResource SystemControlPageTextBaseMediumBrush}"/>
+                            <TextBlock Text="{x:Static ttc:AppInfo.Version}" Foreground="{ui:ThemeResource SystemControlPageTextBaseMediumBrush}"/>
+                            <TextBlock Text=" (portable)" Foreground="{ui:ThemeResource SystemControlPageTextBaseMediumBrush}"
+                                       Visibility="{Binding Path=(ttc:AppInfo.IsPortable), Converter={StaticResource BoolToVisibilityConverter}}" />
+                        </StackPanel>
+                    </StackPanel>
+                </ui:SimpleStackPanel>
+
+                <TextBlock Text="Created by Baffler" HorizontalAlignment="Center" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,12"/>
+
+                <Separator />
+
+                <TextBlock Text="Resources" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,8,0,0"/>
+
+                <ui:HyperlinkButton NavigateUri="https://github.com/baffler/Transparent-Twitch-Chat-Overlay">
+                    <ui:SimpleStackPanel Orientation="Horizontal" Spacing="8">
+                        <ui:SymbolIcon Symbol="Link"/>
+                        <TextBlock Text="GitHub Repository"/>
+                    </ui:SimpleStackPanel>
+                </ui:HyperlinkButton>
+
+                <ui:HyperlinkButton NavigateUri="https://github.com/baffler/Transparent-Twitch-Chat-Overlay/issues">
+                    <ui:SimpleStackPanel Orientation="Horizontal" Spacing="8">
+                        <ui:SymbolIcon Symbol="Repair" />
+                        <TextBlock Text="Report an Issue or Request a Feature"/>
+                    </ui:SimpleStackPanel>
+                </ui:HyperlinkButton>
+
+                <ui:HyperlinkButton NavigateUri="https://github.com/baffler/Transparent-Twitch-Chat-Overlay/wiki">
+                    <ui:SimpleStackPanel Orientation="Horizontal" Spacing="8">
+                        <ui:SymbolIcon Symbol="Help"/>
+                        <TextBlock Text="Wiki &amp; FAQ"/>
+                    </ui:SimpleStackPanel>
+                </ui:HyperlinkButton>
+
+                <Separator/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
+                    <ui:SymbolIcon Symbol="Favorite">
+                        <ui:SymbolIcon.Foreground>
+                            <SolidColorBrush Color="{ui:ThemeResource SystemAccentColor}" />
+                        </ui:SymbolIcon.Foreground>
+                    </ui:SymbolIcon>
+                    <TextBlock Text="Made with WebView2, TwitchLib, ModernWPF, Velopack" Foreground="{ui:ThemeResource SystemControlPageTextBaseMediumBrush}"/>
+                </StackPanel>
+
+            </ui:SimpleStackPanel>
+        </Border>
     </Grid>
 </UserControl>

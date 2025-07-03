@@ -119,8 +119,20 @@ namespace TransparentTwitchChatWPF
                 mainWindow.Show();
             }
             catch (Exception ex) {
-                MessageBox.Show("An exception occurred On Startup. Note you can click on this message box to focus it, then press Ctrl-C to copy the entire message.\n\n" + ex.Message.ToString(),
+                var msg = "An exception occurred On Startup. Note you can click on this message box to focus it, then press Ctrl-C to copy the entire message.\n\n" + ex.Message.ToString();
+                if (ex.InnerException != null)
+                {
+                    msg += "\n\n" + ex.InnerException.ToString();
+                }
+                if (ex.StackTrace != null)
+                {
+                    msg += "\n\n" + ex.StackTrace.ToString();
+                }
+
+                MessageBox.Show(msg,
                     "Click on this message box and press Ctrl-C to copy the entire message");
+                Application.Current.Shutdown();
+                return;
             }
         }
 
@@ -177,6 +189,8 @@ namespace TransparentTwitchChatWPF
         {
             MessageBox.Show("An unhandled exception occurred. Note you can click on this message box to focus it, then press Ctrl-C to copy the entire message.\n\n" + e.ExceptionObject.ToString(),
                 "Click on this message box and press Ctrl-C to copy the entire message");
+            Application.Current.Shutdown();
+            return;
         }
     }
 }

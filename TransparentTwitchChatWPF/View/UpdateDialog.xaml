@@ -1,0 +1,80 @@
+﻿<Window x:Class="TransparentTwitchChatWPF.View.UpdateDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TransparentTwitchChatWPF.View"
+        mc:Ignorable="d"
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        ui:WindowHelper.UseModernWindowStyle="True"
+        ui:ThemeManager.RequestedTheme="Dark"
+        ui:TitleBar.ExtendViewIntoTitleBar="True"
+        Title="New Version Available"
+        SnapsToDevicePixels="True"
+        ResizeMode="NoResize"
+        WindowStyle="ToolWindow"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True"
+        Background="#121212" Width="400" Height="255">
+    <Border Padding="20" BorderThickness="1">
+        <StackPanel>
+            <TextBlock Text="A new version is available!" 
+                       Foreground="{ui:ThemeResource SystemControlPageTextBaseMediumBrush}"
+                       FontSize="18" 
+                       FontWeight="Bold" 
+                       Margin="0,0,0,10" />
+
+            <Grid Margin="0,5,0,15">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock 
+                    Grid.Row="0" 
+                    Grid.Column="0" 
+                    Text="Current Version:" 
+                    Foreground="{ui:ThemeResource SystemControlPageTextBaseMediumBrush}"
+                    FontWeight="SemiBold" 
+                    Margin="0,0,10,0" />
+                <TextBlock 
+                    Grid.Row="0" 
+                    Grid.Column="1" 
+                    x:Name="CurrentVersionText" 
+                    Text="0.0.0" 
+                    Foreground="{ui:ThemeResource SystemControlPageTextBaseMediumBrush}" />
+
+                <TextBlock 
+                    Grid.Row="1" 
+                    Grid.Column="0" 
+                    Text="New Version:" 
+                    Foreground="{ui:ThemeResource SystemControlPageTextBaseMediumBrush}"
+                    FontWeight="SemiBold" 
+                    Margin="0,5,10,0" />
+                <TextBlock 
+                    Grid.Row="1" 
+                    Grid.Column="1" 
+                    x:Name="NewVersionText" 
+                    Text="0.0.0" 
+                    Foreground="{ui:ThemeResource SystemControlPageTextBaseMediumBrush}"
+                    Margin="0,5,0,0" />
+            </Grid>
+
+            <!--<TextBlock Text="Release Notes:" Foreground="{ui:ThemeResource SystemControlPageTextBaseMediumBrush}" FontWeight="SemiBold" Margin="0,10,0,5" />
+            <ScrollViewer MaxHeight="200" VerticalScrollBarVisibility="Auto" Background="White" Padding="5" BorderBrush="#DDDDDD" BorderThickness="1">
+                <TextBlock x:Name="ReleaseNotesText" TextWrapping="Wrap" Text="Loading release notes..." />
+            </ScrollViewer>-->
+
+            <CheckBox x:Name="DisableUpdateCheckBox" Content="Don't check for updates automatically" Margin="0,20,0,0" />
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                <Button Content="Update Now" x:Name="YesButton" IsDefault="True" FontWeight="Bold" MinWidth="100" Margin="0,0,10,0" Click="YesButton_Click" />
+                <Button Content="Later" x:Name="NoButton" IsCancel="True" MinWidth="100" Click="NoButton_Click" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>
