@@ -471,8 +471,8 @@ public partial class MainWindow : Window, BrowserWindow
     public void ProcessCommandLineArgs(string[] args)
     {
         // Check if the command is our special "show window" command
-        if (args.Length > 0 && args[0] == IpcManager.ShowWindowCommand)
-        {
+        if (args.Length > 0 && args[0] == IpcManager.ShowWindowCommand) {
+            Title = "[MainWindow]";
             CheckForegroundWindow();
             return;
         }

@@ -33,112 +33,95 @@ namespace TransparentTwitchChatWPF
         {
             // Velopack needs to be able to bootstrap your application and handle updates
             VelopackApp.Build().Run();
-
+            
             var application = new App();
             application.InitializeComponent(); // loads App.xaml resources
             application.Run(); // Triggers the OnStartup event
         }
 
-        protected override async void OnStartup(StartupEventArgs e)
-        {
-            SimpleFileLogger.Log($"--- New App Instance Started. Args: {string.Join(" ", e.Args)} ---");
+        protected override async void OnStartup(StartupEventArgs e) {
+            try {
+                SimpleFileLogger.Log($"--- New App Instance Started. Args: {string.Join(" ", e.Args)} ---");
+                base.OnStartup(e);
 
-            // ALWAYS call the base method first
-            base.OnStartup(e);
-
-            Settings.Init();
-
-            // --- SINGLE-INSTANCE LOGIC ---
-            // First, check if we should enforce single-instance behavior.
-            if (!Settings.GeneralSettings.AllowMultipleInstances)
-            {
-                SimpleFileLogger.Log("Single-instance mode is active.");
-
-                SimpleFileLogger.Log("Attempting to start IPC server...");
+                Settings.Init();
 
                 // Try to become the IPC server. If it fails, another instance is already running.
                 if (!IpcManager.StartServer())
                 {
-                    SimpleFileLogger.Log("IPC server start failed. This must be a SECOND instance.");
-
-
-                    // We are a subsequent instance.
-                    // Show a message if the user just double-clicked the .exe
-                    if (e.Args.Length == 0)
-                    {
-                        SimpleFileLogger.Log("No args detected, showing 'already running' message.");
-                        MessageBox.Show("The application is already running. Check your system tray or taskbar.", "Application Running", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-
-                    // Send arguments to the first instance so it can process them (e.g., from a JumpList).
+                    // We are another instance. Always send arguments to the first instance.
                     await IpcManager.SendArgumentsToFirstInstance(e.Args);
 
-                    SimpleFileLogger.Log("Shutdown command issued for this instance.");
-                    // Immediately shut down this new instance.
-                    Application.Current.Shutdown();
-                    return; // IMPORTANT: Stop all further execution in this instance.
+                    // If it was a jump list action OR single-instance mode is on, we are done. Exit now.
+                    if (e.Args.Length > 0 || !Settings.GeneralSettings.AllowMultipleInstances)
+                    {
+                        SimpleFileLogger.Log("Shutdown command issued for this instance.");
+                        // Immediately shut down this new instance.
+                        Application.Current.Shutdown();
+                        return;
+                    }
+        
+                    // If we get here, it means:
+                    // 1. We are another instance.
+                    // 2. It was NOT a jump list action.
+                    // 3. Multi-instance IS allowed.
+                    // Therefore, we can proceed to launch a new full instance.
                 }
 
-                SimpleFileLogger.Log("IPC server started successfully. This must be the FIRST instance.");
-                // If we've reached here, we are the FIRST instance.
-                // Set up the listener for arguments from future instances.
-                IpcManager.ArgumentsReceived += ProcessCommandLineArgsFromSecondInstance;
-                // Create the JumpList, as we are the primary instance.
+                // Every full instance that runs should set up the jump list and the IPC listener.
+                // This ensures that even if the first instance is closed, the remaining ones still
+                // have correctly configured jump lists.
                 CreateJumpList();
-            }
-            else
-            {
-                SimpleFileLogger.Log("Multi-instance mode is active. Skipping IPC checks.");
-            }
-            // If AllowMultipleInstances is true, we simply skip all the logic above.
+                IpcManager.ArgumentsReceived += ProcessCommandLineArgsFromSecondInstance;
+            
+                // Hook the global unhandled exception handler
+                AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-            SimpleFileLogger.Log("Proceeding with full application startup.");
-
-            // --- COMMON STARTUP LOGIC for all instances that are allowed to run ---
-
-            // Hook the global unhandled exception handler
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-
-            // Build the Dependency Injection Host
-            Host = Microsoft.Extensions.Hosting.Host.
-            CreateDefaultBuilder().
-            UseContentRoot(AppContext.BaseDirectory).
-            ConfigureServices((context, services) =>
-            {
-                services.AddSingleton<MainWindow>();
+                // Build the Dependency Injection Host
+                Host = Microsoft.Extensions.Hosting.Host.
+                    CreateDefaultBuilder().
+                    UseContentRoot(AppContext.BaseDirectory).
+                    ConfigureServices((context, services) =>
+                    {
+                        services.AddSingleton<MainWindow>();
                 
-                services.AddTwitchLibEventSubWebsockets();
-                services.AddSingleton<TwitchService>();
-                services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<TwitchService>());
-                services.AddSingleton<ITwitchAuthService, TwitchAuthService>();
+                        services.AddTwitchLibEventSubWebsockets();
+                        services.AddSingleton<TwitchService>();
+                        services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<TwitchService>());
+                        services.AddSingleton<ITwitchAuthService, TwitchAuthService>();
 
-                // Settings pages
-                services.AddTransient<ConnectionSettingsPage>();
-                services.AddTransient<ChatSettingsPage>();
-                services.AddTransient<GeneralSettingsPage>();
-                services.AddTransient<WidgetSettingsPage>();
-                services.AddTransient<AboutSettingsPage>();
+                        // Settings pages
+                        services.AddTransient<ConnectionSettingsPage>();
+                        services.AddTransient<ChatSettingsPage>();
+                        services.AddTransient<GeneralSettingsPage>();
+                        services.AddTransient<WidgetSettingsPage>();
+                        services.AddTransient<AboutSettingsPage>();
 
-                // Main settings window
-                services.AddTransient<SettingsWindow>();
-            })
-            .ConfigureLogging(logging =>
-            {
-                logging.ClearProviders();
-                logging.AddConsole();
-                logging.AddDebug();
-                // can add other providers here, like Serilog, NLog, or a file logger.
-            })
-            .Build();
+                        // Main settings window
+                        services.AddTransient<SettingsWindow>();
+                    })
+                    .ConfigureLogging(logging =>
+                    {
+                        logging.ClearProviders();
+                        logging.AddConsole();
+                        logging.AddDebug();
+                        // can add other providers here, like Serilog, NLog, or a file logger.
+                    })
+                    .Build();
 
-            await Host.StartAsync();
+                await Host.StartAsync();
 
-            // Create and show the main window
-            var mainWindow = Host.Services.GetRequiredService<MainWindow>();
-
-            // Let the main window process its own startup arguments
-            mainWindow.ProcessCommandLineArgs(e.Args);
-            mainWindow.Show();
+                // Create and show the main window
+                var mainWindow = Host.Services.GetRequiredService<MainWindow>();
+                
+                // Let the main window process its own startup arguments
+                mainWindow.ProcessCommandLineArgs(e.Args);
+                mainWindow.Show();
+            }
+            catch (Exception ex) {
+                MessageBox.Show("An exception occurred On Startup. Note you can click on this message box to focus it, then press Ctrl-C to copy the entire message.\n\n" + ex.Message.ToString(),
+                    "Click on this message box and press Ctrl-C to copy the entire message");
+            }
         }
 
         private void CreateJumpList()

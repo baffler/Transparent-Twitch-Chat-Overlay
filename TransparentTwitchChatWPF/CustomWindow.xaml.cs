@@ -19,38 +19,41 @@ namespace TransparentTwitchChatWPF
     public partial class CustomWindow : Window, BrowserWindow
     {
 
-        MainWindow mainWindow;
-        Thickness noBorderThickness = new Thickness(0);
-        Thickness borderThickness = new Thickness(4);
-        Color borderColor = (Color)ColorConverter.ConvertFromString("#5D077F");
+        private readonly MainWindow _mainWindow;
+        private readonly Thickness _noBorderThickness = new Thickness(0);
+        private readonly Thickness _borderThickness = new Thickness(4);
+        private readonly Color _borderColor = (Color)ColorConverter.ConvertFromString("#5D077F");
 
-        bool hiddenBorders = false;
-        string customURL = "";
-        string hashCode = "";
+        private bool _hiddenBorders = false;
+        private readonly string _customUrl = "";
+        private readonly string _hashCode = "";
 
         private Button _closeButton;
 
         // Tracked properties
         public double ZoomLevel { get; set; }
+        public byte OpacityLevel { get; set; }
         public string customCSS { get; set; }
         public string customJS { get; set; }
 
         public CustomWindow(MainWindow main, string Url, string CustomCSS)
         {
-            this.mainWindow = main;
-            this.customURL = Url;
+            this._mainWindow = main;
+            this._customUrl = Url;
             ZoomLevel = 1;
+            OpacityLevel = 0;
             customCSS = CustomCSS;
             customJS = "";
 
             InitializeComponent();
 
-            hashCode = Hasher.Create64BitHash(this.customURL);
+            _hashCode = Hasher.Create64BitHash(this._customUrl);
             App.Settings.Tracker.Configure<CustomWindow>()
-                .Id(w => w.hashCode, null, false)
+                .Id(w => w._hashCode, null, false)
                 .Properties(cw => new
                 {
                     cw.ZoomLevel,
+                    cw.OpacityLevel,
                     cw.customCSS,
                     cw.customJS,
                     cw.Top, cw.Width, cw.Height, cw.Left, cw.WindowState
@@ -61,7 +64,7 @@ namespace TransparentTwitchChatWPF
 
             if (ZoomLevel <= 0) ZoomLevel = 1;
 
-            InitializeWebViewAsync();
+            _ = InitializeWebViewAsync();
         }
 
         public void Persist()
@@ -69,7 +72,7 @@ namespace TransparentTwitchChatWPF
             App.Settings.Tracker.Persist(this);
         }
 
-        async void InitializeWebViewAsync()
+        private async Task InitializeWebViewAsync()
         {
             var options = new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required");
             options.AdditionalBrowserArguments = "--disable-background-timer-throttling";
@@ -102,11 +105,11 @@ namespace TransparentTwitchChatWPF
             this.AppTitleBar.Visibility = Visibility.Visible;
             this.FooterBar.Visibility = Visibility.Visible;
             this.webView.SetValue(Grid.RowSpanProperty, 1);
-            this.BorderBrush = new SolidColorBrush(borderColor);
-            this.BorderThickness = this.borderThickness;
+            this.BorderBrush = new SolidColorBrush(_borderColor);
+            this.BorderThickness = this._borderThickness;
             this.ResizeMode = System.Windows.ResizeMode.CanResizeWithGrip;
 
-            hiddenBorders = false;
+            _hiddenBorders = false;
 
             this.Topmost = false;
             this.Activate();
@@ -128,10 +131,10 @@ namespace TransparentTwitchChatWPF
             this.FooterBar.Visibility = Visibility.Collapsed;
             this.webView.SetValue(Grid.RowSpanProperty, 2);
             this.BorderBrush = Brushes.Transparent;
-            this.BorderThickness = this.noBorderThickness;
+            this.BorderThickness = this._noBorderThickness;
             this.ResizeMode = System.Windows.ResizeMode.NoResize;
 
-            hiddenBorders = true;
+            _hiddenBorders = true;
 
             this.Topmost = false;
             this.Activate();
@@ -142,7 +145,7 @@ namespace TransparentTwitchChatWPF
 
         public void ToggleBorderVisibility()
         {
-            if (hiddenBorders)
+            if (_hiddenBorders)
                 drawBorders();
             else
                 hideBorders();
@@ -171,9 +174,12 @@ namespace TransparentTwitchChatWPF
 
         private void SetupBrowser()
         {
-            if (!string.IsNullOrWhiteSpace(this.customURL))
+            webView.DefaultBackgroundColor = System.Drawing.Color.Transparent;
+            SetBackgroundOpacity(OpacityLevel);
+            
+            if (!string.IsNullOrWhiteSpace(this._customUrl))
             {
-                SetCustomAddress(this.customURL);
+                SetCustomAddress(this._customUrl);
             }
         }
 
@@ -188,6 +194,26 @@ namespace TransparentTwitchChatWPF
                 MessageBox.Show(ex.Message + "\n\nThis likely means the URL is invalid.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        
+        private void SetBackgroundOpacity(int opacity)
+        {
+            double Remap(int inputValue)
+            {
+                double outputValue = (inputValue - 0) * (1.0 - 0.0) / (255 - 0) + 0.0;
+                return outputValue;
+            }
+
+            double remapped = Remap(opacity);
+            if (remapped <= 0)
+            {
+                //if (_interactable)  remapped = 0.01;
+                //else
+                    remapped = 0;
+            }
+            else if (remapped >= 1) remapped = 1;
+            this.overlay.Opacity = remapped;
+            this.FooterBar.Opacity = remapped;
+        }
 
         private void btnSettings_Click(object sender, RoutedEventArgs e)
         {
@@ -201,6 +227,24 @@ namespace TransparentTwitchChatWPF
             settingsBtnContextMenu.HorizontalOffset = screenPos.X;
             settingsBtnContextMenu.VerticalOffset = screenPos.Y;
             settingsBtnContextMenu.IsOpen = true;
+        }
+        
+        private void MenuItem_IncOpacity(object sender, RoutedEventArgs e)
+        {
+            OpacityLevel = (byte)Math.Clamp(OpacityLevel + 15, 0, 255);
+            SetBackgroundOpacity(OpacityLevel);
+        }
+
+        private void MenuItem_DecOpacity(object sender, RoutedEventArgs e)
+        {
+            OpacityLevel = (byte)Math.Clamp(OpacityLevel - 15, 0, 255);
+            SetBackgroundOpacity(OpacityLevel);
+        }
+
+        private void MenuItem_ResetOpacity(object sender, RoutedEventArgs e)
+        {
+            OpacityLevel = 0;
+            SetBackgroundOpacity(OpacityLevel);
         }
 
         private void MenuItem_VisitWebsite(object sender, RoutedEventArgs e)
@@ -247,7 +291,7 @@ namespace TransparentTwitchChatWPF
             this.webView.Dispatcher.Invoke(new Action(() => { SetZoomFactor(ZoomLevel); }));
 
             // Insert some custom CSS for webcaptioner.com domain
-            if (this.customURL.ToLower().Contains("webcaptioner.com"))
+            if (this._customUrl.ToLower().Contains("webcaptioner.com"))
             {
                 await this.webView.ExecuteScriptAsync(InsertCustomCSS(CustomCSS_Defaults.WebCaptioner));
             }
@@ -298,7 +342,7 @@ namespace TransparentTwitchChatWPF
 
             if (MessageBox.Show("This will delete the settings for this window. Are you sure?", "Remove Window", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
             {
-                this.mainWindow.RemoveCustomWindow(this.customURL);
+                this._mainWindow.RemoveCustomWindow(this._customUrl);
 
                 // TODO: Remove the tracking configuration for this window
                 /*string path = (Services.Tracker.StoreFactory as Jot.Storage.JsonFileStoreFactory).StoreFolderPath;
@@ -339,10 +383,7 @@ namespace TransparentTwitchChatWPF
                     }
                 }
             }
-            catch //(Exception ex)
-            {
-                //MessageBox.Show($"Failed to hide close button: {ex.Message}");
-            }
+            catch {}
         }
 
         public void SetTopMost(bool topMost)

@@ -60,6 +60,11 @@
                                     <MenuItem Header="- Zoom Out" Click="MenuItem_ZoomOut" StaysOpenOnClick="True" />
                                     <MenuItem Header="Reset" Click="MenuItem_ZoomReset" />
                                 </MenuItem>
+                                <MenuItem Header="Opacity Level">
+                                    <MenuItem Header="+ Increase" Click="MenuItem_IncOpacity" StaysOpenOnClick="True" />
+                                    <MenuItem Header="- Decrease" Click="MenuItem_DecOpacity" StaysOpenOnClick="True" />
+                                    <MenuItem Header="Reset" Click="MenuItem_ResetOpacity" />
+                                </MenuItem>
                                 <MenuItem Header="Edit Custom CSS" Click="MenuItem_EditCSSClick" />
                                 <MenuItem Header="Show Dev Tools" Click="MenuItem_DevToolsClick" />
                                 <Separator />
