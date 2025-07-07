@@ -1,4 +1,74 @@
-applyStyles("size", sizes[2]);
+function initializePreview() {
+    sizeUpdate();
+    heightUpdate();
+    fontUpdate();
+    strokeUpdate();
+    weightUpdate();
+    shadowUpdate();
+    badgesUpdate();
+    paintsUpdate();
+    colonUpdate();
+    capsUpdate();
+    smsUpdate();
+    centerUpdate();
+    bigEmoteUpdate();
+    pronounsUpdate();
+}
+
+function populateFormFromSettings(settings) {
+    if (!settings) {
+        console.error("No settings object provided from host.");
+        return;
+    }
+
+    // --- Populate Text Inputs ---
+    $channel.val(settings.channel);
+    $ytChannel.val(settings.yt);
+    $regex.val(settings.regex);
+    $blockedUsers.val(settings.blockedUsers);
+    $messageImage.val(settings.messageImage);
+    $custom_font.val(settings.font); // Assuming font name is stored here if custom
+
+    // --- Populate Dropdowns ---
+    $size.val(settings.size);
+    $emoteScale.val(settings.emoteScale);
+    $scale.val(settings.scale);
+    $height.val(settings.height);
+    $voice.val(settings.voice);
+    $stroke.val(settings.stroke);
+    $weight.val(settings.weight);
+    $shadow.val(settings.shadow);
+    $pronounColorMode.val(settings.pronounColorMode);
+
+    // If the font is not a custom one, set the dropdown by its value
+    if (fonts.includes(settings.font)) {
+        $font.val(fonts.indexOf(settings.font));
+    }
+
+    // --- Populate Checkboxes ---
+    $animate.prop('checked', settings.animate);
+    $bots.prop('checked', settings.showBots);
+    $commands.prop('checked', settings.hideCommands);
+    $fade_bool.prop('checked', settings.fade > 0);
+    if (settings.fade > 0) {
+        $fade.val(settings.fade);
+    }
+    $readable.prop('checked', settings.readable);
+    $badges.prop('checked', settings.hideBadges);
+    $paints.prop('checked', settings.hidePaints);
+    $pronouns.prop('checked', settings.showPronouns);
+    $colon.prop('checked', settings.hideColon);
+    $small_caps.prop('checked', settings.smallCaps);
+    $invert.prop('checked', settings.invert);
+    $bigEmotes.prop('checked', settings.bigSoloEmotes);
+    $center.prop('checked', settings.center);
+    $sms.prop('checked', settings.sms);
+    $sync.prop('checked', settings.disableSync);
+    $pruning.prop('checked', settings.disablePruning);
+
+    // --- Finally, update the entire preview to reflect the new values ---
+    initializePreview();
+}
 
 function fadeOption(event) {
     if ($fade_bool.is(":checked")) {
@@ -118,6 +188,9 @@ document.addEventListener('DOMContentLoaded', function() {
     setupFormTransition();
     setupThemeToggle();
     generateCustomPronounColorInputs();
+    // Add responsive layout handling
+    adjustFormLayout();
+    window.addEventListener('resize', adjustFormLayout);
 
     Coloris({
       el: '.coloris',
@@ -152,9 +225,24 @@ document.addEventListener('DOMContentLoaded', function() {
       alpha: false,
       swatches: pronounColors
     });
+
+    // Initialize pronoun settings
+    pronounsUpdate();
+  
+    // Ensure form elements have consistent height
+    document.querySelectorAll('select, input[type="text"]').forEach(el => {
+        el.style.height = '42px';
+    });
     
     // Initial application of styles
-    applyStyles("size", sizes[2]);
+    //applyStyles("size", sizes[2]);
+
+    // Check if settings were injected from the C# host
+    if (window.appSettings) {
+        populateFormFromSettings(window.appSettings);
+    }
+
+    initializePreview();
 });
 
 // Unified popup show function
@@ -708,29 +796,6 @@ function toggleTheme() {
     example.classList.toggle('white');
 }
 
-// Initialize all the new UI enhancements
-document.addEventListener('DOMContentLoaded', function() {
-  popup.init();
-  initializeAnimations();
-  setupFormTransition();
-  setupThemeToggle();
-  
-  // Initial application of styles
-  applyStyles("size", sizes[2]);
-  
-  // Initialize pronoun settings
-  pronounsUpdate();
-  
-  // Add responsive layout handling
-  adjustFormLayout();
-  window.addEventListener('resize', adjustFormLayout);
-  
-  // Ensure form elements have consistent height
-  document.querySelectorAll('select, input[type="text"]').forEach(el => {
-    el.style.height = '42px';
-  });
-});
-
 // Add layout improvement functions
 
 // Adjust form layout based on screen size
@@ -830,7 +895,76 @@ function generateURL(event) {
     $url.val(generatedUrl + "&" + params);
 }
 
-// --- Start of New Code ---
+function getSettingsData() {
+    // Helper function to get the selected font name
+    var selectedFont;
+    if (fonts[Number($font.val())] === "Custom") {
+        selectedFont = $custom_font.val();
+    } else {
+        selectedFont = $font.val();
+    }
+
+    // 1. Gather all settings into a single object
+    const settings = {
+        // Channel Settings
+        channel: $channel.val(),
+        yt: $ytChannel.val().replace('@', ''),
+
+        // Appearance Settings
+        size: parseInt($size.val(), 10),
+        emoteScale: parseInt($emoteScale.val(), 10),
+        scale: parseFloat($scale.val()),
+        font: selectedFont,
+        height: parseInt($height.val(), 10),
+        weight: parseInt($weight.val(), 10),
+        stroke: parseInt($stroke.val(), 10),
+        shadow: parseInt($shadow.val(), 10),
+        
+        // Behavior & Filtering
+        animate: $animate.is(":checked"),
+        showBots: $bots.is(":checked"),
+        hideCommands: $commands.is(":checked"),
+        fade: $fade_bool.is(":checked") ? parseInt($fade.val(), 10) : 0,
+        readable: $readable.is(":checked"),
+        hideBadges: $badges.is(":checked"),
+        hidePaints: $paints.is(":checked"),
+        showPronouns: $pronouns.is(":checked"),
+        hideColon: $colon.is(":checked"),
+        smallCaps: $small_caps.is(":checked"),
+        invert: $invert.is(":checked"),
+        bigSoloEmotes: $bigEmotes.is(":checked"),
+        center: $center.is(":checked"),
+        sms: $sms.is(":checked"),
+        messageImage: $sms.is(":checked") ? $messageImage.val() : null,
+        
+        // Disabled Features
+        disableSync: $sync.is(":checked"),
+        disablePruning: $pruning.is(":checked"),
+        disabledCommands: [
+            $disableTTS.is(":checked") ? 'tts' : null,
+            $disableRickroll.is(":checked") ? 'rickroll' : null,
+            $disableYTPlay.is(":checked") ? 'ytplay' : null,
+            $disableYTStop.is(":checked") ? 'ytstop' : null,
+            $disableIMG.is(":checked") ? 'img' : null
+        ].filter(cmd => cmd !== null).join(','),
+        
+        // Advanced Filtering
+        regex: $regex.val(),
+        blockedUsers: $blockedUsers.val().replace(/\s+/g, ""),
+
+        // TTS Voice
+        voice: $voice.val(),
+
+        // Pronoun Customization
+        pronounColorMode: $pronounColorMode.val(),
+        pronounSingleColor1: $pronounColorMode.val() === "single" ? $pronounColor1.val() : null,
+        pronounSingleColor2: $pronounColorMode.val() === "single" ? $pronounColor2.val() : null,
+        pronounCustomColors: $pronounColorMode.val() === "custom" ? getPronounCustomColors() : null,
+    };
+
+    // 2. Return the settings object as a JSON string
+    return JSON.stringify(settings);
+}
 
 // This new function will handle sending settings to your C# app
 function sendSettingsToHost(event) {

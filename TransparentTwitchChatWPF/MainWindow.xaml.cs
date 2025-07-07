@@ -452,7 +452,7 @@ public partial class MainWindow : Window, BrowserWindow
     private void ApplyVirtualHostMappings(CoreWebView2 core)
     {
         core.SetVirtualHostNameToFolderMapping(
-            "nativechat.overlay",
+            OverlayPathHelper.GetNativeChatHostname(),
             OverlayPathHelper.GetNativeChatPath(),
             CoreWebView2HostResourceAccessKind.DenyCors);
     }

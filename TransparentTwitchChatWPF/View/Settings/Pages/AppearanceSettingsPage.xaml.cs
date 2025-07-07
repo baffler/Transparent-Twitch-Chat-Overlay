@@ -61,6 +61,10 @@ public partial class AppearanceSettingsPage : UserControl
         webView.CoreWebView2.SetVirtualHostNameToFolderMapping("nativechat.overlay",
             OverlayPathHelper.GetNativeChatPath(), CoreWebView2HostResourceAccessKind.DenyCors);
 
+        string jsonSettings = JsonSerializer.Serialize(App.Settings.jChatSettings);
+        var script = $"window.appSettings = {jsonSettings};";
+        await webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(script);
+
         await NavigateToUrl(new Uri("https://nativechat.overlay/index.html").AbsoluteUri);
     }
 
@@ -88,6 +92,29 @@ public partial class AppearanceSettingsPage : UserControl
         {
             // Clear the browser cache. You can add other data types to clear if needed.
             await this.webView.CoreWebView2.Profile.ClearBrowsingDataAsync();
+        }
+    }
+
+    public async Task SaveValues()
+    {
+        if (webView != null && webView.CoreWebView2 != null)
+        {
+            // Execute the JavaScript function and get the JSON string
+            string jsonResult = await webView.CoreWebView2.ExecuteScriptAsync("getSettingsData()");
+            string unescapedJson = JsonSerializer.Deserialize<string>(jsonResult);
+
+            if (!string.IsNullOrEmpty(unescapedJson))
+            {
+                try
+                {
+                    App.Settings.UpdateJChatConfig(unescapedJson);
+                    MessageBox.Show("Settings saved successfully!");
+                }
+                catch (JsonException ex)
+                {
+                    MessageBox.Show($"Error parsing settings: {ex.Message}");
+                }
+            }
         }
     }
 

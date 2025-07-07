@@ -13,8 +13,8 @@ public class NativeChatProvider : IChatProvider
 {
     public Uri GetNavigationUri()
     {
-        string localIndexPath = OverlayPathHelper.GetNativeChatOverlayPath();
-        return new Uri(localIndexPath);
+        string hostName = OverlayPathHelper.GetNativeChatHostname();
+        return new Uri($"https://{hostName}/v2/index.html");
     }
 
     public Task ConfigureAsync(CoreWebView2 coreWebView2)

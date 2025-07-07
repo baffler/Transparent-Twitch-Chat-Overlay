@@ -16,8 +16,8 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=Indie+Flower&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Noto+Sans+JP:wght@100;300;400;500;700;900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Source+Code+Pro:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,900&family=Press+Start+2P&family=Wallpoet&display=swap"
         rel="stylesheet" />
-    <link rel="stylesheet" href="1d1b757205444d7bc10a.css?v=1" />
-    <link rel="stylesheet" href="bb173ca24a851856d3a6.css?v=1" />
+    <link rel="stylesheet" href="6ea0f8384c22b7fcfe6b.css?v=1" />
+    <link rel="stylesheet" href="9ab26c5e41ebf19db0f3.css?v=1" />
     <link rel="stylesheet" href="f403b409f620bf5eea6b.css"/>
     <script src="5740064f0d9fcab6ddef.js"></script>
     <script src="8ed75762fc01d436a20d.js"></script>
@@ -25,7 +25,8 @@
     <script src="bb35e44d5e3b211550f5.js" defer></script>
     <script src="3d7eea52462fac7995ee.js"></script>
     <script src="229ec37a399e19b37841.js"></script>
-    <script src="7ce1d60f1c02e4cd742d.js" defer></script>
+    <script src="19135c1bbd17b500b593.js?v=12" defer></script>
+
     <script src="06c978abfb0ab5239c60.js"></script>
 
     <style>
@@ -233,7 +234,7 @@
             display: flex;
         }
     </style>
-<script defer src="index.8d888bbec6bc52d420fd.js?2add92fd73a011ac282a"></script><script defer src="v2.efc1c66f316ead35a443.js?2add92fd73a011ac282a"></script></head>
+<script defer src="index.f1d3eb26b5c139bde8bc.js?3ff045306d176b07cc9a"></script><script defer src="v2.9586e8983fe6110fe46d.js?3ff045306d176b07cc9a"></script></head>
 
 <body>
     <div id="popupOverlay" class="popup-overlay">
@@ -249,23 +250,15 @@
         </div>
     </div>
 
-    <header class="elevation-2">
-        <img src="bef8c529a6ddd1ff89c4.webp" alt="Native Chat Logo" />
+    <!-- <header class="elevation-2">
+        <img src="img/ttco.webp" alt="Native Chat Logo" />
         <div>
-            <h1>Twitch Chat Overlay: Native Chat</h1>
+            <h2>Native Chat: Appearance</h2>
         </div>
-    </header>
+    </header> -->
 
     <section>
-        <div class="card elevation-2 slideUp">
-            <p>
-                <em>Native Chat</em> is a static, self-hosted chat overlay for use with Transparent Twitch Chat Overlay. 
-                Forked from Cyan Chat (originally based on JChat), it runs from local files to ensure fast, reliable 
-                rendering without requiring a remote web server. You can customize the overlay below with many options.
-            </p>
-        </div>
-
-        <details class="elevation-2 slideUp">
+        <!-- <details class="elevation-2 slideUp">
             <summary>Commands</summary>
             <div class="details-content">
                 <p>
@@ -309,7 +302,7 @@
                     <li>Raveena (Indian)</li>
                 </ul>
             </div>
-        </details>
+        </details> -->
 
         <form name="generator" class="card elevation-3 slideUp">
             <div class="main-section-header">
@@ -759,10 +752,11 @@
                                     style="visibility: visible" /></span>
                         </div>
                     </div>
-                    <button type="submit" class="generate-button">
+                    <h4>Remember to press the "Save" button to apply the settings!</h4>
+                    <!-- <button type="submit" class="generate-button">
                         <span class="button-text">Save and Apply</span>
                         <span class="button-icon">➜</span>
-                    </button>
+                    </button> -->
                 </div>
             </div>
         </form>
@@ -772,8 +766,7 @@
             <h3>Your Overlay URL</h3>
             <input type="text" id="url" readonly />
             <p>
-                Configure a new browser source on your streaming software with the
-                given URL.
+                ...
             </p>
             <div class="button-group">
                 <button id="go-back" class="secondary-button">
@@ -817,22 +810,16 @@
     </div>
 
     <div id="message-pruning-content" style="display:none;">
-        <p>Automatically removes messages that pass the top of the screen. Increases performance and IMO makes chat look nicer.</p>
-        <br>
-        <p>To see effect in OBS make sure not to crop the top of the browser source.</p>
-        <br>
-        <p>Potential downside: A very short chat size has the potential to clear any new message that is too long.</p>
+        <p>Automatically removes messages that pass the top of the screen.</p>
+        <p>Increases performance and can make the chat look nicer.</p>
     </div>
 
     <div id="sms-theme-content" style="display:none;">
-        <p>A cute SMS chat bubble styled theme that includes its own custom animations</p>
-        <br>
-        <p>Because this makes messages taller I recommend setting a fairly low fade time like 5s</p>
-        <br>
-        <p>Also the image in the bottom right is optional, it's just shown in the preview so you can see how it'd look</p>
-        <br>
-        <p>Incompatible with 7tv paints, text stroke, text shadow, center theme, and mention colors. This is due to readability on dynamically colored backgrounds.</p>
+        <p>SMS-style chat bubbles with custom animations. Messages are taller, so a short fade time (e.g., 5s) is recommended.</p>
+        <p>The bottom-right image is optional, shown only in the preview.</p>
+        <p>Not compatible with 7tv paints, text stroke/shadow, center theme, or mention colors for readability reasons.</p>
     </div>
+
 </body>
 
 </html>

@@ -53,12 +53,14 @@ public partial class SettingsWindow : Window
         SettingsContentControl.Content = _chatSettingsPage;
     }
 
-    private void OKButton_Click(object sender, RoutedEventArgs e)
+    private async void OKButton_Click(object sender, RoutedEventArgs e)
     {
+        App.Settings.GeneralSettings.ChatType = this.comboChatType.SelectedIndex;
+
         _generalSettingsPage.SaveValues();
         _chatSettingsPage.SaveValues();
+        await _appearanceSettingsPage.SaveValues();
 
-        App.Settings.GeneralSettings.ChatType = this.comboChatType.SelectedIndex;
         App.Settings.Persist();
 
         DialogResult = true;

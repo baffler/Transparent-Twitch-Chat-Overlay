@@ -68,7 +68,7 @@ window.chrome.webview.addEventListener('message', event => {
       // Apply the settings and connect
       Chat.applySettings(config);
       Chat.connect(config.channel);
-      //generateTestMessages(10);
+      generateTestMessages(10);
   }
 });
 

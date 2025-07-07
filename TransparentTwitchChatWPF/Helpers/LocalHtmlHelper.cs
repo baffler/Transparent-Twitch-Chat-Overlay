@@ -59,6 +59,11 @@ namespace TransparentTwitchChatWPF.Helpers
             return Path.Combine(BrowserBasePath, "overlays", "native-chat", "v2", "index.html");
         }
 
+        public static string GetNativeChatHostname()
+        {
+            return "nativechat.overlay";
+        }
+
         /// <summary>
         /// Checks if a given overlay's base directory exists.
         /// </summary>
