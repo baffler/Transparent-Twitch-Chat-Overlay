@@ -1,0 +1,32 @@
+.message {
+  width: 45%;
+  display: block;
+  padding-left: 1em;
+}
+
+.user_info {
+  width: 50%;
+  text-align: right;
+}
+
+.nick {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 60%;
+  display: inline-block;
+  white-space: nowrap;
+  padding-left: 5px;
+  vertical-align: bottom;
+}
+
+.colon {
+  display: none;
+}
+
+.chat_line {
+  display: flex;
+}
+
+.message .emote {
+  vertical-align: top;
+}

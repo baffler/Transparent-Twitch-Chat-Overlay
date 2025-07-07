@@ -43,7 +43,7 @@
                  Margin="22,100,15,50" WordWrap="False"
                  Text="body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }" />
         </Grid>
-        <Grid Name="kapChatGrid" Visibility="Visible" Grid.Column="1">
+        <Grid Name="kapChatGrid" Visibility="Hidden" Grid.Column="1">
             <StackPanel HorizontalAlignment="Left" Orientation="Vertical" Width="127">
                 <Label Content="Username" HorizontalAlignment="Left" Margin="20,33,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                 <Label Content="Redemptions" HorizontalAlignment="Left" Margin="20,20,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
@@ -91,34 +91,37 @@
                          Text="body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }" />
             </StackPanel>
         </Grid>
-        <Grid Name="jChatGrid" Visibility="Hidden"  Grid.Column="1">
+        <Grid Name="jChatGrid" Visibility="Visible"  Grid.Column="1">
             <StackPanel HorizontalAlignment="Left" Orientation="Vertical" Width="127">
-                <Label Content="jCyan URL" HorizontalAlignment="Left" Margin="20,33,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                <Label Content="Username" HorizontalAlignment="Left" Margin="20,33,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                 <Label Content="Redemptions" HorizontalAlignment="Left" Margin="20,35,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                 <Label Content="Twitch" HorizontalAlignment="Left" Margin="20,20,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                <Label Content="Filter Settings" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                <!--<Label Content="Filter Settings" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>-->
                 <Label Content="Chat Sound" HorizontalAlignment="Left" Margin="20,35,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
             </StackPanel>
 
             <StackPanel HorizontalAlignment="Right" Orientation="Vertical" Width="274">
-                <TextBox Name="tb_jChatURL" HorizontalAlignment="Left" Height="23" Margin="20,27,0,0" TextWrapping="NoWrap" Text="URL" VerticalAlignment="Top" Width="240"/>
-                <Label 
-                    FontStyle="Italic"
-                    HorizontalAlignment="Left" 
-                    VerticalAlignment="Top"
-                    Margin="20,0,0,0">
-                    <Hyperlink NavigateUri = "https://chat.johnnycyan.com/"
-                   Hyperlink.RequestNavigate = "Hyperlink_RequestNavigate" >
-                        <TextBlock Text="Click this link to generate the URL" />
-                    </Hyperlink>
-                </Label>
+                <TextBox Name="tb_nativeChatUsername" 
+                         HorizontalAlignment="Left" 
+                         Height="23" 
+                         Margin="20,27,0,0" 
+                         TextWrapping="NoWrap" 
+                         ui:ControlHelper.PlaceholderText="Username"
+                         VerticalAlignment="Top" 
+                         Width="240"/>
+                <ui:HyperlinkButton NavigateUri="https://github.com/baffler/Transparent-Twitch-Chat-Overlay">
+                    <ui:SimpleStackPanel Orientation="Horizontal" Spacing="8">
+                        <ui:SymbolIcon Symbol="Link"/>
+                        <TextBlock Text="Go to All Settings"/>
+                    </ui:SimpleStackPanel>
+                </ui:HyperlinkButton>
                 <CheckBox Name="cbRedemptions2" Content="Community point redemptions" Margin="20,5,0,0" Checked="cbRedemptions_Checked" Unchecked="cbRedemptions_Unchecked" />
                 <TextBox Visibility="Collapsed" Name="tbUsername2" HorizontalAlignment="Left" Height="23" Margin="20,5,0,0" TextWrapping="NoWrap" Text="username" VerticalAlignment="Top" Width="240"/>
                 <StackPanel Orientation="Horizontal">
                     <Label Name="lblTwitchConnected2" Margin="20,10,0,0" Content="..." Foreground="Gray" FontWeight="Bold" />
                     <Button Visibility="Hidden" Name="btGetChannelID2" Margin="5,10,0,0" Content="Connect Twitch" Height="26" Width="100" FontSize="12" Click="btGetChannelID_Click" />
                 </StackPanel>
-                <Button Name="btOpenChatFilterSettings2" Margin="20,18,14,0" Content="Open Chat Filter Settings" Height="32" Click="btOpenChatFilterSettings_Click" />
+                <!--<Button Name="btOpenChatFilterSettings2" Margin="20,18,14,0" Content="Open Chat Filter Settings" Height="32" Click="btOpenChatFilterSettings_Click" />-->
                 <ComboBox Name="comboChatSound2" SelectedValuePath="Content" Margin="20,20,14,0" DropDownClosed="comboChatSound_DropDownClosed2" />
             </StackPanel>
         </Grid>

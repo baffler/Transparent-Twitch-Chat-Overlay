@@ -15,6 +15,7 @@ public partial class SettingsWindow : Window
     public event Action CheckForUpdateRequested;
 
     private readonly ChatSettingsPage _chatSettingsPage;
+    private readonly AppearanceSettingsPage _appearanceSettingsPage;
     private readonly GeneralSettingsPage _generalSettingsPage;
     private readonly ConnectionSettingsPage _connectionSettingsPage;
     private readonly WidgetSettingsPage _widgetSettingsPage;
@@ -23,6 +24,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow(
         ConnectionSettingsPage connectionPage,
         ChatSettingsPage chatPage,
+        AppearanceSettingsPage appearancePage,
         GeneralSettingsPage generalPage,
         WidgetSettingsPage widgetPage,
         AboutSettingsPage aboutPage)
@@ -31,6 +33,7 @@ public partial class SettingsWindow : Window
 
         _connectionSettingsPage = connectionPage;
         _chatSettingsPage = chatPage;
+        _appearanceSettingsPage = appearancePage;
         _generalSettingsPage = generalPage;
         _widgetSettingsPage = widgetPage;
         _aboutSettingsPage = aboutPage;
@@ -97,6 +100,9 @@ public partial class SettingsWindow : Window
             {
                 case "Chat":
                     SettingsContentControl.Content = _chatSettingsPage;
+                    break;
+                case "Appearance":
+                    SettingsContentControl.Content = _appearanceSettingsPage;
                     break;
                 case "General":
                     SettingsContentControl.Content = _generalSettingsPage;

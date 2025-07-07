@@ -1,0 +1,391 @@
+{
+  "data": {
+    "cosmetics": {
+      "paints": [
+        {
+          "angle": 45,
+          "function": "LINEAR_GRADIENT",
+          "id": "01FQ8S87J8000BDD0YMN21KEXG",
+          "image_url": "",
+          "name": "Candy Cane",
+          "repeat": true,
+          "shadows": [
+            {
+              "color": 102,
+              "radius": 0.7,
+              "x_offset": -1,
+              "y_offset": 0
+            },
+            {
+              "color": 102,
+              "radius": 0.7,
+              "x_offset": 1,
+              "y_offset": 0
+            },
+            {
+              "color": 102,
+              "radius": 0.7,
+              "x_offset": 0,
+              "y_offset": -1
+            },
+            {
+              "color": 102,
+              "radius": 0.7,
+              "x_offset": 0,
+              "y_offset": 1
+            }
+          ],
+          "shape": "circle",
+          "stops": [
+            {
+              "at": 0.1,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": -757935361
+            },
+            {
+              "at": 0.2,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": -757935361
+            },
+            {
+              "at": 0.2,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": -10197761
+            },
+            {
+              "at": 0.3,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": -10197761
+            }
+          ]
+        },
+        {
+          "angle": 30,
+          "function": "LINEAR_GRADIENT",
+          "id": "01FQ8SH7N0000BDD0YMN21KEXH",
+          "image_url": "",
+          "name": "Tinsel",
+          "repeat": false,
+          "shadows": [
+            {
+              "color": 60,
+              "radius": 2,
+              "x_offset": 0,
+              "y_offset": 0
+            }
+          ],
+          "shape": "circle",
+          "stops": [
+            {
+              "at": 0,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": 350638335
+            },
+            {
+              "at": 0.1,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": 350638335
+            },
+            {
+              "at": 0.7,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": -11518721
+            },
+            {
+              "at": 0.9,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": -88855041
+            }
+          ]
+        },
+        {
+          "angle": 0,
+          "function": "RADIAL_GRADIENT",
+          "id": "01FQ8SR3C8000BDD0YMN21KEXK",
+          "image_url": "",
+          "name": "Ice & Snow",
+          "repeat": false,
+          "shadows": [
+            {
+              "color": 102,
+              "radius": 0.7,
+              "x_offset": -1,
+              "y_offset": 0
+            },
+            {
+              "color": 102,
+              "radius": 0.7,
+              "x_offset": 1,
+              "y_offset": 0
+            },
+            {
+              "color": 102,
+              "radius": 0.7,
+              "x_offset": 0,
+              "y_offset": -1
+            },
+            {
+              "color": 102,
+              "radius": 0.7,
+              "x_offset": 0,
+              "y_offset": 1
+            }
+          ],
+          "shape": "circle",
+          "stops": [
+            {
+              "at": 0.2,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": 1354680575
+            },
+            {
+              "at": 0.3,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": 769455615
+            },
+            {
+              "at": 0.4,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": 1013901055
+            },
+            {
+              "at": 0.8,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": -252645121
+            }
+          ]
+        },
+        {
+          "angle": 0,
+          "function": "URL",
+          "id": "01FQB6K5T0000BDD0YMN21KEXX",
+          "image_url": "https://cdn.7tv.app/paint/01FQB6K5T0000BDD0YMN21KEXX/layer/01JAMR1DWJ14HBYADTC6Q634WR/1x.webp",
+          "name": "Staff Shine",
+          "repeat": false,
+          "shadows": [],
+          "shape": "circle",
+          "stops": []
+        },
+        {
+          "angle": 0,
+          "function": "URL",
+          "id": "01FRBRAWZ80000FXJ1CNCE196T",
+          "image_url": "https://cdn.7tv.app/paint/01FRBRAWZ80000FXJ1CNCE196T/layer/01JAMR1E62X1WZGGX52YM21H98/1x.webp",
+          "name": "Spilled Glue",
+          "repeat": false,
+          "shadows": [
+            {
+              "color": 255,
+              "radius": 1,
+              "x_offset": 0,
+              "y_offset": 0
+            }
+          ],
+          "shape": "circle",
+          "stops": []
+        },
+        {
+          "angle": 90,
+          "function": "LINEAR_GRADIENT",
+          "id": "01FRV9TXD0000E7692NF398GSS",
+          "image_url": "",
+          "name": "Soft Fire",
+          "repeat": false,
+          "shadows": [],
+          "shape": "circle",
+          "stops": [
+            {
+              "at": 0,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": -335584001
+            },
+            {
+              "at": 0.4,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": -5953281
+            },
+            {
+              "at": 0.8,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": -11843841
+            }
+          ]
+        },
+        {
+          "angle": 45,
+          "function": "LINEAR_GRADIENT",
+          "id": "01FV8PCSG0000BRBEDNCDBP3DJ",
+          "image_url": "",
+          "name": "Metallic",
+          "repeat": true,
+          "shadows": [],
+          "shape": "circle",
+          "stops": [
+            {
+              "at": 0.01,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": 2105376127
+            },
+            {
+              "at": 0.15,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": -421075301
+            },
+            {
+              "at": 0.3,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": -1330597761
+            }
+          ]
+        },
+        {
+          "angle": 0,
+          "function": "RADIAL_GRADIENT",
+          "id": "01FV8Q51VR000BRBEDNCDBP3DK",
+          "image_url": "",
+          "name": "Dreaming",
+          "repeat": false,
+          "shadows": [],
+          "shape": "circle",
+          "stops": [
+            {
+              "at": 0.01,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": -10837761
+            },
+            {
+              "at": 0.48,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": 1684983295
+            },
+            {
+              "at": 0.99,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": -96016641
+            }
+          ]
+        },
+        {
+          "angle": 0,
+          "function": "RADIAL_GRADIENT",
+          "id": "01G8P2G5N8000927RGPZYETBVC",
+          "image_url": "",
+          "name": "Solar Flare",
+          "repeat": true,
+          "shadows": [
+            {
+              "color": -861929217,
+              "radius": 1,
+              "x_offset": 0,
+              "y_offset": 0
+            },
+            {
+              "color": -1303705857,
+              "radius": 3.5,
+              "x_offset": 0,
+              "y_offset": 0
+            }
+          ],
+          "shape": "ellipse",
+          "stops": [
+            {
+              "at": 0.72,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": -2925313
+            },
+            {
+              "at": 0.87,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": -7864065
+            },
+            {
+              "at": 0.88,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": -176543233
+            },
+            {
+              "at": 0.95,
+              "center_at": [
+                0,
+                0
+              ],
+              "color": -103119105
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

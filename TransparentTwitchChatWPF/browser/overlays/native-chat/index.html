@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Native Chat &bull; Setup | Transparent Twitch Chat Overlay</title>
+    <meta content="Native Chat by Transparent Twitch Chat Overlay" property="og:title" />
+    <meta content="Native Chat is a static, self-hosted chat overlay for use with Transparent Twitch Chat Overlay." property="og:description" />
+    <meta content="#00D9FF" data-react-helmet="true" name="theme-color" />
+    <link rel="icon" type="image/webp" href="bef8c529a6ddd1ff89c4.webp" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=Indie+Flower&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Noto+Sans+JP:wght@100;300;400;500;700;900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Source+Code+Pro:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,900&family=Press+Start+2P&family=Wallpoet&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="1d1b757205444d7bc10a.css?v=1" />
+    <link rel="stylesheet" href="bb173ca24a851856d3a6.css?v=1" />
+    <link rel="stylesheet" href="f403b409f620bf5eea6b.css"/>
+    <script src="5740064f0d9fcab6ddef.js"></script>
+    <script src="8ed75762fc01d436a20d.js"></script>
+    <script src="d7c8b9a64a7c18c2e40a.js" defer></script>
+    <script src="bb35e44d5e3b211550f5.js" defer></script>
+    <script src="3d7eea52462fac7995ee.js"></script>
+    <script src="229ec37a399e19b37841.js"></script>
+    <script src="7ce1d60f1c02e4cd742d.js" defer></script>
+    <script src="06c978abfb0ab5239c60.js"></script>
+
+    <style>
+        /* Additional animations for form transitions */
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form_row {
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Interactive emote preview */
+        #example .emote {
+            transition: transform 0.2s ease;
+        }
+
+        #example .emote:hover {
+            transform: scale(1.1);
+        }
+
+        /* Additional layout fixes */
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .form-section {
+            margin-bottom: 0;
+            /* Override margin to use gap instead */
+        }
+
+        .channel-section {
+            margin-bottom: 5px;
+            width: 100%;
+            padding: 0;
+        }
+
+        .form_row.center {
+            justify-content: center;
+        }
+
+        .form_row input[type="text"] {
+            width: 100%;
+        }
+
+        /* Fix the donation section */
+        .donation-content {
+            padding: 5px;
+        }
+
+        /* Fix spacing for preview section */
+        #example {
+            margin: 10px 0 15px;
+        }
+
+        /* Fix header height */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Fix select elements being cut off */
+        select option {
+            padding: 8px;
+        }
+
+        /* Make form elements more consistent */
+        .standardized-width {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        /* Improved layout for form heading */
+        .main-section-header {
+            text-align: center;
+        }
+
+        .main-section-header h3 {
+            color: var(--primary);
+            font-size: 20px;
+            margin: 0;
+        }
+
+        /* Pronoun color customization styles */
+        .pronoun-color-field {
+            margin-top: 10px;
+        }
+
+        .pronoun-color-field label {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        #pronoun-color-inputs {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+        }
+
+        #pronoun-color-inputs input[type="text"] {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .square .clr-field button {
+            width: 25%;
+            max-width: 100px;
+            min-width: 22px;
+            height: 22px;
+            left: 10px;
+            right: auto;
+            border-radius: 5px;
+            background: transparent;
+        }
+
+        .square .clr-field input {
+            padding-left: 36px;
+        }
+
+        .square, .clr-field {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .pronoun-label {
+            min-width: 120px;
+        }
+
+        div.pronoun-label > .pronoun {
+            margin-left: 0px;
+        }
+
+        .clr-field button::after, .clr-swatches button::after {
+            width: 400% !important;
+            height: 400% !important;
+            opacity: 1;
+        }
+
+        .clr-dark input.clr-color, .square .clr-field input {
+            text-transform: uppercase;
+        }
+
+        @media only screen and (max-width: 768px) {
+            header {
+                min-height: 140px;
+                padding: 0px;
+            }
+
+            header img {
+                margin-bottom: 0px;
+            }
+
+            header div {
+                margin: 0;
+            }
+        }
+
+        @media only screen and (max-width: 358px) {
+            #donation {
+                padding-bottom: 250px;
+            }
+        }
+
+        @media only screen and (min-width: 359px) and (max-width: 401px) {
+            #donation {
+                padding-bottom: 200px;
+            }
+        }
+
+        @media only screen and (min-width: 402px) and (max-width: 783px) {
+            #donation {
+                padding-bottom: 170px;
+            }
+        }
+
+        #custom-colors-field {
+            display: flex;
+        }
+    </style>
+<script defer src="index.8d888bbec6bc52d420fd.js?2add92fd73a011ac282a"></script><script defer src="v2.efc1c66f316ead35a443.js?2add92fd73a011ac282a"></script></head>
+
+<body>
+    <div id="popupOverlay" class="popup-overlay">
+        <div id="popupContainer" class="popup-container">
+            <div class="popup-header">
+                <h2 id="popupTitle">Title</h2>
+            </div>
+            <div class="popup-content" id="popupContent">
+                </div>
+            <div class="popup-footer">
+                <button class="popup-close" id="popupClose">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <header class="elevation-2">
+        <img src="bef8c529a6ddd1ff89c4.webp" alt="Native Chat Logo" />
+        <div>
+            <h1>Twitch Chat Overlay: Native Chat</h1>
+        </div>
+    </header>
+
+    <section>
+        <div class="card elevation-2 slideUp">
+            <p>
+                <em>Native Chat</em> is a static, self-hosted chat overlay for use with Transparent Twitch Chat Overlay. 
+                Forked from Cyan Chat (originally based on JChat), it runs from local files to ensure fast, reliable 
+                rendering without requiring a remote web server. You can customize the overlay below with many options.
+            </p>
+        </div>
+
+        <details class="elevation-2 slideUp">
+            <summary>Commands</summary>
+            <div class="details-content">
+                <p>
+                    <em>Native Chat</em> comes with a few mod only commands that you
+                    can use in chat.
+                </p>
+                <ul>
+                    <li><em>!nativechat refresh</em> - Refreshes the emotes in chat.</li>
+                    <li><em>!nativechat reload</em> - Reloads the overlay.</li>
+                    <li><em>!nativechat test [num]</em> - Sends a number of generated test messages into the chat widget. The number is optional and defaults to 5.</li>
+                    <li><em>!nativechat tts</em> - Lets you send a tts message (Also can specify a voice with -v {voice}).</li>
+                    <li><em>!nativechat img [emote_name] or [link] -d [duration] -o [opacity]</em> - Shows the emote image or url image. (duration defaults to 5s if not specified, opacity is 0-1 - default of 1)</li>
+                </ul>
+            </div>
+        </details>
+
+        <details class="elevation-2 slideUp">
+            <summary>Voices</summary>
+            <div class="details-content">
+                <p>
+                    <em>Native Chat</em> supports the following voices:
+                </p>
+                <ul class="voice-list">
+                    <li>Brian</li>
+                    <li>Ivy</li>
+                    <li>Justin</li>
+                    <li>Russell</li>
+                    <li>Nicole</li>
+                    <li>Emma</li>
+                    <li>Amy</li>
+                    <li>Joanna</li>
+                    <li>Salli</li>
+                    <li>Kimberly</li>
+                    <li>Kendra</li>
+                    <li>Joey</li>
+                    <li>Mizuki (Japanese)</li>
+                    <li>Chantal (French)</li>
+                    <li>Mathieu (French)</li>
+                    <li>Maxim (Russian)</li>
+                    <li>Hans (German)</li>
+                    <li>Raveena (Indian)</li>
+                </ul>
+            </div>
+        </details>
+
+        <form name="generator" class="card elevation-3 slideUp">
+            <div class="main-section-header">
+                <h3>Channel Settings</h3>
+            </div>
+
+            <div class="channel-section form-section">
+                <div class="stacked-inputs" style="padding: 12px;">
+                    <div class="form_row">
+                        <label for="channel">Twitch</label>
+                        <input type="text" name="channel" required placeholder="Twitch channel name" class="standardized-width" />
+                    </div>
+                    <div class="form_row">
+                        <label for="yt-channel">YouTube</label>
+                        <input type="text" name="yt-channel" placeholder="YouTube ID or Handle (Optional)" class="standardized-width" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-container">
+                <div class="form-section">
+                    <div class="section-header">
+                        <h3>Appearance Settings</h3>
+                    </div>
+
+                    <div class="form_table">
+                        <div class="form_col" style="align-items: start; flex: 60%;">
+                            <div class="form-field">
+                                <label for="size">Text Size</label>
+                                <select name="size" class="standardized-width">
+                                    <option value="1" selected>Small</option>
+                                    <option value="2">Medium</option>
+                                    <option value="3">Large</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label for="emote_scale">Emote Scale</label>
+                                <select name="emote_scale" class="standardized-width">
+                                    <option value="1" selected>1x</option>
+                                    <option value="2">2x</option>
+                                    <option value="3">3x</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label for="scale" data-tooltip="Scales the entire chat widget down. Can't be previewed below.">Chat Scale</label>
+                                <select name="scale" class="standardized-width">
+                                    <option value="0.1">0.1x</option>
+                                    <option value="0.2">0.2x</option>
+                                    <option value="0.3">0.3x</option>
+                                    <option value="0.4">0.4x</option>
+                                    <option value="0.5">0.5x</option>
+                                    <option value="0.6">0.6x</option>
+                                    <option value="0.7">0.7x</option>
+                                    <option value="0.8">0.8x</option>
+                                    <option value="0.9">0.9x</option>
+                                    <option value="1" selected>1x</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label for="height" data-tooltip="Space between text lines.">Line Height</label>
+                                <select name="height" class="standardized-width">
+                                    <option value="0">Smallest</option>
+                                    <option value="1">Smaller</option>
+                                    <option value="2">Small</option>
+                                    <option value="3" selected>Medium</option>
+                                    <option value="4">Large</option>
+                                    <option value="5">Largest</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label for="font">Font</label>
+                                <select name="font" class="standardized-width">
+                                    <option value="0" selected>Baloo Tammudu</option>
+                                    <option value="1">Segoe UI</option>
+                                    <option value="2">Roboto</option>
+                                    <option value="3">Lato</option>
+                                    <option value="4">Noto Sans</option>
+                                    <option value="5">Source Code Pro</option>
+                                    <option value="6">Impact</option>
+                                    <option value="7">Comfortaa</option>
+                                    <option value="8">Dancing Script</option>
+                                    <option value="9">Indie Flower</option>
+                                    <option value="10">Press Start 2P</option>
+                                    <option value="11">Wallpoet</option>
+                                    <option value="12">Custom</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label for="custom_font" data-tooltip="The name of any font you have installed or any google font name. Ex: Sour Gummy">Custom Font</label>
+                                <input type="text" name="custom_font" placeholder="Font Name" disabled class="standardized-width" />
+                            </div>
+                            <div class="form-field">
+                                <label for="stroke">Text Stroke</label>
+                                <select name="stroke" class="standardized-width">
+                                    <option value="0">Off</option>
+                                    <option value="1" selected>Fine</option>
+                                    <option value="2">Thick</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label for="shadow">Text Shadow</label>
+                                <select name="shadow" class="standardized-width">
+                                    <option value="0" selected>Off</option>
+                                    <option value="1">Small</option>
+                                    <option value="2">Medium</option>
+                                    <option value="3">Large</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label for="weight">Text Weight</label>
+                                <select name="weight" class="standardized-width">
+                                    <option value="1">Thinest</option>
+                                    <option value="2">Thin</option>
+                                    <option value="3">Small</option>
+                                    <option value="4" selected>Default</option>
+                                    <option value="5">Thick</option>
+                                </select>
+                            </div>
+                            <div class="form-field compact-dropdown">
+                                <label for="voice">TTS Voice</label>
+                                <select name="voice" class="standardized-width">
+                                    <option value="Brian" selected>Brian</option>
+                                    <option value="Ivy">Ivy</option>
+                                    <option value="Justin">Justin</option>
+                                    <option value="Russell">Russell</option>
+                                    <option value="Nicole">Nicole</option>
+                                    <option value="Emma">Emma</option>
+                                    <option value="Amy">Amy</option>
+                                    <option value="Joanna">Joanna</option>
+                                    <option value="Salli">Salli</option>
+                                    <option value="Kimberly">Kimberly</option>
+                                    <option value="Kendra">Kendra</option>
+                                    <option value="Joey">Joey</option>
+                                    <option value="Mizuki">Mizuki (Japanese)</option>
+                                    <option value="Chantal">Chantal (French)</option>
+                                    <option value="Mathieu">Mathieu (French)</option>
+                                    <option value="Maxim">Maxim (Russian)</option>
+                                    <option value="Hans">Hans (German)</option>
+                                    <option value="Raveena">Raveena (Indian)</option>
+                                </select>
+                            </div>
+                            <div class="form-field message-image-field">
+                                <label for="message_image">SMS Image URLs</label>
+                                <input type="text" name="message_image" placeholder="URLs for SMS corner images comma separated (optional)" class="standardized-width" />
+                            </div>
+                            <div class="form-field">
+                                <label for="pronoun_color_mode" data-tooltip="Choose how to color pronoun badges">Pronoun Colors</label>
+                                <select name="pronoun_color_mode" class="standardized-width" disabled>
+                                    <option value="default" selected>Default Gradients</option>
+                                    <option value="single">Single Custom Gradient</option>
+                                    <option value="custom">Custom Per Pronoun</option>
+                                </select>
+                            </div>
+                            <div class="form-field pronoun-color-field" id="single-gradient-field" style="display: none;">
+                                <div class="pronoun-label" style="text-align: center; cursor: pointer;" data-pronoun="single" data-default1="#a8edea" data-default2="#fed6e3" title="Click to reset to default colors">
+                                    <span class="pronoun theythem" style="padding: 0.2em 0.5em; border-radius: 0.8em; color: black; font-size:16px;">They/Them</span>
+                                </div>
+                                <div style="display: flex; gap: 5px;">
+                                    <div class="color-picker square">
+                                        <input type="text" name="pronoun_single_color1" class="coloris instance1" value="#a8edea"/>
+                                    </div>
+                                    <div class="color-picker square">
+                                        <input type="text" name="pronoun_single_color2" class="coloris instance1" value="#fed6e3"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-field pronoun-color-field" id="custom-colors-field" style="display: none;">
+                                <div id="pronoun-color-inputs" style="max-height: 200px; overflow-y: auto;">
+                                    </div>
+                            </div>
+                        </div>
+
+                        <div class="form_col" style="align-items: end; flex: 20%;">
+                            <div>
+                                <div class="checkbox-row">
+                                    <label for="readable" data-tooltip="Uses an algorithm to make username colors more readable">Readable Colors</label>
+                                    <input type="checkbox" name="readable" id="readable" checked />
+                                </div>
+                                <div class="checkbox-row">
+                                    <label for="animate" data-tooltip="Adds a neat animation for when messages come in">Animate Messages</label>
+                                    <input type="checkbox" name="animate" id="animate" checked />
+                                </div>
+                                <div class="checkbox-row">
+                                    <label for="bots" data-tooltip="Show messages from bot accounts">Show bots</label>
+                                    <input type="checkbox" name="bots" id="bots" />
+                                </div>
+                                <div class="checkbox-row">
+                                    <label for="commands" data-tooltip="Hide messages starting with !">Hide commands</label>
+                                    <input type="checkbox" name="commands" id="commands" />
+                                </div>
+                                <div class="checkbox-row">
+                                    <label for="badges" data-tooltip="Hide all badges">Hide badges</label>
+                                    <input type="checkbox" name="badges" id="badges" />
+                                </div>
+                                <div class="checkbox-row">
+                                    <label for="paints" data-tooltip="Use normal Twitch colors instead of 7tv Paints">Hide 7tv Paints</label>
+                                    <input type="checkbox" name="paints" id="paints" />
+                                </div>
+                                <div class="checkbox-row">
+                                    <label for="pronouns" data-tooltip="Show user pronouns from pronouns.alejo.io">Show Pronouns</label>
+                                    <input type="checkbox" name="pronouns" id="pronouns" />
+                                </div>
+                                <div class="checkbox-row">
+                                    <label for="colon" data-tooltip="Hide the colon between user and message">Hide Colon</label>
+                                    <input type="checkbox" name="colon" id="colon" />
+                                </div>
+                                <div class="checkbox-row fade-row">
+                                    <label for="fade_bool" data-tooltip="Fades and removes old messages after a set time">Fade Messages</label>
+                                    <input type="checkbox" name="fade_bool" id="fade_bool" />
+                                    <div class="fade-container">
+                                        <input type="text" name="fade" value="60" class="short hidden" />
+                                        <span id="fade_seconds" class="hidden">sec</span>
+                                    </div>
+                                </div>
+                                <div class="checkbox-row">
+                                    <label for="small_caps">Use Small Caps</label>
+                                    <input type="checkbox" name="small_caps" id="small_caps" />
+                                </div>
+                                <div class="checkbox-row">
+                                    <label for="invert" data-tooltip="Invert the vertical direction of chat messges">Invert</label>
+                                    <input type="checkbox" name="invert" id="invert" />
+                                </div>
+                                <div class="checkbox-row">
+                                    <label for="center" data-tooltip="When the message only has emotes, they are bigger">Big When Only Emotes</label>
+                                    <input type="checkbox" name="big_emotes" id="big_emotes" />
+                                </div>
+                                <div class="checkbox-row">
+                                    <label for="center" data-tooltip="Similar to StreamLabs chat widget">Center Theme</label>
+                                    <input type="checkbox" name="center" id="center" />
+                                </div>
+                                <div class="checkbox-row">
+                                    <label for="disable_tts" data-tooltip="Disable being able to send tts messages">Disable TTS</label>
+                                    <input type="checkbox" name="disable_tts" id="disable_tts" />
+                                </div>
+                                <div class="checkbox-row">
+                                    <label for="disable_img" data-tooltip="Disable the img chat command">Disable IMG</label>
+                                    <input type="checkbox" name="disable_img" id="disable_img" />
+                                </div>
+                                <div class="checkbox-row">
+                                    <label for="sms" data-tooltip="Click for more info">
+                                        <a href="javascript:void(0);" onclick="event.preventDefault(); showPopup('sms-theme')" style="color:var(--primary);">SMS Theme*</a>
+                                    </label>
+                                    <input type="checkbox" name="sms" id="sms" />
+                                </div>
+                                <div class="checkbox-row">
+                                    <label for="sync" data-tooltip="Click for more info">
+                                        <a href="javascript:void(0);" onclick="event.preventDefault(); showPopup('emote-sync')" style="color:var(--primary);">Disable Emote Sync*</a>
+                                    </label>
+                                    <input type="checkbox" name="sync" id="sync" />
+                                </div>
+                                <div class="checkbox-row">
+                                    <label for="pruning" data-tooltip="Click for more info">
+                                        <a href="javascript:void(0);" onclick="event.preventDefault(); showPopup('message-pruning')" style="color:var(--primary);">Disable Message Pruning*</a>
+                                    </label>
+                                    <input type="checkbox" name="pruning" id="pruning" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section" style="padding: 12px;">
+                    <div class="section-header">
+                        <h3>Message Filtering</h3>
+                    </div>
+
+                    <div class="stacked-inputs message-filtering-section">
+                        <div class="form_row">
+                            <label for="regex">Regex Blacklist</label>
+                            <input type="text" name="regex" placeholder="Regex Pattern to Block ex: ^[1-8]$" class="standardized-width" />
+                        </div>
+                        <div class="form_row">
+                            <label for="blocked_users">Users/Bots Blocked List</label>
+                            <input type="text" name="blocked_users" placeholder="Extra users or bots to hide. Comma separated." class="standardized-width" />
+                        </div>
+                    </div>
+                </div>
+
+                <div id="submit_container" class="elevation-2">
+                    <div class="preview">
+                        <label>
+                            <a href="javascript:void(0);" onclick="toggleTheme()">Preview</a>
+                        </label>
+                        </div>
+                    <div id="example" style='font-family: "Baloo Tammudu 2", cursive'>
+                        <div class="chat_line">
+                            <span class="user_info"><img class="badge"
+                                    src="https://cdn.frankerfacez.com/room-badge/mod/majijej/4/rounded" /><img class="badge"
+                                    src="https://static-cdn.jtvnw.net/badges/v1/b2dc1665-2b75-4ce4-af11-086e70ecfcc5/3" /><img
+                                    class="badge"
+                                    src="https://static-cdn.jtvnw.net/badges/v1/4300a897-03dc-4e83-8c0e-c332fee7057f/3" /><img
+                                    class="badge" src="https://cdn.7tv.app/badge/6508d5bd55deb74f50368f40/3x" /><span
+                                    class="nick"
+                                    style="color: transparent; position: absolute; z-index:0;">User</span><span
+                                    class="nick paint" style="
+                  color: rgb(0, 217, 255);
+                  background-image: linear-gradient(
+                    156deg,
+                    rgb(199, 144, 254) 0%,
+                    rgb(82, 226, 255) 15%,
+                    rgb(10, 255, 161) 30%,
+                    rgb(255, 77, 222) 90%
+                  );
+                  filter: drop-shadow(rgb(158, 226, 255) 0px 1px 0.1px)
+                    drop-shadow(rgb(255, 112, 243) 1px 0px 0.1px)
+                    drop-shadow(rgb(95, 124, 116) 1px 0px 3px);
+                ">User</span><span class="colon"> :</span> </span><span class="message"><img
+                                    class="cheer_emote"
+                                    src="https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/100/4.gif" /><span
+                                    class="cheer_bits">100</span>
+                                Nice chat
+                                <img class="emote"
+                                    src="https://cdn.7tv.app/emote/60ae7316f7c927fad14e6ca2/4x.webp" /></span>
+                        </div>
+                        <div class="chat_line">
+                            <span class="user_info"><img class="badge"
+                                    src="https://cdn.frankerfacez.com/room-badge/mod/majijej/4/rounded" /><img class="badge"
+                                    src="https://static-cdn.jtvnw.net/badges/v1/b2dc1665-2b75-4ce4-af11-086e70ecfcc5/3" /><img
+                                    class="badge"
+                                    src="https://static-cdn.jtvnw.net/badges/v1/4300a897-03dc-4e83-8c0e-c332fee7057f/3" /><img
+                                    class="badge" src="https://cdn.7tv.app/badge/6508d5bd55deb74f50368f40/3x" /><span
+                                    class="nick"
+                                    style="color: transparent; position: absolute; z-index:0;">User</span><span
+                                    class="nick paint" style="
+                  color: rgb(0, 217, 255);
+                  background-image: linear-gradient(
+                    156deg,
+                    rgb(199, 144, 254) 0%,
+                    rgb(82, 226, 255) 15%,
+                    rgb(10, 255, 161) 30%,
+                    rgb(255, 77, 222) 90%
+                  );
+                  filter: drop-shadow(rgb(158, 226, 255) 0px 1px 0.1px)
+                    drop-shadow(rgb(255, 112, 243) 1px 0px 0.1px)
+                    drop-shadow(rgb(95, 124, 116) 1px 0px 3px);
+                ">User</span><span class="colon"> :</span></span><span class="message">gn xen
+                                <img class="emote" src="https://cdn.7tv.app/emote/63882e9d346422503a288b5e/4x.webp"
+                                    style="visibility: visible" /></span>
+                        </div>
+                        <div class="chat_line">
+                            <span class="user_info"><img class="badge"
+                                    src="https://static-cdn.jtvnw.net/badges/v1/a730d387-f884-4230-bcab-9d4ca2743580/3" /><span
+                                    class="nick" style="color: rgb(77, 38, 134)">czero42</span><span class="colon">
+                                    :</span></span><span class="message"><span class="mention paint" style="
+                  color: rgb(255, 0, 0);
+                  background-image: linear-gradient(
+                    0deg,
+                    rgb(0, 145, 255) 0%,
+                    rgb(56, 179, 255) 25%,
+                    rgb(87, 213, 255) 40%,
+                    rgb(255, 255, 255) 55%
+                  );
+                  filter: drop-shadow(rgb(15, 175, 255) 0px 0px 0.1px);
+                ">@xen_ninjas</span>
+                                gn
+                                <img class="emote" src="https://cdn.7tv.app/emote/63882e9d346422503a288b5e/4x.webp"
+                                    style="visibility: visible" /><img class="emote"
+                                    src="https://cdn.7tv.app/emote/639008385901e8ad82935b7f/4x.webp"
+                                    style="visibility: visible" /></span>
+                        </div>
+                        <div class="chat_line">
+                            <span class="user_info"><img class="badge"
+                                    src="https://cdn.frankerfacez.com/room-badge/mod/majijej/4/rounded" /><img class="badge"
+                                    src="https://static-cdn.jtvnw.net/badges/v1/b2dc1665-2b75-4ce4-af11-086e70ecfcc5/3" /><img
+                                    class="badge"
+                                    src="https://static-cdn.jtvnw.net/badges/v1/617b0a83-e235-4d1c-9977-7cefe451f545/3" /><span
+                                    class="nick" style="color: rgb(0, 255, 127)">LeoHi_93</span><span class="colon">
+                                    :</span></span><span class="message"><span class="mention paint" style="
+                  color: rgb(255, 0, 0);
+                  background-image: linear-gradient(
+                    0deg,
+                    rgb(0, 145, 255) 0%,
+                    rgb(56, 179, 255) 25%,
+                    rgb(87, 213, 255) 40%,
+                    rgb(255, 255, 255) 55%
+                  );
+                  filter: drop-shadow(rgb(15, 175, 255) 0px 0px 0.1px);
+                ">@xen_ninjas</span>
+                                gn
+                                <img class="emote" src="https://cdn.7tv.app/emote/63882e9d346422503a288b5e/4x.webp"
+                                    style="visibility: visible" /><img class="emote"
+                                    src="https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_24396e3f5a64449e9ba19b794b0a6aa6/default/dark/3.0"
+                                    style="visibility: visible" /></span>
+                        </div>
+                        <div class="chat_line">
+                            <span class="user_info"><img class="badge"
+                                    src="https://cdn.frankerfacez.com/room-badge/vip/majijej/4" /><img class="badge"
+                                    src="https://static-cdn.jtvnw.net/badges/v1/b2dc1665-2b75-4ce4-af11-086e70ecfcc5/3" /><img
+                                    class="badge"
+                                    src="https://static-cdn.jtvnw.net/badges/v1/2a4d0b84-9075-4bb5-ae56-ccaf47a3ac37/3" /><img
+                                    class="badge" src="https://cdn.7tv.app/badge/62f97f19e46eb00e438a696f/3x" /><span
+                                    class="nick" style="
+                  color: transparent;
+                  position: absolute;
+                  z-index:0;
+                ">xen_ninjas</span><span class="nick paint" style="
+                  color: rgb(255, 0, 0);
+                  background-image: linear-gradient(
+                    0deg,
+                    rgb(0, 145, 255) 0%,
+                    rgb(56, 179, 255) 25%,
+                    rgb(87, 213, 255) 40%,
+                    rgb(255, 255, 255) 55%
+                  );
+                  filter: drop-shadow(rgb(15, 175, 255) 0px 0px 0.1px);
+                ">xen_ninjas</span><span class="colon"> :</span></span><span class="message"><img class="emote should-be-big"
+                                    src="https://cdn.7tv.app/emote/639008385901e8ad82935b7f/4x.webp"
+                                    style="visibility: visible" /><img class="emote should-be-big"
+                                    src="https://cdn.7tv.app/emote/6107cb319dc18aaf9f0e451e/4x.webp"
+                                    style="visibility: visible" /></span>
+                        </div>
+                        <div class="chat_line">
+                            <span class="user_info"><img class="badge"
+                                    src="https://cdn.frankerfacez.com/room-badge/mod/majijej/4/rounded" /><img class="badge"
+                                    src="https://static-cdn.jtvnw.net/badges/v1/b2dc1665-2b75-4ce4-af11-086e70ecfcc5/3" /><img
+                                    class="badge"
+                                    src="https://static-cdn.jtvnw.net/badges/v1/4300a897-03dc-4e83-8c0e-c332fee7057f/3" /><img
+                                    class="badge" src="https://cdn.7tv.app/badge/6508d5bd55deb74f50368f40/3x" /><span
+                                    class="nick"
+                                    style="color: transparent; position: absolute; z-index:0;">User</span><span
+                                    class="nick paint" style="
+                  color: rgb(0, 217, 255);
+                  background-image: linear-gradient(
+                    156deg,
+                    rgb(199, 144, 254) 0%,
+                    rgb(82, 226, 255) 15%,
+                    rgb(10, 255, 161) 30%,
+                    rgb(255, 77, 222) 90%
+                  );
+                  filter: drop-shadow(rgb(158, 226, 255) 0px 1px 0.1px)
+                    drop-shadow(rgb(255, 112, 243) 1px 0px 0.1px)
+                    drop-shadow(rgb(95, 124, 116) 1px 0px 3px);
+                ">User</span><span class="colon"> :</span></span><span class="message"><span class="mention paint" style="
+                  color: rgb(255, 0, 0);
+                  background-image: linear-gradient(
+                    0deg,
+                    rgb(0, 145, 255) 0%,
+                    rgb(56, 179, 255) 25%,
+                    rgb(87, 213, 255) 40%,
+                    rgb(255, 255, 255) 55%
+                  );
+                  filter: drop-shadow(rgb(15, 175, 255) 0px 0px 0.1px);
+                ">@xen_ninjas</span>
+                                <img class="emote" src="https://cdn.7tv.app/emote/639234ce908ab3ef06b3c640/4x.webp"
+                                    style="visibility: visible" /><img class="emote"
+                                    src="https://cdn.7tv.app/emote/61a78600e9684edbbc37c61c/4x.webp"
+                                    style="visibility: visible" /></span>
+                        </div>
+                    </div>
+                    <button type="submit" class="generate-button">
+                        <span class="button-text">Save and Apply</span>
+                        <span class="button-icon">➜</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div id="result" class="card elevation-3 hidden">
+            <div id="alert" class="alert-success">Copied to clipboard</div>
+            <h3>Your Overlay URL</h3>
+            <input type="text" id="url" readonly />
+            <p>
+                Configure a new browser source on your streaming software with the
+                given URL.
+            </p>
+            <div class="button-group">
+                <button id="go-back" class="secondary-button">
+                    <span class="button-icon">←</span>
+                    <span class="button-text">Go Back</span>
+                </button>
+                <button id="reset" class="danger-button">
+                    <span class="button-icon">↺</span>
+                    <span class="button-text">Reset</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>
+            Native Chat with &#10084; by
+            <a href="https://github.com/baffler/Transparent-Twitch-Chat-Overlay">Transparent Twitch Chat Overlay</a>
+            <a href="https://github.com/baffler/Transparent-Twitch-Chat-Overlay" target="_blank"><img class="github"
+                    src="5de0643bf1bbf77878ff.png" /></a>
+        </p>
+        <p>
+            Cyan Chat with &#10084; by
+            <a href="https://www.johnnycyan.com/">Johnnycyan</a>
+            <a href="https://github.com/Johnnycyan/cyan-chat" target="_blank"><img class="github"
+                    src="5de0643bf1bbf77878ff.png" /></a>
+        </p>
+        <p>
+            jChat (original) with &#10084; by
+            <a href="mailto:me@giambaj.it">giambaJ</a>
+            <a href="https://github.com/giambaJ/jChat" target="_blank"><img class="github" src="5de0643bf1bbf77878ff.png" /></a>
+        </p>
+        <p>
+            This application is not affiliated with
+            <a href="https://www.twitch.tv/" target="_blank">Twitch</a>
+        </p>
+    </footer>
+
+    <div id="emote-sync-content" style="display:none;">
+        <p>Tries to keep all emotes in sync with each other and on the same loop timing.</p>
+    </div>
+
+    <div id="message-pruning-content" style="display:none;">
+        <p>Automatically removes messages that pass the top of the screen. Increases performance and IMO makes chat look nicer.</p>
+        <br>
+        <p>To see effect in OBS make sure not to crop the top of the browser source.</p>
+        <br>
+        <p>Potential downside: A very short chat size has the potential to clear any new message that is too long.</p>
+    </div>
+
+    <div id="sms-theme-content" style="display:none;">
+        <p>A cute SMS chat bubble styled theme that includes its own custom animations</p>
+        <br>
+        <p>Because this makes messages taller I recommend setting a fairly low fade time like 5s</p>
+        <br>
+        <p>Also the image in the bottom right is optional, it's just shown in the preview so you can see how it'd look</p>
+        <br>
+        <p>Incompatible with 7tv paints, text stroke, text shadow, center theme, and mention colors. This is due to readability on dynamically colored backgrounds.</p>
+    </div>
+</body>
+
+</html>

@@ -3,6 +3,8 @@ using Jot.Storage;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Windows.Input;
 using TransparentTwitchChatWPF.Helpers;
 using Application = System.Windows.Application;
@@ -14,6 +16,7 @@ public class AppSettings
 {
     public Tracker Tracker;
     public GeneralSettings GeneralSettings { get; set; }
+    public jChatConfig jChatSettings { get; set; }
 
     public string UserDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF");
 
@@ -25,7 +28,7 @@ public class AppSettings
         _isInitialized = true;
 
         this.Tracker.Configure(this)
-            .Properties<AppSettings>(w => new { w.GeneralSettings })
+            .Properties<AppSettings>(w => new { w.GeneralSettings, w.jChatSettings })
             .Id(w => w.GetType().Name, null, false);
 
         Application.Current.Exit += (s, e) => {
@@ -61,6 +64,8 @@ public class AppSettings
                 // Defaults are within the class constructor now
                 this.GeneralSettings = new GeneralSettings();
             }
+
+            this.jChatSettings = new jChatConfig();
         }
     }
 
@@ -72,6 +77,38 @@ public class AppSettings
     public void RevertChanges()
     {
         this.Tracker.Track(this);
+    }
+
+
+    /// <summary>
+    /// Deserializes a JSON string into the jChatSettings object and persists the changes.
+    /// </summary>
+    /// <param name="jsonConfig">The JSON string received from the WebView.</param>
+    public void UpdateJChatConfig(string jsonConfig)
+    {
+        if (string.IsNullOrWhiteSpace(jsonConfig)) return;
+
+        try
+        {
+            // Use the System.Text.Json serializer to convert the JSON string
+            // into a new instance of your jChatConfig class.
+            var newSettings = JsonSerializer.Deserialize<jChatConfig>(jsonConfig);
+
+            if (newSettings != null)
+            {
+                // Replace the existing settings object with the new one.
+                this.jChatSettings = newSettings;
+
+                // Don't save the AppSettings just yet
+                // We'll call Persist() after the user clicks Save button in the settings dialog.
+                //this.Persist();
+            }
+        }
+        catch (JsonException ex)
+        {
+            // It's good practice to log any errors if the JSON is malformed.
+            Debug.WriteLine($"Error deserializing jChatConfig: {ex.Message}");
+        }
     }
 }
 
@@ -121,4 +158,118 @@ public class GeneralSettings
     public Hotkey ToggleInteractableHotkey { get; set; } = new Hotkey(Key.F7, ModifierKeys.Control | ModifierKeys.Alt);
     public Hotkey BringToTopHotkey { get; set; } = new Hotkey(Key.F8, ModifierKeys.Control | ModifierKeys.Alt);
     public bool AllowMultipleInstances { get; set; } = false;
+}
+
+public class jChatConfig
+{
+    [JsonPropertyName("channel")]
+    public string Channel { get; set; }
+
+    // Boolean toggles
+    [JsonPropertyName("animate")]
+    public bool Animate { get; set; } = false;
+
+    [JsonPropertyName("center")] // OLD: centerTheme
+    public bool Center { get; set; } = false;
+
+    [JsonPropertyName("sms")] // OLD: smsTheme
+    public bool Sms { get; set; } = false;
+
+    [JsonPropertyName("showBots")]
+    public bool ShowBots { get; set; } = false;
+
+    [JsonPropertyName("hideCommands")]
+    public bool HideCommands { get; set; } = false;
+
+    [JsonPropertyName("hideBadges")]
+    public bool HideBadges { get; set; } = false;
+
+    [JsonPropertyName("hidePaints")] // OLD: hide7tvPaints
+    public bool HidePaints { get; set; } = false;
+
+    [JsonPropertyName("hideColon")]
+    public bool HideColon { get; set; } = false;
+
+    [JsonPropertyName("smallCaps")] // OLD: useSmallCaps
+    public bool SmallCaps { get; set; } = false;
+
+    [JsonPropertyName("invert")] // OLD: invertChat
+    public bool Invert { get; set; } = false;
+
+    [JsonPropertyName("readable")] // OLD: readableColors
+    public bool Readable { get; set; } = false;
+
+    [JsonPropertyName("disableSync")] // OLD: disableEmoteSync
+    public bool DisableSync { get; set; } = false;
+
+    [JsonPropertyName("disablePruning")] // OLD: disableMessagePruning
+    public bool DisablePruning { get; set; } = false;
+
+    [JsonPropertyName("bigSoloEmotes")] // OLD: bigWhenOnlyEmotes
+    public bool BigSoloEmotes { get; set; } = false;
+
+    [JsonPropertyName("showPronouns")]
+    public bool ShowPronouns { get; set; } = false;
+
+    // Numeric settings
+    [JsonPropertyName("fade")] // OLD: fadeTimeout
+    public int Fade { get; set; } = 360;
+
+    [JsonPropertyName("size")] // OLD: textSize
+    public int Size { get; set; } = 1;
+
+    [JsonPropertyName("height")] // OLD: lineHeight
+    public int Height { get; set; } = 3;
+
+    [JsonPropertyName("weight")] // OLD: textWeight
+    public int Weight { get; set; } = 4;
+
+    [JsonPropertyName("stroke")] // OLD: textStroke
+    public int Stroke { get; set; } = 0;
+
+    [JsonPropertyName("shadow")] // OLD: textShadow
+    public int Shadow { get; set; } = 0;
+
+    [JsonPropertyName("emoteScale")]
+    public int EmoteScale { get; set; } = 1;
+
+    [JsonPropertyName("scale")] // OLD: chatScale
+    public float Scale { get; set; } = 1.0f;
+
+    // String settings
+    [JsonPropertyName("font")]
+    public string Font { get; set; } = "0";
+
+    [JsonPropertyName("blockedUsers")]
+    public string BlockedUsers { get; set; } = "";
+
+    [JsonPropertyName("nicknameColor")]
+    public string NicknameColor { get; set; } = "";
+
+    [JsonPropertyName("regex")] // OLD: regexBlacklist
+    public string Regex { get; set; } = "";
+
+    [JsonPropertyName("yt")] // OLD: youtubeChannel
+    public string Yt { get; set; } = "";
+
+    [JsonPropertyName("voice")] // OLD: ttsVoice
+    public string Voice { get; set; } = "";
+
+    [JsonPropertyName("messageImage")] // OLD: smsMessageImage
+    public string MessageImage { get; set; } = "";
+
+    [JsonPropertyName("disabledCommands")]
+    public string DisabledCommands { get; set; } = "";
+
+    [JsonPropertyName("pronounColorMode")]
+    public string PronounColorMode { get; set; } = "default";
+
+    [JsonPropertyName("pronounSingleColor1")]
+    public string PronounSingleColor1 { get; set; } = "#a8edea";
+
+    [JsonPropertyName("pronounSingleColor2")]
+    public string PronounSingleColor2 { get; set; } = "#fed6e3";
+
+    [JsonPropertyName("pronounCustomColors")]
+    public string PronounCustomColors { get; set; } = "{}";
 }

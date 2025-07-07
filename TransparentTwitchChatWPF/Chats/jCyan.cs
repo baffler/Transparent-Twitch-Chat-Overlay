@@ -11,7 +11,7 @@ using Color = System.Windows.Media.Color;
 
 namespace TransparentTwitchChatWPF.Chats
 {
-    public class jCyan : Chat
+    /*public class jCyan : Chat
     {
         public jCyan() : base(ChatTypes.jCyan)
         {
@@ -124,7 +124,7 @@ namespace TransparentTwitchChatWPF.Chats
                         typeof window.chrome.webview.hostObjects.jsCallbackFunctions.logMessage === 'function') {
                         window.chrome.webview.hostObjects.jsCallbackFunctions.logMessage(logMessage);
                     }
-                } catch (e) { /* silent fail */ }
+                } catch (e) { }
             }
 
             logToWebViewConsole('info', 'Chat wrapper injection script started.');
@@ -315,8 +315,8 @@ namespace TransparentTwitchChatWPF.Chats
                     .home-chatter::before {
                       content: '★';
                       color: #a970ff;
-                      margin-right: 5px; /* Space between the star and the first real badge */
-                      font-size: 0.8em; /* Make the star slightly smaller */
+                      margin-right: 5px;
+                      font-size: 0.8em;
                       vertical-align: middle;
                       opacity: 0.9;
                     }
@@ -325,5 +325,5 @@ namespace TransparentTwitchChatWPF.Chats
 
             return css;
         }
-    }
+    }*/
 }

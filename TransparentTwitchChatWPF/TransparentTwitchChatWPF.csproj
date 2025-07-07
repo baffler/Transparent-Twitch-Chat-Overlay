@@ -77,4 +77,49 @@
 		<Copy SourceFiles="$(ProjectDir)MicrosoftEdgeWebview2Setup.exe" DestinationFolder="$(PublishDir)" />
 	</Target>
 
+	<!-- 
+	  This target runs BEFORE the main build. It ensures the latest web assets 
+	  are built and copied into the project's source folder without causing build errors.
+	-->
+	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+
+		<!-- Step 1: Execute the npm build command to generate the latest files. -->
+		<!--<Exec Command="npm run build" WorkingDirectory="$(SolutionDir)NativeChatClient" /> -->
+
+		<!-- Step 2: Find all the old web asset files currently in the project folder. -->
+		<ItemGroup>
+			<OldProjectDistFiles Include="$(ProjectDir)browser\overlays\native-chat\**\*.*" />
+		</ItemGroup>
+
+		<!-- Step 3: IMPORTANT - Remove the old files from the project's list of content. -->
+		<!-- This prevents the build from trying to find files that are about to be deleted. -->
+		<ItemGroup>
+			<Content Remove="@(OldProjectDistFiles)" />
+			<None Remove="@(OldProjectDistFiles)" />
+		</ItemGroup>
+
+		<!-- Step 4: Delete the old files from the disk. -->
+		<Delete Files="@(OldProjectDistFiles)" />
+
+		<!-- Step 5: Define the new source files from the 'dist' folder. -->
+		<ItemGroup>
+			<SourceDistFiles Include="$(SolutionDir)NativeChatClient\dist\**\*.*" />
+		</ItemGroup>
+
+		<!-- Step 6: Copy the new files from 'dist' to the project folder. -->
+		<Copy
+		  SourceFiles="@(SourceDistFiles)"
+		  DestinationFiles="@(SourceDistFiles->'$(ProjectDir)browser\overlays\native-chat\%(RecursiveDir)%(Filename)%(Extension)')"
+		/>
+
+		<!-- Step 7: Dynamically add the newly copied files to the project's content. -->
+		<!-- This ensures they are included in the build and copied to the output directory. -->
+		<ItemGroup>
+			<Content Include="$(ProjectDir)browser\overlays\native-chat\**\*.*">
+				<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			</Content>
+		</ItemGroup>
+
+	</Target>
+
 </Project>

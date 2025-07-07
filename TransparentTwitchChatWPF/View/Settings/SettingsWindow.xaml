@@ -34,6 +34,11 @@
                 </ListViewItem>
                 <ListViewItem>
                     <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Appearance" VerticalAlignment="Center" />
+                    </StackPanel>
+                </ListViewItem>
+                <ListViewItem>
+                    <StackPanel Orientation="Horizontal">
                         <TextBlock Text="General" VerticalAlignment="Center" />
                     </StackPanel>
                 </ListViewItem>
@@ -79,10 +84,10 @@
                             VerticalAlignment="Bottom" 
                             Width="170"
                             Margin="0,0,0,5">
-                        <ComboBoxItem Content="KapChat (Default)" />
+                        <ComboBoxItem Content="NativeChat (Default)" />
                         <ComboBoxItem Content="Twitch Popout" />
+                        <ComboBoxItem Content="KapChat (Deprecated)" />
                         <ComboBoxItem Content="Custom URL" />
-                        <ComboBoxItem Content="jCyan (Beta)" />
                     </ComboBox>
             
                     <Button

@@ -1,0 +1,576 @@
+@font-face {
+  font-family: "Baloo Tammudu 2";
+  src: url("BalooTammudu2-Fixed.woff2") format("woff2"),
+    url("BalooTammudu2-Fixed.woff") format("woff"),
+    url("BalooTammudu2-Fixed.ttf") format("truetype");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+body {
+  height: 100vh;
+  margin: 0;
+  background: rgb(34, 34, 34);
+  color: white;
+  font-family: "Baloo Tammudu 2", "Segoe UI", sans-serif;
+  font-size: 1.5em;
+  font-weight: 400;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+header img {
+  width: 250px;
+  height: auto;
+}
+
+header div {
+  margin: 20px;
+  text-align: center;
+}
+
+h1 {
+  margin: 0px;
+  font-weight: 600;
+  font-size: 3em;
+}
+
+h2 {
+  margin: 0;
+  font-weight: 300;
+}
+
+section {
+  width: 80%;
+  margin: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+p {
+  margin-top: 0;
+  text-align: justify;
+}
+
+em {
+  font-weight: bolder;
+  font-style: unset;
+}
+
+a {
+  color: white;
+  text-decoration: unset;
+  font-weight: bold;
+  transition: opacity 0.3s;
+}
+
+a:hover {
+  opacity: 0.6;
+}
+
+form[name="generator"] {
+  width: 100%;
+  margin: 15px;
+  margin-top: 0px;
+  padding: 25px;
+  border-radius: 15px;
+  background-color: rgb(43, 43, 43);
+  box-shadow: 2px 2px 10px 2px black;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+input[name="regex"] {
+  display: block;
+  margin: 0 auto;
+}
+
+.form_table {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.form_col {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.form_row {
+  width: 100%;
+  height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.form_row.left {
+  justify-content: flex-start;
+}
+
+.form_row.right {
+  justify-content: flex-end;
+}
+
+.form_row.left label {
+  margin-left: 20px;
+}
+
+.form_row.right label {
+  margin-right: 20px;
+}
+
+.form_row.center {
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+input[type="text"] {
+  width: 420px;
+  height: 42px !important;
+  border: none;
+  border-radius: 5px;
+  font-family: "Montserrat", "Segoe UI", sans-serif;
+  font-size: 1em;
+  text-align: center;
+  padding: 2px 10px;
+  background-color: #191919;
+  color: white;
+}
+
+input[name="custom_font"] {
+  width: 184px;
+  height: 25px;
+  padding: 0px 8px;
+  font-size: 0.7em;
+}
+
+input[type="text"].short {
+  width: 40px;
+  height: 30px !important;
+  font-size: 0.8em;
+}
+
+input[type="checkbox"] {
+  font-size: 17px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 50px;
+  height: 20px;
+  background-color: #191919;
+  border-radius: 20px;
+  position: relative;
+  cursor: pointer;
+  outline: none;
+  -webkit-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+}
+
+input[type="checkbox"]:checked {
+  background: rgb(14, 207, 255);
+}
+
+input[type="checkbox"]:after {
+  position: absolute;
+  content: "";
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  -webkit-box-shadow: 0 0 0.25em rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0.25em rgba(0, 0, 0, 0.3);
+  -webkit-transform: scale(0.7);
+  transform: scale(0.7);
+  left: 0;
+  -webkit-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+}
+
+input[type="checkbox"]:checked:after {
+  left: calc(100% - 1.25em);
+}
+
+select {
+  width: 200px;
+  height: 25px;
+  font-family: "Montserrat", "Segoe UI", sans-serif;
+  font-size: 0.7em;
+  padding: 0px 8px;
+  cursor: pointer;
+  background-color: #191919;
+  color: white;
+  border: none;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#fade_seconds {
+  font-size: 0.7em;
+  font-weight: 200;
+  padding-bottom: 10px;
+}
+
+select:focus,
+input:focus {
+  outline: none;
+}
+
+#submit_container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.preview {
+  display: flex;
+}
+
+.preview img {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+  cursor: pointer;
+  /* display: none; */
+}
+
+#example {
+  margin: 25px 0px;
+  margin-top: 10px;
+  padding: 1rem;
+  border-radius: 15px;
+  overflow: hidden;
+  color: white;
+  font-weight: 800;
+  word-break: break-word;
+  transition: background-color 0.3s ease-in-out;
+}
+
+#example.white {
+  background-color: white;
+}
+
+#example .user_info {
+  display: inline-block;
+}
+
+#example .badge {
+  vertical-align: middle;
+  border-radius: 10%;
+}
+
+#example .cheer_bits {
+  color: rgb(189, 98, 255);
+  font-size: 0.8em;
+}
+
+#example .emote {
+  vertical-align: middle;
+}
+
+#example .emoji {
+  vertical-align: middle;
+}
+
+#example .chat_line {
+  line-height: 1.5em;
+}
+
+input[type="submit"],
+input[type="button"] {
+  width: 150px;
+  height: 45px;
+  border: none;
+  border-radius: 5px;
+  font-family: "Montserrat", "Segoe UI", sans-serif;
+  font-size: 1em;
+  font-weight: 500;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.3s;
+  background-color: #191919;
+  color: white;
+}
+
+input[type="submit"]:hover,
+input[type="button"]:hover {
+  opacity: 1;
+}
+
+#result {
+  position: relative;
+  width: 950px;
+  margin: 15px;
+  padding: 25px;
+  border-radius: 15px;
+  background-color: rgb(43, 43, 43);
+  box-shadow: 2px 2px 10px 2px black;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#alert {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  width: 800px;
+  height: 42px;
+  background-color: #191919;
+  border-radius: 5px;
+  cursor: pointer;
+  color: white;
+  font-size: 1em;
+  text-align: center;
+  transition: opacity 0.2s ease-out;
+}
+
+#url {
+  width: 800px;
+  cursor: pointer;
+}
+
+#result p {
+  text-align: center;
+  font-size: 0.9em;
+  margin: 1em;
+}
+
+#donation {
+  font-size: 0.7em;
+  font-weight: 300;
+  text-align: center;
+}
+
+#donation .emote {
+  height: 30px;
+  width: 30px;
+  margin-bottom: -5px;
+  margin-right: 0;
+}
+
+#donation form {
+  align-items: center;
+}
+
+#donate {
+  border-radius: 20px;
+  background-color: rgb(0 128 255);
+  color: black;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+footer {
+  width: 100%;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: black;
+}
+
+footer p {
+  font-size: 0.8em;
+  font-weight: 200;
+  margin: 5px;
+}
+
+footer a {
+  font-weight: 400;
+}
+
+.github {
+  height: 20px;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(43, 43, 43);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(77, 77, 77);
+}
+
+::-webkit-scrollbar-track {
+  background: black;
+}
+
+.paint {
+  background-size: cover;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+}
+
+.nopaint {
+  filter: none !important;
+  -webkit-text-fill-color: unset !important;
+  text-shadow: unset !important;
+  background-image: none !important;
+  z-index: 2;
+  position: relative;
+}
+
+#emotePopup {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 15px;
+  background-color: rgb(43, 43, 43);
+  box-shadow: 2px 2px 10px 2px black;
+  padding: 20px;
+  z-index: 1000;
+  text-align: center;
+}
+
+#popupBackground {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  /* Semi-transparent */
+  z-index: 999;
+  /* Just below the popup */
+}
+
+#emotePopupButton {
+  width: 150px;
+  height: 45px;
+  border: none;
+  border-radius: 5px;
+  font-family: "Montserrat", "Segoe UI", sans-serif;
+  font-size: 1em;
+  font-weight: 500;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.3s;
+}
+
+#emotePopupButton:hover {
+  opacity: 1;
+}
+
+/* Large emotes for emote-only messages */
+.emote-only {
+  text-align: center;
+}
+
+.emote-only .large-emote {
+  vertical-align: middle;
+}
+
+/* Ensure large emotes in SMS theme work properly */
+.message .large-emote {
+  max-height: 2.2em;
+  max-width: 6.6em;
+}
+
+/* Pronoun styling for preview */
+.pronoun {
+  display: inline-block;
+  font-size: 0.7em;
+  font-weight: 600;
+  margin-left: 0.4em;
+  padding: 0.2em 0.5em;
+  border-radius: 0.8em;
+  color: black !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  vertical-align: middle;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Default gradient */
+}
+
+.pronoun:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Pronoun type gradients */
+.pronoun.hehim {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.pronoun.sheher {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+}
+
+.pronoun.theythem {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+.pronoun.shethem {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fee140 100%);
+}
+
+.pronoun.hethem {
+  background: linear-gradient(135deg, #4facfe 0%, #fed6e3 100%);
+}
+
+.pronoun.heshe {
+  background: linear-gradient(135deg, #4facfe 0%, #ff9a9e 100%);
+}
+
+.pronoun.xexem {
+  background: linear-gradient(135deg, #a8caba 0%, #8a74ae 100%);
+}
+
+.pronoun.faefaer {
+  background: linear-gradient(135deg, #667eea 0%, #9f5edf 100%);
+}
+
+.pronoun.vever {
+  background: linear-gradient(135deg, #ffeef1 0%, #f093fb 100%);
+}
+
+.pronoun.aeaer {
+  background: linear-gradient(135deg, #7cc2ff 0%, #00f2fe 100%);
+}
+
+.pronoun.ziehir {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.pronoun.perper {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.pronoun.eem {
+  background: linear-gradient(135deg, #667eea 0%, #9d64d6 100%);
+}
+
+.pronoun.itits {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}

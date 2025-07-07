@@ -1,0 +1,44 @@
+#chat_container, #info_container {
+    font-size: 20px;
+}
+
+.badge {
+    width: 16px;
+    height: 16px;
+    margin-right: 2px;
+    margin-bottom: 3px;
+}
+
+.badge:last-of-type {
+    margin-right: 3px;
+}
+
+.colon {
+    margin-right: 8px;
+}
+
+.cheer_bits {
+    font-weight: 700;
+    margin-left: 2px;
+    margin-right: 4px;
+}
+
+.cheer_emote {
+    max-height: 25px;
+    margin-bottom: -6px;
+}
+
+.emote {
+    max-width: 75px;
+    max-height: 25px;
+    /* margin-right: -2px;
+    margin-left: -2px; */
+}
+
+.upscale {
+    height: 25px;
+}
+
+.emoji {
+    height: 22px;
+}

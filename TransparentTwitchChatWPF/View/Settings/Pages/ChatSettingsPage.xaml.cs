@@ -37,7 +37,7 @@ public partial class ChatSettingsPage : UserControl
         this.comboChatSound2.SelectedIndex = this.comboChatSound.SelectedIndex;
 
         this.tbUsername.Text = App.Settings.GeneralSettings.Username;
-        this.tb_jChatURL.Text = App.Settings.GeneralSettings.jChatURL;
+        this.tb_nativeChatUsername.Text = App.Settings.jChatSettings.Channel;
         this.tbUsername2.Text = App.Settings.GeneralSettings.Username;
         this.tbTwitchPopoutUsername.Text = App.Settings.GeneralSettings.Username;
         this.cbRedemptions.IsChecked = App.Settings.GeneralSettings.RedemptionsEnabled;
@@ -152,9 +152,8 @@ public partial class ChatSettingsPage : UserControl
                 App.Settings.GeneralSettings.BetterTtv = this.cbBetterTtv.IsChecked ?? false;
                 App.Settings.GeneralSettings.FrankerFaceZ = this.cbFfz.IsChecked ?? false;
             }
-            else if (chatType == (int)ChatTypes.KapChat)
+            else if (chatType == ChatTypes.KapChat)
             {
-                App.Settings.GeneralSettings.CustomURL = string.Empty;
                 App.Settings.GeneralSettings.Username = this.tbUsername.Text;
                 App.Settings.GeneralSettings.RedemptionsEnabled = this.cbRedemptions.IsChecked ?? false;
                 App.Settings.GeneralSettings.FadeChat = this.cbFade.IsChecked ?? false;
@@ -168,10 +167,11 @@ public partial class ChatSettingsPage : UserControl
                     App.Settings.GeneralSettings.CustomCSS = this.tbCSS.Text;
                 }
             }
-            else if (chatType == ChatTypes.jCyan)
+            else if (chatType == ChatTypes.NativeChat)
             {
-                App.Settings.GeneralSettings.CustomURL = string.Empty;
-                App.Settings.GeneralSettings.jChatURL = this.tb_jChatURL.Text;
+                App.Settings.GeneralSettings.Username = this.tb_nativeChatUsername.Text;
+                App.Settings.jChatSettings.Channel = this.tb_nativeChatUsername.Text;
+                App.Settings.GeneralSettings.jChatURL = string.Empty;
                 App.Settings.GeneralSettings.RedemptionsEnabled = this.cbRedemptions2.IsChecked ?? false;
                 if (App.Settings.GeneralSettings.RedemptionsEnabled)
                     App.Settings.GeneralSettings.Username = this.tbUsername2.Text;
@@ -309,11 +309,11 @@ public partial class ChatSettingsPage : UserControl
 
         switch (chatType)
         {
-            case ChatTypes.KapChat:
-                this.kapChatGrid.Visibility = Visibility.Visible;
+            case ChatTypes.NativeChat:
+                this.kapChatGrid.Visibility = Visibility.Hidden;
                 this.customURLGrid.Visibility = Visibility.Hidden;
                 this.twitchPopoutChat.Visibility = Visibility.Hidden;
-                this.jChatGrid.Visibility = Visibility.Hidden;
+                this.jChatGrid.Visibility = Visibility.Visible;
                 break;
             case ChatTypes.TwitchPopout:
                 this.kapChatGrid.Visibility = Visibility.Hidden;
@@ -326,17 +326,17 @@ public partial class ChatSettingsPage : UserControl
                 else
                     this.tbPopoutCSS.Text = App.Settings.GeneralSettings.TwitchPopoutCSS;
                 break;
+            case ChatTypes.KapChat:
+                this.kapChatGrid.Visibility = Visibility.Visible;
+                this.customURLGrid.Visibility = Visibility.Hidden;
+                this.twitchPopoutChat.Visibility = Visibility.Hidden;
+                this.jChatGrid.Visibility = Visibility.Hidden;
+                break;
             case ChatTypes.CustomURL:
                 this.kapChatGrid.Visibility = Visibility.Hidden;
                 this.customURLGrid.Visibility = Visibility.Visible;
                 this.twitchPopoutChat.Visibility = Visibility.Hidden;
                 this.jChatGrid.Visibility = Visibility.Hidden;
-                break;
-            case ChatTypes.jCyan:
-                this.kapChatGrid.Visibility = Visibility.Hidden;
-                this.customURLGrid.Visibility = Visibility.Hidden;
-                this.twitchPopoutChat.Visibility = Visibility.Hidden;
-                this.jChatGrid.Visibility = Visibility.Visible;
                 break;
             default:
                 this.kapChatGrid.Visibility = Visibility.Hidden;

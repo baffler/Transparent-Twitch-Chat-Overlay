@@ -1,0 +1,257 @@
+@keyframes slide-left {
+  from {
+    opacity: 0%;
+    margin-right: -1000px;
+    padding-left: 1000px;
+  }
+  to {
+    opacity: 100%;
+    margin-right: 0px;
+    padding-left: 0px;
+  }
+}
+
+@keyframes slide-right {
+  from {
+    opacity: 0%;
+    margin-left: -1000px;
+    padding-right: 1000px;
+  }
+  to {
+    opacity: 100%;
+    margin-left: 0px;
+    padding-right: 0px;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0%;
+    transform: scale(1, 0.5);
+  }
+  to {
+    opacity: 100%;
+    transform: scale(1, 1);
+  }
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  height: 100vh;
+  position: relative;
+}
+
+#info_container {
+  position: absolute;
+  bottom: 10px;
+  margin: 0 auto;
+  pointer-events: none;
+  align-items: center;
+  display: flex;
+  z-index: 1;
+  transform: scale(var(--scale, 1));
+  transform-origin: bottom left;
+  width: calc(100% / var(--scale, 1));
+}
+
+#info_text {
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 10px;
+  color: white;
+  margin: 0 auto;
+  font-family: "Noto Sans", sans-serif;
+  opacity: 0;
+}
+
+#chat_container {
+  width: calc(calc(100% / var(--scale, 1)) - 20px);
+  padding: 10px;
+  position: absolute;
+  bottom: 0;
+  overflow: hidden;
+  background-color: transparent;
+  color: white;
+  font-weight: 800;
+  word-break: break-word;
+  transform: scale(var(--scale, 1));
+  transform-origin: var(--transform-origin, bottom) left;
+  box-sizing: border-box;
+}
+
+.user_info {
+  display: inline-block;
+}
+
+.badge {
+  vertical-align: middle;
+  border-radius: 10%;
+}
+
+.zero-width_container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+.cheer_bits {
+  font-size: 0.8em;
+}
+
+.emote {
+  vertical-align: middle;
+}
+
+.zero-width {
+  position: absolute;
+}
+
+.emoji {
+  vertical-align: middle;
+}
+
+.hidden {
+  display: none;
+}
+
+.paint {
+  background-size: cover;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+}
+
+.nopaint {
+  filter: none !important;
+  -webkit-text-fill-color: unset !important;
+  text-shadow: unset !important;
+  background-image: none !important;
+}
+
+.animate-slide-left {
+  animation-name: slide-left;
+  animation-duration: 0.3s;
+  animation-timing-function: ease-in-out;
+}
+
+.animate-slide-right {
+  animation-name: slide-right;
+  animation-duration: 0.3s;
+  animation-timing-function: ease-in-out;
+}
+
+.animate {
+  animation-name: fade;
+  animation-duration: 0.2s;
+  animation-timing-function: ease-in-out;
+}
+
+/* Large emotes for emote-only messages */
+.emote-only {
+  text-align: center;
+}
+
+.emote-only .large-emote {
+  vertical-align: middle;
+}
+
+/* Ensure large emotes in SMS theme work properly */
+.message .large-emote {
+  max-height: 2.2em;
+  max-width: 6.6em;
+}
+
+/* Pronoun styling for default theme */
+.pronoun {
+  display: inline-block;
+  font-size: 0.7em;
+  font-weight: 600;
+  margin-left: 0.4em;
+  padding: 0.2em 0.5em;
+  border-radius: 0.8em;
+  color: black !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  vertical-align: middle;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Default gradient */
+}
+
+.pronoun:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Pronoun type gradients */
+.pronoun.hehim {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.pronoun.sheher {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+}
+
+.pronoun.theythem {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+.pronoun.shethem {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fee140 100%);
+}
+
+.pronoun.hethem {
+  background: linear-gradient(135deg, #4facfe 0%, #fed6e3 100%);
+}
+
+.pronoun.heshe {
+  background: linear-gradient(135deg, #4facfe 0%, #ff9a9e 100%);
+}
+
+.pronoun.xexem {
+  background: linear-gradient(135deg, #a8caba 0%, #8a74ae 100%);
+}
+
+.pronoun.faefaer {
+  background: linear-gradient(135deg, #667eea 0%, #9f5edf 100%);
+}
+
+.pronoun.vever {
+  background: linear-gradient(135deg, #ffeef1 0%, #f093fb 100%);
+}
+
+.pronoun.aeaer {
+  background: linear-gradient(135deg, #7cc2ff 0%, #00f2fe 100%);
+}
+
+.pronoun.ziehir {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.pronoun.perper {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.pronoun.eem {
+  background: linear-gradient(135deg, #667eea 0%, #9d64d6 100%);
+}
+
+.pronoun.itits {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+/* Additional common pronouns */
+.pronoun.any {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+}
+
+.pronoun.other {
+  background: linear-gradient(135deg, #a8caba 0%, #937cb8 100%);
+}
+
+.pronoun.ask {
+  background: linear-gradient(135deg, #7883b2 0%, #9475b2 100%);
+}

@@ -1,94 +1,75 @@
 ﻿using System;
 using System.IO;
+using System.Text.RegularExpressions;
+using TwitchLib.Api.Helix;
 
 namespace TransparentTwitchChatWPF.Helpers
 {
-    /// <summary>
-    /// Copies the bundled “browser” folder to the user’s AppData once,
-    /// then returns the full path to index.html ready for WebView2.
-    /// </summary>
     internal static class LocalHtmlHelper
-    {
-        private static readonly string AppDataBrowserPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "TransparentTwitchChatWPF", "browser");
-        
-        private static readonly string SourceBrowserPath = Path.Combine(
+    {   
+        private static readonly string BrowserBasePath = Path.Combine(
             AppContext.BaseDirectory, "browser");
         
-        /// <summary>
-        /// Copies or updates the bundled "browser" folder to the user's AppData.
-        /// This method should be called at application startup to ensure the
-        /// local files are the latest versions from the application bundle.
-        /// It will overwrite existing files in the destination.
-        /// </summary>
-        public static void EnsureLocalBrowserFiles()
-        {
-            // Call CopyDirectory, ensuring overwrite is enabled
-            CopyDirectory(SourceBrowserPath, AppDataBrowserPath, true);
-        }
-        
-        /// <summary>
-        /// Gets the full path to the local "index.html" file in AppData.
-        /// Assumes EnsureLocalBrowserFiles() has been called (e.g., at application startup).
-        /// </summary>
-        /// <returns>The full path to index.html.</returns>
         public static string GetIndexHtmlPath()
         {
-            return Path.Combine(AppDataBrowserPath, "index.html");
+            return Path.Combine(BrowserBasePath, "index.html");
         }
         
-        /// <summary>
-        /// Gets the full path to the local "jchat.html" file in AppData.
-        /// Assumes EnsureLocalBrowserFiles() has been called (e.g., at application startup).
-        /// </summary>
-        /// <returns>The full path to jchat.html.</returns>
         public static string GetJChatIndexPath()
         {
-            return Path.Combine(AppDataBrowserPath, "jchat.html");
+            return Path.Combine(BrowserBasePath, "jchat.html");
         }
-        
+    }
+
+    /// <summary>
+    /// Provides direct paths to overlay HTML files located within the application's "browser" directory.
+    /// This helper assumes the application has read access to its installation folder.
+    /// </summary>
+    internal static class OverlayPathHelper
+    {
+        /// <summary>
+        /// The base path to the "browser" directory within the application's folder.
+        /// </summary>
+        private static readonly string BrowserBasePath = Path.Combine(AppContext.BaseDirectory, "browser");
 
         /// <summary>
-        /// Recursively copies a directory from a source to a destination.
+        /// Gets the full, absolute path to the settings page for the Native Chat overlay.
         /// </summary>
-        /// <param name="sourceDir">The source directory path.</param>
-        /// <param name="destDir">The destination directory path.</param>
-        /// <param name="overwriteFiles">If true, existing files in the destination will be overwritten.</param>
-        private static void CopyDirectory(string sourceDir, string destDir, bool overwriteFiles)
+        /// <returns>The full path to native-chat\index.html.</returns>
+        public static string GetNativeChatSettingsIndexFilePath()
         {
-            // Check if the source directory exists
-            if (!Directory.Exists(sourceDir))
-            {
-                Console.WriteLine($"Warning: Source directory not found: '{sourceDir}'. Nothing will be copied.");
-                // Consider if you need to clean up destDir if sourceDir is missing
-                return;
-            }
+            return Path.Combine(BrowserBasePath, "overlays", "native-chat", "index.html");
+        }
 
-            // Ensure the destination directory exists
-            Directory.CreateDirectory(destDir);
+        /// <summary>
+        /// Gets the full, absolute path to the Native Chat overlay.
+        /// </summary>
+        /// <returns>The full path to native-chat.</returns>
+        public static string GetNativeChatPath()
+        {
+            return Path.Combine(BrowserBasePath, "overlays", "native-chat");
+        }
 
-            // Copy all files from the source to the destination
-            foreach (var file in Directory.GetFiles(sourceDir))
-            {
-                var destFile = Path.Combine(destDir, Path.GetFileName(file));
-                try
-                {
-                    File.Copy(file, destFile, overwriteFiles);
-                }
-                catch (IOException ex)
-                {
-                    // Log or handle errors, e.g., file might be in use
-                    Console.WriteLine($"Error copying file '{Path.GetFileName(file)}' to '{destFile}': {ex.Message}");
-                }
-            }
+        /// <summary>
+        /// Gets the full, absolute path to the actual chat overlay for the Native Chat overlay.
+        /// </summary>
+        /// <returns>The full path to native-chat\v2\index.html.</returns>
+        public static string GetNativeChatOverlayPath()
+        {
+            return Path.Combine(BrowserBasePath, "overlays", "native-chat", "v2", "index.html");
+        }
 
-            // Recursively copy subdirectories
-            foreach (var sourceSubDir in Directory.GetDirectories(sourceDir))
-            {
-                var destSubDir = Path.Combine(destDir, Path.GetFileName(sourceSubDir));
-                CopyDirectory(sourceSubDir, destSubDir, overwriteFiles);
-            }
+        /// <summary>
+        /// Checks if a given overlay's base directory exists.
+        /// </summary>
+        /// <param name="overlayId">The ID (folder name) of the overlay.</param>
+        /// <returns>True if the directory exists, otherwise false.</returns>
+        public static bool DoesOverlayExist(string overlayId)
+        {
+            if (string.IsNullOrEmpty(overlayId)) return false;
+
+            string overlayPath = Path.Combine(BrowserBasePath, "overlays", overlayId);
+            return Directory.Exists(overlayPath);
         }
     }
 }

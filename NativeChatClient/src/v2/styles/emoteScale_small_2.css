@@ -1,0 +1,9 @@
+#chat_container .emote {
+    max-height: 50px;
+    max-width: 150px;
+}
+
+.zero-width_container {
+    margin-bottom: 11px;
+    margin-top: 11px;
+}

@@ -99,11 +99,11 @@
             <Grid x:Name="PlaceholderOverlay" Background="#80000000" Visibility="Collapsed">
 
                 <Border HorizontalAlignment="Center" 
-            VerticalAlignment="Center"
-            Background="#FF2D2D30"
-            CornerRadius="8"
-            MaxWidth="400"
-            Padding="25">
+                        VerticalAlignment="Center"
+                        Background="#FF2D2D30"
+                        CornerRadius="8"
+                        MaxWidth="400"
+                        Padding="25">
                     <Border.Effect>
                         <DropShadowEffect ShadowDepth="0" BlurRadius="15" Opacity="0.5" Color="Black"/>
                     </Border.Effect>

@@ -1,0 +1,1228 @@
+:root {
+  --primary: #00D9FF;
+  --primary-light: #5EEAFF;
+  --primary-dark: #00A7C7;
+  --secondary: #8B54FF;
+  --background: #1a1a1a;
+  --surface: #2a2a2a;
+  --surface-lighter: #3a3a3a;
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0b0;
+  --error: #FF5252;
+  --success: #4CAF50;
+  --warning: #FFC107;
+  --border-radius: 12px;
+  --transition-speed: 0.3s;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+  transition: background-color var(--transition-speed);
+  line-height: 1.6;
+}
+
+/* Material Card Styles */
+.card {
+  background-color: var(--surface);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.card > p {
+  margin: 0;
+}
+
+/* Header Styles */
+header {
+  background-color: var(--surface);
+  padding: 15px 0px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  z-index: 1;
+}
+
+header img {
+  width: 40px;
+  height: 40px;
+  /*border-radius: 50%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);*/
+  transition: transform 0.3s ease;
+}
+
+header img:hover {
+  transform: rotate(10deg) scale(1.05);
+}
+
+header h1 {
+  margin: 0;
+  color: var(--primary);
+  font-size: 32px;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+header h2 {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 18px;
+  font-weight: 400;
+}
+
+div.card:nth-child(1) > p:nth-child(1) {
+  font-size: 18px;
+}
+
+/* Section Styles */
+section {
+  margin: 0 auto;
+  padding: 0 24px 24px;
+}
+
+/* Form Styles */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form_row {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.form_table {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.form_col {
+  flex: 1;
+  min-width: 150px;
+  margin-bottom: 0;
+}
+
+/* Input Styles */
+input[type="text"], 
+input[type="password"],
+select {
+  background-color: var(--surface-lighter);
+  border: 2px solid transparent;
+  border-radius: var(--border-radius);
+  color: var(--text-primary);
+  padding: 12px 15px;
+  font-size: 16px;
+  transition: all 0.3s;
+  width: 100%;
+  outline: none;
+  box-sizing: border-box;
+}
+
+input[type="text"]:focus, 
+input[type="password"]:focus,
+select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(0, 217, 255, 0.2);
+}
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300D9FF'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 20px;
+  padding-right: 40px;
+  height: 42px;
+  padding: 8px 15px;
+  box-sizing: border-box;
+}
+
+/* Label Styles */
+label {
+  font-weight: 500;
+  margin: 0 0 5px 0;
+  display: inline-block;
+}
+
+.form_row.left label {
+  margin-left: 15px;
+}
+
+.form_row.right label {
+  margin-right: 15px;
+}
+
+/* Checkbox and Radio Styles */
+/* input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid var(--surface-lighter);
+  background-color: var(--surface);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+input[type="checkbox"]:checked {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  width: 4px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+} */
+
+/* Button Styles */
+input[type="submit"],
+input[type="button"],
+button {
+  background-color: var(--primary);
+  color: #111;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+}
+
+input[type="submit"]:hover,
+input[type="button"]:hover,
+button:hover {
+  background-color: var(--primary-light);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+input[type="submit"]:active,
+input[type="button"]:active,
+button:active {
+  background-color: var(--primary-dark);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transform: translateY(0);
+}
+
+/* Ripple effect */
+input[type="submit"]::after,
+input[type="button"]::after,
+button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: var(--border-radius);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: width 0.5s, height 0.5s, opacity 0.5s;
+}
+
+input[type="submit"]:active::after,
+input[type="button"]:active::after,
+button:active::after {
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  transition: 0s;
+}
+
+/* Preview Section Styles */
+#submit_container {
+  background-color: var(--surface-lighter);
+  border-radius: var(--border-radius);
+  padding: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.preview {
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+}
+
+#example {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  padding: 15px;
+  overflow-y: auto;
+  width: 90%;
+}
+
+/* Result Section */
+#result {
+  background-color: var(--surface);
+  border-radius: var(--border-radius);
+  padding: 24px;
+  position: relative;
+  animation: fadeIn 0.5s;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+#result input[type="text"] {
+  font-family: monospace;
+  padding: 16px;
+  margin: 20px 0;
+}
+
+#alert {
+  background-color: var(--success);
+  color: white;
+  border-radius: var(--border-radius);
+  position: absolute;
+  top: 10px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.6s, visibility 0.6s;
+}
+
+/* Details & Summary Styles */
+details {
+  border-radius: var(--border-radius);
+  background-color: var(--surface);
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+summary {
+  padding: 15px 20px;
+  cursor: pointer;
+  font-weight: 500;
+  outline: none;
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+summary:hover {
+  background-color: var(--surface-lighter);
+}
+
+details[open] summary {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+details > p, details > ul {
+  padding: 15px 20px;
+  margin: 0;
+}
+
+/* Footer Styles */
+footer {
+  text-align: center;
+  background-color: var(--surface);
+  margin-top: 60px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, var(--surface), var(--surface-lighter));
+}
+
+footer p {
+  color: var(--text-secondary);
+}
+
+footer a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+footer a:hover {
+  color: var(--primary-light);
+  text-decoration: underline;
+}
+
+footer img.github {
+  vertical-align: middle;
+  margin-left: 5px;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+footer img.github:hover {
+  opacity: 1;
+}
+
+/* Links */
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+a:hover {
+  color: var(--primary-light);
+  text-decoration: underline;
+}
+
+/* Improved Popup Styles */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: none;
+  z-index: 1000;
+  opacity: 0;
+  backdrop-filter: blur(5px);
+  transition: opacity 0.3s ease;
+}
+
+.popup-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  background-color: var(--surface);
+  border-radius: var(--border-radius);
+  padding: 30px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  z-index: 1001;
+  max-width: 500px;
+  width: 80%;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  border: none;
+}
+
+.popup-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  border-top-left-radius: var(--border-radius);
+  border-top-right-radius: var(--border-radius);
+}
+
+.popup-container.active {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.popup-overlay.active {
+  opacity: 1;
+  display: block;
+}
+
+.popup-header {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  position: relative;
+}
+
+.popup-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 25%;
+  width: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+}
+
+.popup-header h2 {
+  margin-top: 0;
+  color: var(--primary);
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.popup-content {
+  margin-bottom: 25px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.popup-footer {
+  text-align: center;
+}
+
+.popup-close {
+  background-color: var(--primary);
+  color: #111;
+  border: none;
+  padding: 10px 25px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.popup-close:hover {
+  background-color: var(--primary-light);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+.popup-close:active {
+  background-color: var(--primary-dark);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transform: translateY(0);
+}
+
+.popup-content p {
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.slideUp {
+  animation: slideUp 0.5s forwards;
+}
+
+/* Donation Section */
+#donation {
+  background: linear-gradient(135deg, var(--surface), var(--surface-lighter));
+  border-radius: var(--border-radius);
+  padding-bottom: 132px;
+  padding-top: 12px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+#donation::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  height: 10px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  filter: blur(10px);
+}
+
+#donation span {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+#donate {
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  color: #111;
+  border: none;
+  border-radius: 30px;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(0, 217, 255, 0.3);
+  text-transform: uppercase;
+}
+
+#donate:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 7px 20px rgba(0, 217, 255, 0.4);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .form_table {
+    flex-direction: column;
+  }
+  
+  .form_col {
+    min-width: 100%;
+  }
+  
+  header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  header img {
+    margin-right: 0;
+    margin-bottom: 15px;
+  }
+}
+
+/* Material Elevation Classes */
+.elevation-1 {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.elevation-2 {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.elevation-3 {
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+.elevation-4 {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Loading and transition effects */
+.hidden {
+  display: none !important;
+}
+
+.fade-transition {
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+/* Additional animation for sections */
+section p, section details, section form {
+  opacity: 0;
+  animation: slideUp 0.5s forwards;
+}
+
+section p {
+  animation-delay: 0.1s;
+}
+
+section details {
+  animation-delay: 0.2s;
+}
+
+section form {
+  animation-delay: 0.3s;
+}
+
+/* Additional styling for form sections, buttons, and animations */
+
+/* Form Section Styling */
+.form-section {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: var(--border-radius);
+  padding: 12px;
+  margin-bottom: 15px;
+  transition: transform 0.3s, box-shadow 0.3s;
+  position: relative;
+}
+
+.form-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+.form-section h3 {
+  color: var(--primary);
+  margin-top: 0;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* Enhanced Button Styling */
+.generate-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 14px;
+  margin-top: 10px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  color: #111;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 18px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.generate-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+.generate-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.button-text {
+  margin: 0 10px;
+}
+
+.button-icon {
+  font-size: 20px;
+  transition: transform 0.3s;
+}
+
+.generate-button:hover .button-icon {
+  transform: translateX(5px);
+}
+
+.secondary-button {
+  background-color: var(--surface-lighter);
+  color: var(--text-primary);
+  margin-right: 10px;
+}
+
+.secondary-button:hover {
+  background-color: var(--surface-lighter);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.secondary-button:hover .button-icon {
+  transform: translateX(-5px);
+}
+
+.danger-button {
+  background-color: #ff5252;
+  color: white;
+}
+
+.danger-button:hover {
+  background-color: #ff6b6b;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* Improved Form Components */
+.form_group {
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.form_group label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--primary);
+}
+
+.form_group input[type="text"] {
+  display: block;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Result Section Improvements */
+#result h3 {
+  color: var(--primary);
+  margin-top: 0;
+  text-align: center;
+}
+
+#alert.alert-success {
+  background-color: var(--primary-dark);
+  color: white;
+  border-radius: var(--border-radius);
+  position: absolute;
+  top: 117px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.6s, visibility 0.6s;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-dark);
+  border-radius: 10px;
+  transition: background 0.3s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Header Animation */
+.logo-pulse {
+  animation: pulse 2s infinite alternate-reverse;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(0, 217, 255, 0.7);
+  }
+  100% {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px 5px rgba(0, 217, 255, 0.5);
+  }
+}
+
+/* Details Element Improvements */
+.details-content {
+  padding: 15px;
+  animation: fadeInDown 0.3s;
+}
+
+.voice-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+}
+
+.voice-list li {
+  background-color: var(--surface-lighter);
+  padding: 8px 12px;
+  border-radius: 5px;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.voice-list li:hover {
+  background-color: var(--primary);
+  color: #111;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Donation Section Enhancement */
+.donation-content {
+  position: relative;
+  z-index: 1;
+}
+
+#donation::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><circle cx="2" cy="2" r="1" fill="%2300A7C7" opacity="0.3"/></svg>');
+  opacity: 0.1;
+  z-index: 0;
+}
+
+#donate::after {
+  content: '❤';
+  margin-left: 8px;
+  font-size: 16px;
+  transition: transform 0.3s;
+}
+
+#donate:hover::after {
+  transform: scale(1.5);
+}
+
+/* Fade Container */
+.fade-container {
+  align-items: center;
+}
+
+.fade-container input[type="text"] {
+  width: 60px;
+  margin-right: 5px;
+}
+
+/* Animation Keyframes */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOutUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes justFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes justFadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Shimmer effect on focus */
+input[type="text"]:focus,
+select:focus,
+textarea:focus {
+  background-image: linear-gradient(
+    90deg,
+    var(--surface-lighter) 0%,
+    var(--surface) 50%,
+    var(--surface-lighter) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+  border-color: var(--primary);
+}
+
+/* Make sections appear with staggered delay */
+section > *:nth-child(1) { animation-delay: 0.1s; }
+section > *:nth-child(2) { animation-delay: 0.2s; }
+section > *:nth-child(3) { animation-delay: 0.3s; }
+section > *:nth-child(4) { animation-delay: 0.4s; }
+
+#example .chat_line {
+  transition: transform 0.3s, opacity 0.3s, background-color 0.3s;
+  border-radius: 8px;
+  padding: 5px;
+}
+
+/* Tooltip styling */
+[data-tooltip] {
+  position: relative;
+  cursor: help;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--surface);
+  color: var(--text-primary);
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  white-space: nowrap;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s, visibility 0.3s;
+  z-index: 100;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+
+[data-tooltip]:hover::after {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Layout adjustment fixes */
+
+/* Fix header height */
+header {
+  min-height: 42px;
+}
+
+/* Reduced padding in cards and sections */
+.card {
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* Form section improvements */
+.form-section {
+  padding: 12px;
+  margin-bottom: 15px;
+}
+
+/* Better organization of form sections */
+.form_col {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+/* Standardize input widths */
+input[type="text"], 
+select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Fix select dropdown heights */
+select {
+  height: 42px; /* Ensure enough height for text */
+  padding: 8px 15px;
+  box-sizing: border-box;
+}
+
+/* Standardize form groups */
+.form_group {
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.form_group input[type="text"] {
+  display: block;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Fix message filtering section */
+.message-filtering-section {
+  font-size: 14px;
+}
+
+.message-filtering-section label {
+  width: 20%;
+}
+
+/* Consistent spacing in checkbox rows */
+.checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+/* Improve table layout */
+.form_table {
+  gap: 15px;
+}
+
+/* Better submit container */
+#submit_container {
+  padding: 15px;
+}
+
+/* Standardize channel inputs */
+.channel-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+/* Ensure sections have proper headers */
+.section-header {
+  padding-bottom: 10px;
+}
+
+.section-header h3 {
+  margin: 0;
+  color: var(--primary);
+  font-size: 18px;
+  font-weight: 500;
+}
+
+/* Make form elements more compact but still usable */
+.compact-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+/* Fix spacing above and below labels */
+label {
+  margin: 0 0 5px 0;
+}
+
+/* Clean up checkbox alignment */
+/* input[type="checkbox"] {
+  margin-right: 8px;
+} */
+
+/* Form field alignment fixes */
+
+/* Adjust checkbox alignment */
+.checkbox-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.checkbox-row label {
+  margin: 0;
+  flex-grow: 1;
+  font-size: 14px;
+}
+
+.checkbox-row input[type="checkbox"] {
+  margin-left: 10px;
+  order: 2;
+}
+
+/* Fix stacked inputs */
+.stacked-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.stacked-inputs .form_row {
+  width: 100%;
+}
+
+/* Standardize form field layout */
+.form-field {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.form-field label {
+  font-size: 14px;
+  margin: 0;
+  text-align: left;
+}
+
+.form-field select,
+.form-field input[type="text"] {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Smaller dropdown labels */
+.compact-dropdown label {
+  font-size: 14px;
+}
+
+/* Fix section headers */
+.section-header h3,
+.section-header h4 {
+  font-size: 16px;
+}
+
+/* Fix filtering section */
+.filtering-item {
+  margin-bottom: 15px;
+}
+
+.filtering-item label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+/* Channel settings */
+.channel-section .form_row label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 5px;
+  width: 20%;
+}
+
+/* Better positioning for fade container */
+.fade-row {
+  position: relative;
+}
+
+.fade-container {
+  position: absolute;
+  right: 75px;
+  top: 3px;
+  display: flex;
+  align-items: center;
+}
+
+/* Fix checkbox tooltip positioning */
+[data-tooltip]label::after {
+  bottom: auto;
+  top: 125%;
+}
