@@ -73,6 +73,12 @@
 	  <Page Include="App.xaml" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Update="LegacyHasher.exe">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 	<Target Name="CopyInstallerAfterPublish" AfterTargets="Publish">
 		<Copy SourceFiles="$(ProjectDir)MicrosoftEdgeWebview2Setup.exe" DestinationFolder="$(PublishDir)" />
 	</Target>

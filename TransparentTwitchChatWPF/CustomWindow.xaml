@@ -67,6 +67,7 @@
                                 <MenuItem Header="Edit Custom CSS" Click="MenuItem_EditCSSClick" />
                                 <MenuItem Header="Show Dev Tools" Click="MenuItem_DevToolsClick" />
                                 <Separator />
+                                <MenuItem Header="Migrate Settings" Click="MenuItem_MigrateSettings" />
                                 <MenuItem Header="GitHub latest release" Click="MenuItem_VisitWebsite" />
                                 <Separator />
                                 <MenuItem Header="Exit Application" Click="MenuItemExitApp_Click" />

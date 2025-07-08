@@ -1,16 +1,19 @@
 ﻿using Jot;
-using System.Diagnostics;
-using System.Windows;
-using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Controls;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
-using Application = System.Windows.Application;
-using MessageBox = System.Windows.MessageBox;
-using Brushes = System.Windows.Media.Brushes;
-using Point = System.Windows.Point;
+using Newtonsoft.Json;
+using System.Diagnostics;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Interop;
+using System.Windows.Media;
 using TransparentTwitchChatWPF.Utils;
+using Application = System.Windows.Application;
+using Brushes = System.Windows.Media.Brushes;
+using File = System.IO.File;
+using MessageBox = System.Windows.MessageBox;
+using Path = System.IO.Path;
+using Point = System.Windows.Point;
 
 namespace TransparentTwitchChatWPF
 {
@@ -26,23 +29,27 @@ namespace TransparentTwitchChatWPF
         private readonly Color _borderColor = (Color)ColorConverter.ConvertFromString("#5D077F");
 
         private bool _hiddenBorders = false;
-        private readonly string _customUrl = "";
-        private readonly string _hashCode = "";
+        //private readonly string _customUrl = "";
+        //private readonly string _hashCode = "";
 
         private Button _closeButton;
         private WebView2 webView;
         private bool hasWebView2Runtime = false;
 
         // Tracked properties
+        public string Url { get; set; }
+        public string HashCode { get; set; }
+        public string DisplayName { get; set; }
         public double ZoomLevel { get; set; }
         public byte OpacityLevel { get; set; }
         public string customCSS { get; set; }
         public string customJS { get; set; }
 
-        public CustomWindow(MainWindow main, string Url, string CustomCSS)
+        public CustomWindow(MainWindow main, string URL, string CustomCSS)
         {
             this._mainWindow = main;
-            this._customUrl = Url;
+
+            Url = URL;
             ZoomLevel = 1;
             OpacityLevel = 0;
             customCSS = CustomCSS;
@@ -50,11 +57,17 @@ namespace TransparentTwitchChatWPF
 
             InitializeComponent();
 
-            _hashCode = Hasher.Create64BitHash(this._customUrl);
+            HashCode = Hasher.Create64BitHash(URL);
+            // TODO: Let user set display name
+            DisplayName = HashCode;
+
             App.Settings.Tracker.Configure<CustomWindow>()
-                .Id(w => w._hashCode, null, false)
+                .Id(w => w.HashCode, null, false)
                 .Properties(cw => new
                 {
+                    cw.Url,
+                    cw.HashCode,
+                    cw.DisplayName,
                     cw.ZoomLevel,
                     cw.OpacityLevel,
                     cw.customCSS,
@@ -64,6 +77,10 @@ namespace TransparentTwitchChatWPF
                 .PersistOn(nameof(Window.Closing))
                 .StopTrackingOn(nameof(Window.Closing));
             App.Settings.Tracker.Track(this);
+
+            // TODO: Setting this here to make sure we use the URL passed in the constructor
+            // otherwise it could load a value that is invalid possibly?
+            Url = URL;
 
             if (ZoomLevel <= 0) ZoomLevel = 1;
 
@@ -266,9 +283,9 @@ namespace TransparentTwitchChatWPF
             webView.DefaultBackgroundColor = System.Drawing.Color.Transparent;
             SetBackgroundOpacity(OpacityLevel);
             
-            if (!string.IsNullOrWhiteSpace(this._customUrl))
+            if (!string.IsNullOrWhiteSpace(this.Url))
             {
-                NavigateToUrl(this._customUrl);
+                NavigateToUrl(this.Url);
             }
         }
 
@@ -382,7 +399,7 @@ namespace TransparentTwitchChatWPF
             this.webView.Dispatcher.Invoke(new Action(() => { SetZoomFactor(ZoomLevel); }));
 
             // Insert some custom CSS for webcaptioner.com domain
-            if (this._customUrl.ToLower().Contains("webcaptioner.com"))
+            if (this.Url.ToLower().Contains("webcaptioner.com"))
             {
                 await this.webView.ExecuteScriptAsync(InsertCustomCSS(CustomCSS_Defaults.WebCaptioner));
             }
@@ -433,7 +450,7 @@ namespace TransparentTwitchChatWPF
 
             if (MessageBox.Show("This will delete the settings for this window. Are you sure?", "Remove Window", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
             {
-                this._mainWindow.RemoveCustomWindow(this._customUrl);
+                this._mainWindow.RemoveCustomWindow(this.Url);
 
                 // TODO: Remove the tracking configuration for this window
                 /*string path = (Services.Tracker.StoreFactory as Jot.Storage.JsonFileStoreFactory).StoreFolderPath;
@@ -487,5 +504,135 @@ namespace TransparentTwitchChatWPF
             var hwnd = new WindowInteropHelper(this).Handle;
             WindowHelper.SetWindowPosTopMost(hwnd);
         }
+
+        private void MenuItem_MigrateSettings(object sender, RoutedEventArgs e)
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = Path.Combine(AppContext.BaseDirectory, "LegacyHasher.exe"),
+                UseShellExecute = false,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                CreateNoWindow = true
+            };
+
+            string DataFolder = (App.Settings.Tracker.Store as Jot.Storage.JsonFileStore).FolderPath;
+
+            using (var process = Process.Start(startInfo))
+            {
+                // Send the single URL to the legacy hasher
+                process.StandardInput.WriteLine(this.Url);
+                process.StandardInput.Close(); // Signal that we're done writing
+
+                // Read the single line of output, which is the old hash code
+                string oldHashCode = process.StandardOutput.ReadToEnd().Trim();
+                process.WaitForExit();
+
+                // Now you have everything you need to perform the migration
+                if (!string.IsNullOrEmpty(oldHashCode))
+                {
+                    // Construct the old and new filenames
+                    string oldFileName = $"CustomWindow_{oldHashCode}.json";
+                    string oldFileNameMigrated = $"CustomWindow_{oldHashCode}.json.migrated";
+                    string newFileName = $"{this.HashCode}.json";
+
+                    // Construct the full paths
+                    string oldSettingsPath = Path.Combine(DataFolder, oldFileName);
+                    string oldSettingsMigratedPath = Path.Combine(DataFolder, oldFileNameMigrated);
+                    string newSettingsPath = Path.Combine(DataFolder, newFileName);
+
+                    if (File.Exists(oldSettingsPath))
+                    {
+                        try
+                        {
+                            string json = File.ReadAllText(oldSettingsPath);
+
+                            // Deserialize into a list of the generic properties
+                            var oldProperties = JsonConvert.DeserializeObject<List<OldSettingProperty>>(json);
+
+                            if (oldProperties != null)
+                            {
+                                // Helper function to find a value by name and convert it
+                                T GetValue<T>(string name)
+                                {
+                                    var prop = oldProperties.FirstOrDefault(p => p.Name == name);
+                                    // Check if the property was found and its value is not null
+                                    if (prop != null && prop.Value != null)
+                                    {
+                                        // Use Convert for safe type conversion from object
+                                        return (T)Convert.ChangeType(prop.Value, typeof(T));
+                                    }
+                                    return default(T); // Return the default value (0, null, etc.) if not found
+                                }
+
+                                // Manually assign each value from the parsed list
+                                this.Height = GetValue<double>("Height");
+                                this.Width = GetValue<double>("Width");
+                                this.Top = GetValue<double>("Top");
+                                this.Left = GetValue<double>("Left");
+                                this.ZoomLevel = GetValue<double>("ZoomLevel");
+                                this.customCSS = GetValue<string>("customCSS");
+                                this.customJS = GetValue<string>("customJS");
+
+                                // Handle the WindowState enum separately
+                                var windowStateProp = oldProperties.FirstOrDefault(p => p.Name == "WindowState");
+                                if (windowStateProp != null && windowStateProp.Value != null)
+                                {
+                                    // First, convert the object (containing an Int64) to an int.
+                                    int stateValue = Convert.ToInt32(windowStateProp.Value);
+                                    // Then, cast the int to the WindowState enum.
+                                    this.WindowState = (System.Windows.WindowState)stateValue;
+                                }
+
+                                this.Persist(); // Save the migrated settings
+
+                                // Rename the old file to indicate it has been migrated
+                                File.Move(oldSettingsPath, oldSettingsPath + ".migrated");
+                                // Show a success message to the user
+                                MessageBox.Show("Settings migrated successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                            }
+                            else
+                            {
+                                MessageBox.Show("Old settings file was empty or invalid.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Show an error message if the migration fails
+                            MessageBox.Show($"Failed to migrate settings: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
+                    else if (File.Exists(oldSettingsMigratedPath))
+                    {
+                        // Show a warning message if already migrated
+                        MessageBox.Show($"Already migrated settings. File = '{oldFileNameMigrated}'", "Already migrated", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                    else
+                    {
+                        // Show an error message if the old file wasn't found
+                        MessageBox.Show("Could not find the old settings file to migrate.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
+        }
     }
+
+    // Class for serializing/deserializing older settings for migration
+    public class OldSettingProperty
+    {
+        public string Name { get; set; }
+        public object Value { get; set; }
+    }
+    /*public class CustomWindowConfig
+    {
+        public double ZoomLevel { get; set; }
+        public byte OpacityLevel { get; set; }
+        public string customCSS { get; set; }
+        public string customJS { get; set; }
+        public double Top { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public double Left { get; set; }
+        public WindowState WindowState { get; set; }
+    }*/
 }
