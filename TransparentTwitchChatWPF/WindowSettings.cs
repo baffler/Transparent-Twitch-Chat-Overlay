@@ -55,14 +55,23 @@ body, p, span, div, a, h1, h2, h3 {
 .chat-line__timestamp { color: gray !important; }
 #chat-room-header-label { color: #cacaca !important; }
 
+.chat-input-tray__open { background-color: rgba(0,0,0,0) !important; color: white !important; }
+.chat-input-container__open { background-color: rgba(0,0,0,0) !important; color: white !important; }
 .chat-wysiwyg-input__box { background-color: rgba(0,0,0,0) !important; color: white !important; }
 .chat-wysiwyg-input__placeholder { color: #a9a9a9 !important; }
 .font-scale--default:has([data-a-target=""chat-input""]) {
   background-color: rgba(0, 0, 0, 0.25) !important;
 }
+.community-highlight { background-color: rgba(0,0,0,0.75) !important; }
+.marquee-animation { display: none !important; }
 
 div:has(> div > div[aria-label=""Expand Top Gifters Leaderboard""]) {
   display: none !important;
+}
+
+.announcement-line { background-color: rgba(0,0,0,0.2) !important; }
+div:has(> div.tw-svg + div) {
+    background-color: transparent !important;
 }
 
 .tw-root--theme-light {
