@@ -52,6 +52,24 @@ public partial class ChatSettingsPage : UserControl
         //this.cbBotActivity.IsChecked = App.Settings.GeneralSettings.ShowBotActivity;
         this.comboTheme.SelectedIndex = App.Settings.GeneralSettings.ThemeIndex;
 
+        // Twitch Popout Chat settings
+        if (App.Settings.GeneralSettings.UseDefaultTwitchPopoutCSS)
+        {
+            this.tbPopoutCSS.Text = CustomCSS_Defaults.TwitchPopoutChat;
+            this.cbUseDefaultPopoutCSS.IsChecked = true;
+        }
+        else
+        {
+            this.tbPopoutCSS.Text = App.Settings.GeneralSettings.TwitchPopoutCSS;
+            this.cbUseDefaultPopoutCSS.IsChecked = false;
+        }
+
+        this.cbBetterTtv.IsChecked = App.Settings.GeneralSettings.BetterTtv;
+        this.cbBetterTtv_7tv.IsChecked = App.Settings.GeneralSettings.BetterTtv_7tv;
+        this.cbBetterTtv_AdvMenu.IsChecked = App.Settings.GeneralSettings.BetterTtv_AdvEmoteMenu;
+        this.cbFfz.IsChecked = App.Settings.GeneralSettings.FrankerFaceZ;
+
+
         if (Enum.IsDefined(typeof(ChatTypes), App.Settings.GeneralSettings.ChatType))
         {
             var chatType = (ChatTypes)App.Settings.GeneralSettings.ChatType;
@@ -72,20 +90,6 @@ public partial class ChatSettingsPage : UserControl
                 this.twitchPopoutChat.Visibility = Visibility.Visible;
                 this.customURLGrid.Visibility = Visibility.Hidden;
                 this.jChatGrid.Visibility = Visibility.Hidden;
-
-                if (App.Settings.GeneralSettings.UseDefaultTwitchPopoutCSS)
-                {
-                    this.tbPopoutCSS.Text = CustomCSS_Defaults.TwitchPopoutChat;
-                    this.cbUseDefaultPopoutCSS.IsChecked = true;
-                }
-                else
-                {
-                    this.tbPopoutCSS.Text = App.Settings.GeneralSettings.TwitchPopoutCSS;
-                    this.cbUseDefaultPopoutCSS.IsChecked = false;
-                }
-
-                this.cbBetterTtv.IsChecked = App.Settings.GeneralSettings.BetterTtv;
-                this.cbFfz.IsChecked = App.Settings.GeneralSettings.FrankerFaceZ;
             }
             else if (chatType == ChatTypes.KapChat)
             {
@@ -156,6 +160,8 @@ public partial class ChatSettingsPage : UserControl
                 }
 
                 App.Settings.GeneralSettings.BetterTtv = this.cbBetterTtv.IsChecked ?? false;
+                App.Settings.GeneralSettings.BetterTtv_7tv = this.cbBetterTtv_7tv.IsChecked ?? false;
+                App.Settings.GeneralSettings.BetterTtv_AdvEmoteMenu = this.cbBetterTtv_AdvMenu.IsChecked ?? false;
                 App.Settings.GeneralSettings.FrankerFaceZ = this.cbFfz.IsChecked ?? false;
             }
             else if (chatType == (int)ChatTypes.KapChat)

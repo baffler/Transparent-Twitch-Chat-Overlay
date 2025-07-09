@@ -19,6 +19,7 @@
         Topmost="True"
         ShowInTaskbar="false"
         Icon="/icons/twitch_chat2.ico"
+        UseLayoutRounding="True"
         Title="" Height="500" Width="360"
         Closing="Window_Closing" Loaded="Window_Loaded">
     <Window.Resources>
@@ -40,8 +41,12 @@
                   ui:ThemeManager.RequestedTheme="Dark">
 
                 <Grid.ColumnDefinitions>
+                    <!-- Column for the custom buttons on the left -->
                     <ColumnDefinition Width="Auto" />
+                    <!-- Column for the title, which will take the remaining space -->
                     <ColumnDefinition Width="*" />
+                    <!-- This column is a placeholder that reserves space for the system caption buttons -->
+                    <ColumnDefinition Width="{Binding Path=(ui:TitleBar.SystemOverlayRightInset), RelativeSource={RelativeSource AncestorType=Window}}" />
                 </Grid.ColumnDefinitions>
 
                 <ui:SimpleStackPanel
@@ -52,31 +57,77 @@
                         Click="btnSettings_Click">
 
                         <ui:TitleBarButton.ContextMenu>
-                            <ContextMenu x:Name="settingsBtnContextMenu" ui:ThemeManager.RequestedTheme="Dark">
-                                <MenuItem Header="Twitch Chat Overlay" IsEnabled="False" />
+                            <ContextMenu x:Name="settingsBtnContextMenu" 
+                                         ui:ThemeManager.RequestedTheme="Dark">
                                 <MenuItem Header="Zoom Level">
+                                    <MenuItem.Icon>
+                                        <Image Source="/assets/images/zoom.png" Width="16" Height="16"
+                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                    </MenuItem.Icon>
+                                    
                                     <MenuItem Header="+ Zoom In" Click="MenuItem_ZoomIn" StaysOpenOnClick="True" />
                                     <MenuItem Header="- Zoom Out" Click="MenuItem_ZoomOut" StaysOpenOnClick="True" />
                                     <MenuItem Header="Reset" Click="MenuItem_ZoomReset" />
                                 </MenuItem>
                                 <MenuItem Header="Opacity Level">
+                                    <MenuItem.Icon>
+                                        <Image Source="/assets/images/opacity.png" Width="16" Height="16"
+                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                    </MenuItem.Icon>
+                                    
                                     <MenuItem Header="+ Increase" Click="MenuItem_IncOpacity" StaysOpenOnClick="True" />
                                     <MenuItem Header="- Decrease" Click="MenuItem_DecOpacity" StaysOpenOnClick="True" />
                                     <MenuItem Header="Reset" Click="MenuItem_ResetOpacity" />
                                 </MenuItem>
-                                <MenuItem Name="menuItemCheckboxAllowInteraction"
-                                          Header="Allow Interaction" 
-                                          IsCheckable="True" 
-                                          Checked="MenuItemInteraction_Checked" 
-                                          Unchecked="MenuItemInteraction_Unchecked" />
-                                <MenuItem Header="Set Display Name" Click="MenuItem_SetDisplayName" />
-                                <MenuItem Header="Edit Custom CSS" Click="MenuItem_EditCSSClick" />
-                                <MenuItem Header="Show Dev Tools" Click="MenuItem_DevToolsClick" />
+                                <MenuItem Header="Settings">
+                                    <MenuItem.Icon>
+                                        <Image Source="/assets/images/settings.png" Width="16" Height="16"
+                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                    </MenuItem.Icon>
+                                    
+                                    <MenuItem Name="menuItemCheckboxAllowInteraction"
+                                              Header="Allow Interaction" 
+                                              IsCheckable="True" 
+                                              Checked="MenuItemInteraction_Checked" 
+                                              Unchecked="MenuItemInteraction_Unchecked" />
+                                    <MenuItem Header="Set Display Name" 
+                                              Click="MenuItem_SetDisplayName" />
+                                    <MenuItem Header="Copy URL" Click="MenuItem_CopyUrl" />
+                                    <Separator />
+                                    <MenuItem Header="Migrate Settings" Click="MenuItem_MigrateSettings" />
+                                </MenuItem>
+                                <MenuItem Header="Edit Custom CSS" Click="MenuItem_EditCSSClick">
+                                    <MenuItem.Icon>
+                                        <Image Source="/assets/images/edit.png" Width="16" Height="16"
+                                               RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Reload" Click="MenuItem_ReloadClick">
+                                    <MenuItem.Icon>
+                                        <Image Source="/assets/images/reload.png" Width="16" Height="16"
+                                                RenderOptions.BitmapScalingMode="HighQuality" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Show Dev Tools" Click="MenuItem_DevToolsClick">
+                                    <MenuItem.Icon>
+                                        <Image Source="/assets/images/bug.png" Width="16" Height="16"
+                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
                                 <Separator />
-                                <MenuItem Header="Migrate Settings" Click="MenuItem_MigrateSettings" />
-                                <MenuItem Header="GitHub latest release" Click="MenuItem_VisitWebsite" />
+                                <MenuItem Header="GitHub latest release" Click="MenuItem_VisitWebsite">
+                                    <MenuItem.Icon>
+                                        <Image Source="/assets/images/github.png" Width="16" Height="16"
+                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
                                 <Separator />
-                                <MenuItem Header="Exit Application" Click="MenuItemExitApp_Click" />
+                                <MenuItem Header="Exit Application" Click="MenuItemExitApp_Click">
+                                    <MenuItem.Icon>
+                                        <Image Source="/assets/images/quit.png" Width="16" Height="16"
+                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
                             </ContextMenu>
                         </ui:TitleBarButton.ContextMenu>
                         <Grid>
@@ -97,15 +148,28 @@
                             <Line X1="1" Y1="1" X2="17" Y2="17" Stroke="White" StrokeThickness="2" />
                         </Grid>
                     </ui:TitleBarButton>
-                    <TextBlock Grid.Column="1"
-                               Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}"
+                </ui:SimpleStackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" 
+                            VerticalAlignment="Center" HorizontalAlignment="Left">
+                    <Path x:Name="InteractableIcon" 
+                          Fill="White" 
+                          Width="16" 
+                          Height="16" 
+                          Stretch="Uniform"
+                          Margin="0,0,5,0"
+                          VerticalAlignment="Center"
+                          Data="m79.031 107.69-19.246-0.058594c-5.4531-0.46094-12.762-8.2656-16.066-12.176l-5.8594-7.5664-10.199-15.355c-1.1367-1.8516-4.625-6.7383-4.3359-9.0039 0.125-1.0195 1.75-2.4141 2.5195-2.9648 3.9453-2.8164 10.18-2.4648 13.93 0.57031 2.2812 1.8438 4.1602 4.5195 5.8164 6.9102l-0.03125-48.852c0-0.78906-0.039063-1.6016 0.054687-2.3789 0.39453-3.3555 2.8984-5.9883 6.2891-6.4141l1.3984-0.03125c3.0312 0.17578 5.8555 2.6797 6.3867 5.6836 0.26172 1.4766 0.14844 3.0742 0.14844 4.5742v18.074c0 2.4102 0.066406 4.8359-0.089844 7.2344 2.3164-7.4688 11.891-7.0234 13.441-0.26953 0.15625 0.67188 0.20312 1.3711 0.27344 2.0508 0.44141-1.2617 1.0039-2.4258 2.0039-3.3398 2.7109-2.4883 7.3242-2.0742 9.75 0.57812 2.0117 2.2031 1.9062 4.9102 1.7852 7.7188 1.5586-5.4453 7.5156-7.4688 11.605-3.4297 1.7109 1.6914 2.3398 3.8008 2.3438 6.1562l0.003906 29.617c0 2.1367 0.039063 4.2617-0.31641 6.375-0.98047 5.8594-3.9805 14.176-10.34 15.957-1.8086 0.51172-3.8945 0.33984-5.7656 0.33984z" 
+                          />
+
+                    <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}"
                                VerticalAlignment="Center"
-                               HorizontalAlignment="Left"
-                               Margin="10,0,0,0"
+                               TextTrimming="CharacterEllipsis"
                                FontSize="14"
                                FontWeight="SemiBold"
                                Foreground="White" />
-                </ui:SimpleStackPanel>
+                </StackPanel>
+
             </Grid>
 
             <Border Grid.Row="1" Name="overlay" Background="black" Opacity="0.01" Panel.ZIndex="1"/>

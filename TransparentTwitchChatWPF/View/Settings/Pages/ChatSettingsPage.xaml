@@ -17,6 +17,8 @@
                     <TextBox Name="tbTwitchPopoutUsername" HorizontalAlignment="Left" Height="23" Width="240" TextWrapping="NoWrap" Text="username" VerticalAlignment="Top" />
                     <Label Content="Extensions" HorizontalAlignment="Left" FontWeight="Bold"/>
                     <CheckBox Name="cbBetterTtv" Content="Enable BetterTTV" HorizontalAlignment="Left" />
+                    <CheckBox Name="cbBetterTtv_AdvMenu" Content="Enable BTTV Advanced Emote Menu" HorizontalAlignment="Left" />
+                    <CheckBox Name="cbBetterTtv_7tv" Content="Enable 7TV Emotes" HorizontalAlignment="Left" />
                     <CheckBox Name="cbFfz" Content="Enable FrankerFaceZ" HorizontalAlignment="Left" />
                     <Label Content="Custom CSS" HorizontalAlignment="Left" FontWeight="Bold" />
                     <CheckBox Name="cbUseDefaultPopoutCSS" 

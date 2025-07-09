@@ -41,6 +41,7 @@ namespace TransparentTwitchChatWPF
         private Button _closeButton;
         private WebView2 webView;
         private bool hasWebView2Runtime = false;
+        private bool webViewProcessFailed = false;
 
         // Tracked properties
         public string Url { get; set; }
@@ -144,12 +145,7 @@ namespace TransparentTwitchChatWPF
                 DefaultBackgroundColor = System.Drawing.Color.Transparent
             };
 
-            var options = new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required")
-            {
-                AdditionalBrowserArguments = "--disable-background-timer-throttling"
-            };
-            string userDataFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF");
-            CoreWebView2Environment cwv2Environment = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
+            CoreWebView2Environment cwv2Environment = await WebView2EnvironmentManager.GetEnvironmentAsync();
 
             // Add to visual tree.
             Grid.SetRow(webView, 1);
@@ -164,7 +160,7 @@ namespace TransparentTwitchChatWPF
             webView.NavigationCompleted += webView_NavigationCompleted;
             webView.CoreWebView2.ProcessFailed += webView_CoreWebView2ProcessFailed;
 
-            webView.CoreWebView2.Profile.PreferredColorScheme = CoreWebView2PreferredColorScheme.Dark;
+            webView.CoreWebView2.Profile.PreferredColorScheme = CoreWebView2PreferredColorScheme.Auto;
 
             // Finalize setup.
             //this.jsCallbackFunctions = new JsCallbackFunctions();
@@ -227,8 +223,9 @@ namespace TransparentTwitchChatWPF
                     this.ResizeMode = ResizeMode.CanResizeWithGrip;
                     this.webView.SetValue(Grid.RowSpanProperty, 1);
                     this.ShowInTaskbar = true;
-                    this.Title = AllowInteraction ? DisplayName + " [Interactable]" : DisplayName;
 
+                    SetCloseButtonVisibility(true);
+                    UpdateTitle();
                     SetBackgroundOpacity(OpacityLevel);
 
                     break;
@@ -255,8 +252,9 @@ namespace TransparentTwitchChatWPF
                     this.ResizeMode = ResizeMode.NoResize;
                     this.webView.SetValue(Grid.RowSpanProperty, 2);
                     this.ShowInTaskbar = false;
-                    this.Title = DisplayName;
-
+                    
+                    SetCloseButtonVisibility(false);
+                    UpdateTitle();
                     SetBackgroundOpacity(OpacityLevel);
 
                     break;
@@ -311,21 +309,19 @@ namespace TransparentTwitchChatWPF
                 });
             }
 
-            // You still need to make the window itself non-click-through to receive mouse events
-            // for the WebView2 content. When you're done, you make it click-through again.
             var hwnd = new WindowInteropHelper(this).Handle;
             if (_isOverlayInteractable)
             {
                 WindowHelper.SetWindowInteractable(hwnd);
                 this.AppTitleBar.Visibility = Visibility.Visible;
-                this.Title = DisplayName + " [Interactable]";
+                UpdateTitle();
                 SetBackgroundOpacity(OpacityLevel);
             }
             else
             {
                 WindowHelper.SetWindowClickThrough(hwnd);
                 this.AppTitleBar.Visibility = Visibility.Collapsed;
-                this.Title = DisplayName;
+                UpdateTitle();
                 SetBackgroundOpacity(OpacityLevel);
             }
         }
@@ -393,43 +389,10 @@ namespace TransparentTwitchChatWPF
             await ApplyWebPageStyles();
         }
 
-        private async void webView_CoreWebView2ProcessFailed(object sender, CoreWebView2ProcessFailedEventArgs e)
+        private void webView_CoreWebView2ProcessFailed(object sender, CoreWebView2ProcessFailedEventArgs e)
         {
-            // It's safest to perform UI updates and re-initialization on the UI thread.
-            await Dispatcher.InvokeAsync(async () =>
-            {
-                MessageBox.Show("The web component crashed and will be reloaded.", "WebView2 Error", MessageBoxButton.OK, MessageBoxImage.Error);
-
-                // --- Clean up old instance ---
-                if (webView != null)
-                {
-                    // Unsubscribe from every event to prevent memory leaks
-                    //webView.CoreWebView2InitializationCompleted -= webView_CoreWebView2InitializationCompleted;
-                    webView.NavigationCompleted -= webView_NavigationCompleted;
-
-                    // The CoreWebView2 might be null if it failed very early
-                    if (webView.CoreWebView2 != null)
-                    {
-                        webView.CoreWebView2.ProcessFailed -= webView_CoreWebView2ProcessFailed;
-                    }
-
-                    // Remove the failed control from the UI and dispose it
-                    this.mainWindowGrid.Children.Remove(webView);
-                    webView.Dispose();
-                    webView = null;
-                }
-
-                // --- Re-create using the helper function ---
-                try
-                {
-                    await SetupWebViewAsync();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Fatal error: Could not recover the WebView2 component. {ex.Message} The window will now close.", "Recovery Failed", MessageBoxButton.OK, MessageBoxImage.Stop);
-                    this.Close();
-                }
-            });
+            webViewProcessFailed = true;
+            this.Close();
         }
         #endregion
 
@@ -532,6 +495,11 @@ namespace TransparentTwitchChatWPF
         #endregion
 
         #region Menu Items
+        private void MenuItem_CopyUrl(object sender, RoutedEventArgs e)
+        {
+            Clipboard.SetText(this.Url);
+        }
+
         private void MenuItem_SetDisplayName(object sender, RoutedEventArgs e)
         {
             var inputWindow = new InputWindow("Window Display Name");
@@ -548,7 +516,7 @@ namespace TransparentTwitchChatWPF
                 }
 
                 DisplayName = name;
-                this.Title = DisplayName;
+                UpdateTitle();
             }
         }
 
@@ -630,6 +598,11 @@ namespace TransparentTwitchChatWPF
             this.webView.CoreWebView2.OpenDevToolsWindow();
         }
 
+        private void MenuItem_ReloadClick(object sender, RoutedEventArgs e)
+        {
+            NavigateToUrl(this.Url);
+        }
+
         private void MenuItem_EditCSSClick(object sender, RoutedEventArgs e)
         {
             TextEditorWindow textEditorWindow = new TextEditorWindow(TextEditorType.CSS, this.customCSS);
@@ -652,14 +625,22 @@ namespace TransparentTwitchChatWPF
 
         private void MenuItem_MigrateSettings(object sender, RoutedEventArgs e)
         {
-            MigrateSettings();
+            if (MessageBox.Show("This will migrate settings from an older version. It will overwrite the current settings for this window.", "Migrate Settings", MessageBoxButton.OKCancel, MessageBoxImage.Information)
+               == MessageBoxResult.OK)
+            {
+                MigrateSettings();
+            }
         }
         #endregion
 
         #region Window Events
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (App.IsShuttingDown) return;
+            if (App.IsShuttingDown || webViewProcessFailed)
+            {
+                e.Cancel = false; // Allow the window to close normally
+                return;
+            }
 
             if (MessageBox.Show("This will delete the settings for this window. Are you sure?", "Remove Window", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
             {
@@ -720,6 +701,20 @@ namespace TransparentTwitchChatWPF
         }
 
         #region Helpers
+        private void UpdateTitle()
+        {
+            var isInteractable = AllowInteraction && (_currentMode == WindowDisplayMode.Setup || _isOverlayInteractable);
+            if (isInteractable)
+            {
+                this.Title = $"{DisplayName} [Interactable]";
+                this.InteractableIcon.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                this.Title = DisplayName;
+                this.InteractableIcon.Visibility = Visibility.Collapsed;
+            }
+        }
         private void MigrateSettings()
         {
             var startInfo = new ProcessStartInfo
@@ -830,6 +825,7 @@ namespace TransparentTwitchChatWPF
             }
         }
         #endregion
+
     }
 
     // Class for serializing/deserializing older settings for migration

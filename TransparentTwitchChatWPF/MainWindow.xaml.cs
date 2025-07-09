@@ -157,7 +157,7 @@ public partial class MainWindow : Window, BrowserWindow
     int cOpacity = 0;
 
     private bool _hiddenBorders = false;
-    public InteractionMode CurrentInteractionMode = InteractionMode.ClickThrough;
+    public WindowDisplayMode CurrentDisplayMode = WindowDisplayMode.Setup;
 
     JsCallbackFunctions jsCallbackFunctions;
     List<BrowserWindow> windows = new List<BrowserWindow>();
@@ -194,7 +194,6 @@ public partial class MainWindow : Window, BrowserWindow
         SetupOrReplaceHotkeys();
         //SettingsWindow.SettingsWindowActive += OnSettingsWindowActive;
 
-        LocalHtmlHelper.EnsureLocalBrowserFiles();
         InitializeWebViewAsync();
     }
 
@@ -286,11 +285,11 @@ public partial class MainWindow : Window, BrowserWindow
 
     private void OnHotKeyToggleInteraction(object sender, HotkeyEventArgs e)
     {
-        CurrentInteractionMode = CurrentInteractionMode == InteractionMode.Interactable
-            ? InteractionMode.ClickThrough
-            : InteractionMode.Interactable;
+        CurrentDisplayMode = CurrentDisplayMode == WindowDisplayMode.Setup
+            ? WindowDisplayMode.Overlay
+            : WindowDisplayMode.Setup;
 
-        bool isInteractable = CurrentInteractionMode == InteractionMode.Interactable;
+        bool isInteractable = CurrentDisplayMode == WindowDisplayMode.Setup;
         SetInteractable(isInteractable);
         SetInteractableAllWindows(isInteractable);
 
@@ -425,12 +424,7 @@ public partial class MainWindow : Window, BrowserWindow
             DefaultBackgroundColor = System.Drawing.Color.Transparent
         };
 
-        var options = new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required")
-        {
-            AdditionalBrowserArguments = "--disable-background-timer-throttling"
-        };
-        string userDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF");
-        CoreWebView2Environment cwv2Environment = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
+        CoreWebView2Environment cwv2Environment = await WebView2EnvironmentManager.GetEnvironmentAsync();
 
         // Add to visual tree.
         Grid.SetRow(webView, 1);
@@ -457,34 +451,26 @@ public partial class MainWindow : Window, BrowserWindow
 
     private async void webView_CoreWebView2ProcessFailed(object sender, CoreWebView2ProcessFailedEventArgs e)
     {
+        Debug.WriteLine($"WebView2 process failed: {e.ProcessFailedKind}, Reason: {e.Reason}");
+
         // It's safest to perform UI updates and re-initialization on the UI thread.
         await Dispatcher.InvokeAsync(async () =>
         {
-            MessageBox.Show("The web component crashed and will be reloaded.", "WebView2 Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"The web component crashed and will now be reloaded.\n'{e.ProcessFailedKind}' Reason: '{e.Reason}'", "WebView2 Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
-            // --- Clean up old instance ---
-            if (webView != null)
-            {
-                // Unsubscribe from every event to prevent memory leaks
-                webView.CoreWebView2InitializationCompleted -= webView_CoreWebView2InitializationCompleted;
-                webView.NavigationCompleted -= webView_NavigationCompleted;
-                webView.WebMessageReceived -= webView_WebMessageReceived;
+            // --- Clean up the FAILED instance ---
+            // Remove the control from the visual tree.
+            this.mainWindowGrid.Children.Remove(webView);
 
-                // The CoreWebView2 might be null if it failed very early
-                if (webView.CoreWebView2 != null)
-                {
-                    webView.CoreWebView2.ProcessFailed -= webView_CoreWebView2ProcessFailed;
-                }
+            // Dispose of it to release resources.
+            webView.Dispose();
+            webView = null;
 
-                // Remove the failed control from the UI and dispose it
-                this.mainWindowGrid.Children.Remove(webView);
-                webView.Dispose();
-                webView = null;
-            }
-
-            // --- Re-create using the helper function ---
+            // --- Re-create a NEW instance ---
             try
             {
+                // This method should now create a new WebView2, subscribe its events,
+                // and add it to the grid. And re-open the widgets.
                 await SetupWebViewAsync();
             }
             catch (Exception ex)
@@ -572,7 +558,7 @@ public partial class MainWindow : Window, BrowserWindow
             this.webView.Focusable = interactable;
         });
 
-        CurrentInteractionMode = interactable ? InteractionMode.Interactable : InteractionMode.ClickThrough;
+        CurrentDisplayMode = interactable ? WindowDisplayMode.Setup : WindowDisplayMode.Overlay;
         var hwnd = new WindowInteropHelper(this).Handle;
 
         if (interactable)
@@ -934,10 +920,66 @@ public partial class MainWindow : Window, BrowserWindow
         }
     }
 
-    private void TwitchPopoutSetup()
+    private async void TwitchPopoutSetup()
     {
         if (App.Settings.GeneralSettings.BetterTtv)
         {
+            /*
+             * p = {
+                    BTTV_EMOTES: 1,
+                    ANIMATED_EMOTES: 2,
+                    FFZ_EMOTES: 4,
+                    ANIMATED_PERSONAL_EMOTES: 8,
+                    SEVENTV_EMOTES: 16,
+                    EMOTE_MODIFIERS: 32,
+                    SEVENTV_UNLISTED_EMOTES: 64
+                }
+            C = { // Defaults
+                // ... other settings ...
+                emotes: [p.BTTV_EMOTES | p.ANIMATED_EMOTES | p.FFZ_EMOTES | p.EMOTE_MODIFIERS, 0],
+                // ... other settings ...
+            }
+             */
+
+            // Define the JavaScript to update the emotes setting using a bitwise operation.
+            // The value '16' corresponds to the flag for enabling 7TV emotes.
+            if (App.Settings.GeneralSettings.BetterTtv_7tv || App.Settings.GeneralSettings.BetterTtv_AdvEmoteMenu)
+            {
+                // Perform a bitwise OR with 16 to enable the 7TV flag
+                // This adds the 7TV setting without disabling others.
+                string enable7tvFlag = @"settings.emotes[0] = settings.emotes[0] | 16;";
+                string disable7tvFlag = @"settings.emotes[0] = settings.emotes[0] & ~16;";
+                string enableAdvEmoteMenuFlag = "settings.emoteMenu = 2;";
+                string disableAdvEmoteMenuFlag = "settings.emoteMenu = 0;";
+
+                var bttvSettingsScript = $$"""
+                (function() {
+                    try {
+                        const settingsKey = 'bttv_settings';
+                        let settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
+
+                        // Enable 7TV Emotes (Bitwise Flag)
+                        if (settings.emotes && Array.isArray(settings.emotes)) {
+                        {{(App.Settings.GeneralSettings.BetterTtv_7tv ? enable7tvFlag : disable7tvFlag)}}
+                        }
+
+                        // --- Enable BTTV Emote Menu ---
+                        // 0 = Off, 1 = Legacy, 2 = Modern
+                        {{(App.Settings.GeneralSettings.BetterTtv_AdvEmoteMenu ? enableAdvEmoteMenuFlag : disableAdvEmoteMenuFlag)}}
+
+                        // --- Save all changes back to localStorage ---
+                        localStorage.setItem(settingsKey, JSON.stringify(settings));
+                        console.log('BTTV settings updated to enable 7TV and the BTTV Emote Menu.');
+                    } catch (e) {
+                        console.error('Failed to pre-configure BTTV settings', e);
+                    }
+                })();
+            """;
+
+                await webView.CoreWebView2.ExecuteScriptAsync(bttvSettingsScript);
+            }
+
+            // Inject the main BTTV script.
             InsertCustomJavaScriptFromUrl("https://cdn.betterttv.net/betterttv.js");
         }
         if (App.Settings.GeneralSettings.FrankerFaceZ)
@@ -1373,6 +1415,7 @@ public partial class MainWindow : Window, BrowserWindow
         var dialog = new UpdateDialog("1.1.0", "1.1.5");
         dialog.Owner = owner;
         dialog.ShowDialog();
+        App.Settings.GeneralSettings.LastUpdateCheck = DateTime.Now;
 #else
         _logger.LogInformation("Checking for updates...");
 
@@ -1419,9 +1462,6 @@ public partial class MainWindow : Window, BrowserWindow
                     App.Settings.GeneralSettings.CheckForUpdates = false;
                 }
             }
-
-            // Persist settings if they have changed
-            App.Settings.Persist();
         }
         catch (Exception ex)
         {
@@ -1582,7 +1622,7 @@ public partial class MainWindow : Window, BrowserWindow
         double remapped = Remap(Opacity);
         if (remapped <= 0)
         {
-            if (this.CurrentInteractionMode == InteractionMode.Interactable)
+            if (this.CurrentDisplayMode == WindowDisplayMode.Setup)
                 remapped = 0.01;
             else
                 remapped = 0;
@@ -1784,10 +1824,4 @@ public partial class MainWindow : Window, BrowserWindow
         var hwnd = new WindowInteropHelper(this).Handle;
         WindowHelper.SetWindowPosTopMost(hwnd);
     }
-}
-
-public enum InteractionMode
-{
-    ClickThrough,
-    Interactable
 }

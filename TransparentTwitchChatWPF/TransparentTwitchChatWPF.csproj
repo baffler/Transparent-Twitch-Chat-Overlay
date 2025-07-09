@@ -47,8 +47,25 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Remove="assets\images\bug.png" />
+		<None Remove="assets\images\copy.png" />
+		<None Remove="assets\images\edit.png" />
+		<None Remove="assets\images\github.png" />
+		<None Remove="assets\images\opacity.png" />
+		<None Remove="assets\images\quit.png" />
+		<None Remove="assets\images\reload.png" />
+		<None Remove="assets\images\settings.png" />
+		<None Remove="assets\images\zoom.png" />
 		<None Remove="browser\emote-bundle.js" />
 		<None Remove="icons\twitch_chat.ico" />
+		<Resource Include="assets\images\bug.png" />
+		<Resource Include="assets\images\edit.png" />
+		<Resource Include="assets\images\github.png" />
+		<Resource Include="assets\images\opacity.png" />
+		<Resource Include="assets\images\quit.png" />
+		<Resource Include="assets\images\reload.png" />
+		<Resource Include="assets\images\settings.png" />
+		<Resource Include="assets\images\zoom.png" />
 		<Resource Include="icons\twitch_chat.ico" />
 		<None Remove="icons\twitch_chat2.ico" />
 		<Resource Include="icons\twitch_chat2.ico" />
@@ -62,6 +79,9 @@
 		<Content Include="browser\*.html">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+		<Resource Include="assets\images\copy.png">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
 		<Content Include="browser\emote-bundle.js">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
