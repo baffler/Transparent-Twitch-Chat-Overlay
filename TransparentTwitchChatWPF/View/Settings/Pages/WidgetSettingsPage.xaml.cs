@@ -9,19 +9,18 @@ namespace TransparentTwitchChatWPF.View.Settings;
 /// </summary>
 public partial class WidgetSettingsPage : UserControl
 {
-    public event Action<string, string> WidgetCreationRequested;
+    public event Action WidgetCreationRequested;
 
     public WidgetSettingsPage()
     {
         InitializeComponent();
 
-        tbWidgetCustomCSS.SyntaxHighlighting = ICSharpCode.AvalonEdit.Highlighting.HighlightingManager.Instance.GetDefinition("CSS");
+        //tbWidgetCustomCSS.SyntaxHighlighting = ICSharpCode.AvalonEdit.Highlighting.HighlightingManager.Instance.GetDefinition("CSS");
     }
 
     private void NewWidgetButton_Click(object sender, RoutedEventArgs e)
     {
-        WidgetCreationRequested?.Invoke(this.tbUrlForWidget.Text, this.tbWidgetCustomCSS.Text);
-        this.tbUrlForWidget.Text = string.Empty;
+        WidgetCreationRequested?.Invoke();
     }
 
     private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)

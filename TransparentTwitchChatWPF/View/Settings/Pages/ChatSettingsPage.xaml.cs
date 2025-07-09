@@ -73,10 +73,16 @@ public partial class ChatSettingsPage : UserControl
                 this.customURLGrid.Visibility = Visibility.Hidden;
                 this.jChatGrid.Visibility = Visibility.Hidden;
 
-                if (string.IsNullOrEmpty(App.Settings.GeneralSettings.TwitchPopoutCSS))
+                if (App.Settings.GeneralSettings.UseDefaultTwitchPopoutCSS)
+                {
                     this.tbPopoutCSS.Text = CustomCSS_Defaults.TwitchPopoutChat;
+                    this.cbUseDefaultPopoutCSS.IsChecked = true;
+                }
                 else
+                {
                     this.tbPopoutCSS.Text = App.Settings.GeneralSettings.TwitchPopoutCSS;
+                    this.cbUseDefaultPopoutCSS.IsChecked = false;
+                }
 
                 this.cbBetterTtv.IsChecked = App.Settings.GeneralSettings.BetterTtv;
                 this.cbFfz.IsChecked = App.Settings.GeneralSettings.FrankerFaceZ;
@@ -139,14 +145,14 @@ public partial class ChatSettingsPage : UserControl
                 }
                 App.Settings.GeneralSettings.Username = this.tbTwitchPopoutUsername.Text;
 
-                if (!string.IsNullOrWhiteSpace(this.tbPopoutCSS.Text) && !string.IsNullOrEmpty(this.tbPopoutCSS.Text)
-                    && (this.tbPopoutCSS.Text.ToLower() != "css"))
+                if (this.cbUseDefaultPopoutCSS.IsChecked ?? false)
                 {
-                    App.Settings.GeneralSettings.TwitchPopoutCSS = this.tbPopoutCSS.Text;
+                    App.Settings.GeneralSettings.UseDefaultTwitchPopoutCSS = true;
                 }
                 else
                 {
-                    App.Settings.GeneralSettings.TwitchPopoutCSS = CustomCSS_Defaults.TwitchPopoutChat;
+                    App.Settings.GeneralSettings.UseDefaultTwitchPopoutCSS = false;
+                    App.Settings.GeneralSettings.TwitchPopoutCSS = this.tbPopoutCSS.Text;
                 }
 
                 App.Settings.GeneralSettings.BetterTtv = this.cbBetterTtv.IsChecked ?? false;
@@ -450,5 +456,17 @@ public partial class ChatSettingsPage : UserControl
     {
         ShellHelper.OpenUrl(e.Uri.AbsoluteUri);
         e.Handled = true;
+    }
+
+    private void cbUseDefaultPopoutCSS_Checked(object sender, RoutedEventArgs e)
+    {
+        tbPopoutCSS.Text = CustomCSS_Defaults.TwitchPopoutChat;
+        tbPopoutCSS.IsReadOnly = true;
+    }
+
+    private void cbUseDefaultPopoutCSS_Unchecked(object sender, RoutedEventArgs e)
+    {
+        tbPopoutCSS.Text = App.Settings.GeneralSettings.TwitchPopoutCSS;
+        tbPopoutCSS.IsReadOnly = false;
     }
 }

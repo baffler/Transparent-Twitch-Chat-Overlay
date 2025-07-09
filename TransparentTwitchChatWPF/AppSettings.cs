@@ -86,6 +86,7 @@ public class GeneralSettings
     public int ThemeIndex { get; set; } = 1;
     public string CustomCSS { get; set; } = string.Empty;
     public string TwitchPopoutCSS { get; set; } = string.Empty;
+    public bool UseDefaultTwitchPopoutCSS { get; set; } = true;
     public int ChatType { get; set; } = 0;
     public string CustomURL { get; set; } = string.Empty;
     public double ZoomLevel { get; set; } = 1;

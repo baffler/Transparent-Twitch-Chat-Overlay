@@ -131,6 +131,7 @@ using TransparentTwitchChatWPF.Twitch;
 using TransparentTwitchChatWPF.Utils;
 using TransparentTwitchChatWPF.View;
 using Velopack;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 /// <summary>
 /// Interaction logic for MainWindow.xaml
@@ -156,7 +157,7 @@ public partial class MainWindow : Window, BrowserWindow
     int cOpacity = 0;
 
     private bool _hiddenBorders = false;
-    private bool _interactable = true;
+    public InteractionMode CurrentInteractionMode = InteractionMode.ClickThrough;
 
     JsCallbackFunctions jsCallbackFunctions;
     List<BrowserWindow> windows = new List<BrowserWindow>();
@@ -285,8 +286,23 @@ public partial class MainWindow : Window, BrowserWindow
 
     private void OnHotKeyToggleInteraction(object sender, HotkeyEventArgs e)
     {
-        SetInteractable(!this.webView.Focusable);
+        CurrentInteractionMode = CurrentInteractionMode == InteractionMode.Interactable
+            ? InteractionMode.ClickThrough
+            : InteractionMode.Interactable;
+
+        bool isInteractable = CurrentInteractionMode == InteractionMode.Interactable;
+        SetInteractable(isInteractable);
+        SetInteractableAllWindows(isInteractable);
+
         e.Handled = true;
+    }
+
+    private void SetInteractableAllWindows(bool isInteractable)
+    {
+        foreach (var window in this.windows)
+        {
+            window.SetInteractable(isInteractable);
+        }
     }
 
     private void OnHotKeyBringToTopTimer(object sender, HotkeyEventArgs e)
@@ -430,6 +446,8 @@ public partial class MainWindow : Window, BrowserWindow
         webView.WebMessageReceived += webView_WebMessageReceived;
         webView.CoreWebView2.ProcessFailed += webView_CoreWebView2ProcessFailed;
 
+        webView.CoreWebView2.Profile.PreferredColorScheme = CoreWebView2PreferredColorScheme.Auto;
+
         // Finalize setup.
         this.jsCallbackFunctions = new JsCallbackFunctions();
         webView.CoreWebView2.AddHostObjectToScript("jsCallbackFunctions", this.jsCallbackFunctions);
@@ -554,7 +572,7 @@ public partial class MainWindow : Window, BrowserWindow
             this.webView.Focusable = interactable;
         });
 
-        _interactable = interactable;
+        CurrentInteractionMode = interactable ? InteractionMode.Interactable : InteractionMode.ClickThrough;
         var hwnd = new WindowInteropHelper(this).Handle;
 
         if (interactable)
@@ -1042,7 +1060,7 @@ public partial class MainWindow : Window, BrowserWindow
         ShellHelper.OpenFolder(folderPath);
     }
 
-    public void CreateNewWindow(string URL, string CustomCSS)
+    public void CreateNewWindow(string URL, string displayName, string CustomCSS, bool allowInteraction)
     {
         if (string.IsNullOrEmpty(URL))
         {
@@ -1059,17 +1077,19 @@ public partial class MainWindow : Window, BrowserWindow
             App.Settings.GeneralSettings.CustomWindows.Add(URL);
             Debug.WriteLine("Creating new window with URL: " + URL);
             Debug.WriteLine("Custom CSS: " + CustomCSS);
-            OpenNewCustomWindow(URL, CustomCSS);
+            OpenNewCustomWindow(URL, displayName, CustomCSS, allowInteraction);
         }
     }
 
-    private void CreateNewWindowDialog()
+    private void CreateNewWindowDialog(Window? owner = null)
     {
         if (!hasWebView2Runtime) return;
         Input_Custom inputDialog = new Input_Custom();
+        inputDialog.Owner = owner;
+
         if (inputDialog.ShowDialog() == true)
         {
-            CreateNewWindow(inputDialog.Url, inputDialog.CustomCSS);
+            CreateNewWindow(inputDialog.Url, inputDialog.DisplayName, inputDialog.CustomCSS, inputDialog.AllowInteraction);
         }
     }
 
@@ -1132,8 +1152,8 @@ public partial class MainWindow : Window, BrowserWindow
 
         var settingsWindow = _serviceProvider.GetRequiredService<SettingsWindow>();
 
-        settingsWindow.CreateWidgetRequested += (url, css) => {
-            this.CreateNewWindow(url, css);
+        settingsWindow.CreateWidgetRequested += (window) => {
+            CreateNewWindowDialog(window);
         };
 
         settingsWindow.CheckForUpdateRequested += () => {
@@ -1258,14 +1278,11 @@ public partial class MainWindow : Window, BrowserWindow
         }
     }
 
-    private void OpenNewCustomWindow(string url, string CustomCSS, bool hideBorder = false)
+    private void OpenNewCustomWindow(string URL, string displayName, string CustomCSS, bool allowInteraction)
     {
-        CustomWindow newWindow = new CustomWindow(this, url, CustomCSS);
+        CustomWindow newWindow = new CustomWindow(this, URL, displayName, CustomCSS, allowInteraction);
         windows.Add(newWindow);
         newWindow.Show();
-
-        if (hideBorder)
-            newWindow.hideBorders();
     }
 
     public void RemoveCustomWindow(string url)
@@ -1464,8 +1481,9 @@ public partial class MainWindow : Window, BrowserWindow
 
         if (App.Settings.GeneralSettings.CustomWindows != null)
         {
+            // Using default values for CustomWindows, but it will load them from the settings once opened
             foreach (string url in App.Settings.GeneralSettings.CustomWindows)
-                OpenNewCustomWindow(url, "", App.Settings.GeneralSettings.AutoHideBorders);
+                OpenNewCustomWindow(url, "", "", false);
         }
 
         if (App.Settings.GeneralSettings.jChatURL.ToLower().Contains("giambaj.it"))
@@ -1564,7 +1582,7 @@ public partial class MainWindow : Window, BrowserWindow
         double remapped = Remap(Opacity);
         if (remapped <= 0)
         {
-            if (_interactable)
+            if (this.CurrentInteractionMode == InteractionMode.Interactable)
                 remapped = 0.01;
             else
                 remapped = 0;
@@ -1724,7 +1742,10 @@ public partial class MainWindow : Window, BrowserWindow
     private void MenuItem_ToggleInteractable(object sender, RoutedEventArgs e)
     {
         if (!hasWebView2Runtime) return;
-        SetInteractable(!this.webView.Focusable);
+
+        var isInteractable = !this.webView.Focusable;
+        SetInteractable(isInteractable);
+        SetInteractableAllWindows(isInteractable);
     }
 
     private void Window_Closed(object sender, EventArgs e)
@@ -1763,4 +1784,10 @@ public partial class MainWindow : Window, BrowserWindow
         var hwnd = new WindowInteropHelper(this).Handle;
         WindowHelper.SetWindowPosTopMost(hwnd);
     }
+}
+
+public enum InteractionMode
+{
+    ClickThrough,
+    Interactable
 }

@@ -10,24 +10,34 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid Name="chatGrid" Visibility="Visible" Grid.Row="0">
-        <Grid Name ="twitchPopoutChat" Visibility="Hidden">
-            <Label Content="Username" HorizontalAlignment="Left" Margin="12,15,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-            <TextBox Name="tbTwitchPopoutUsername" HorizontalAlignment="Left" Height="23" Width="240" Margin="20,40,0,0" TextWrapping="NoWrap" Text="username" VerticalAlignment="Top" />
-            <Label Content="Extensions" HorizontalAlignment="Left" Margin="12,80,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-            <CheckBox Name="cbBetterTtv" Content="Enable BetterTTV" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20,100,0,0" />
-            <CheckBox Name="cbFfz" Content="Enable FrankerFaceZ" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20,125,0,0" />
-            <Label Content="Custom CSS" HorizontalAlignment="Left" Margin="12,160,0,0" FontWeight="Bold" />
-            <avalonedit:TextEditor Name="tbPopoutCSS" 
-                BorderBrush="LightSlateGray"
-                BorderThickness="1"
-                Background="#AAA"
-                Padding="5,5,0,0"
-                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                 Width="Auto" Height="Auto"
-                 HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" 
-                 Margin="22,185,15,50" WordWrap="False"
-                 Text="" />
+        <Grid Name="twitchPopoutChat" Visibility="Hidden">
+            <DockPanel Margin="10">
+                <ui:SimpleStackPanel DockPanel.Dock="Top" Margin="10" Spacing="5">
+                    <Label Content="Username" HorizontalAlignment="Left" FontWeight="Bold"/>
+                    <TextBox Name="tbTwitchPopoutUsername" HorizontalAlignment="Left" Height="23" Width="240" TextWrapping="NoWrap" Text="username" VerticalAlignment="Top" />
+                    <Label Content="Extensions" HorizontalAlignment="Left" FontWeight="Bold"/>
+                    <CheckBox Name="cbBetterTtv" Content="Enable BetterTTV" HorizontalAlignment="Left" />
+                    <CheckBox Name="cbFfz" Content="Enable FrankerFaceZ" HorizontalAlignment="Left" />
+                    <Label Content="Custom CSS" HorizontalAlignment="Left" FontWeight="Bold" />
+                    <CheckBox Name="cbUseDefaultPopoutCSS" 
+                              Content="Use Default (Uncheck to edit the CSS)" 
+                              HorizontalAlignment="Left" 
+                              Checked="cbUseDefaultPopoutCSS_Checked"
+                              Unchecked="cbUseDefaultPopoutCSS_Unchecked" />
+                </ui:SimpleStackPanel>
+
+                <avalonedit:TextEditor Name="tbPopoutCSS" 
+                    BorderBrush="LightSlateGray"
+                    BorderThickness="1"
+                    Background="#AAA"
+                    Padding="5,5,0,0"
+                    Margin="5,0,5,5"
+                    HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" 
+                    WordWrap="False"
+                    Text="" />
+            </DockPanel>
         </Grid>
+        
         <Grid Name="customURLGrid" Visibility="Hidden" Grid.Column="1">
             <Label Content="URL" HorizontalAlignment="Left" Margin="12,15,0,0" FontWeight="Bold" />
             <TextBox Name="tbURL" HorizontalAlignment="Stretch" Height="23" Width="Auto" Margin="20,40,15,0" TextWrapping="NoWrap" Text="url" VerticalAlignment="Top" />

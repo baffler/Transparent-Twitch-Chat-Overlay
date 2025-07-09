@@ -11,7 +11,7 @@ namespace TransparentTwitchChatWPF;
 /// </summary>
 public partial class SettingsWindow : Window
 {
-    public event Action<string, string> CreateWidgetRequested;
+    public event Action<Window> CreateWidgetRequested;
     public event Action CheckForUpdateRequested;
 
     private readonly ChatSettingsPage _chatSettingsPage;
@@ -41,9 +41,9 @@ public partial class SettingsWindow : Window
         };
 
         // Subscribe to the page's event and bubble it up.
-        _widgetSettingsPage.WidgetCreationRequested += (url, css) => {
+        _widgetSettingsPage.WidgetCreationRequested += () => {
             // When the page requests a widget, fire this window's own event.
-            CreateWidgetRequested?.Invoke(url, css);
+            CreateWidgetRequested?.Invoke(this);
         };
 
         // Set the initial page

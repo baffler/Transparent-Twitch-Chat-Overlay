@@ -34,8 +34,15 @@ public class WindowSettings
 public static class CustomCSS_Defaults
 {
     public static string TwitchPopoutChat = @"body { background-color: rgba(0,0,0,0) !important; }
+body, p, span, div, a, h1, h2, h3 {
+    text-shadow:
+        -1px -1px 0 rgba(0, 0, 0, 0.85),
+        1px -1px 0 rgba(0, 0, 0, 0.85),
+        -1px  1px 0 rgba(0, 0, 0, 0.85),
+        1px  1px 0 rgba(0, 0, 0, 0.85);
+}
 .chat-input { display:none; }
-.stream-chat .stream-chat-header { display:none; background-color: rgba(0,0,0,0) !important; color:white !important; }
+.stream-chat .stream-chat-header { display:none; background-color: rgba(0,0,0,0) !important; color: white !important; }
 .chat-room__notifcations { display:none; }
 .tw-z-default { display:none; }
 .tw-flex { background-color: rgba(0,0,0,0) !important; }
@@ -44,8 +51,32 @@ public static class CustomCSS_Defaults
 .stream-chat { background-color: rgba(0,0,0,0) !important; }
 .chat-room { background-color: rgba(0,0,0,0) !important; }
 .chat-list { background-color: rgba(0,0,0,0) !important; }
-.scrollable-area { background-color: rgba(0,0,0,0) !important; color: white; }
+.scrollable-area { background-color: rgba(0,0,0,0) !important; color: white !important; }
+.chat-line__timestamp { color: gray !important; }
+#chat-room-header-label { color: #cacaca !important; }
+
+.chat-wysiwyg-input__box { background-color: rgba(0,0,0,0) !important; color: white !important; }
+.chat-wysiwyg-input__placeholder { color: #a9a9a9 !important; }
+.font-scale--default:has([data-a-target=""chat-input""]) {
+  background-color: rgba(0, 0, 0, 0.25) !important;
+}
+
+div:has(> div > div[aria-label=""Expand Top Gifters Leaderboard""]) {
+  display: none !important;
+}
+
+.tw-root--theme-light {
+  background-color: rgba(0,0,0,0) !important;
+  color: white !important;
+}
+.tw-root--theme-light svg { fill: white !important; }
+.tw-root--theme-light input,
+.tw-root--theme-light textarea { color: white !important; }
+.tw-root--theme-light input::placeholder,
+.tw-root--theme-light textarea::placeholder { color: #cacaca !important; }
+.tw-root--theme-light [class*=""tw-border-""] { border-color: rgba(255, 255, 255, 0.25) !important; }
 ";
+
     public static string WebCaptioner = @"body { background-color: rgba(0,0,0,0.1) !important; }
 .transcript { background-color: rgba(0,0,0,0) !important; margin-bottom: -1em !important; }
 .bg-dark { background-color: rgba(0,0,0,0) !important; }";

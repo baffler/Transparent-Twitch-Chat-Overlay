@@ -19,7 +19,7 @@
         Topmost="True"
         ShowInTaskbar="false"
         Icon="/icons/twitch_chat2.ico"
-        Title="Twitch Chat Overlay" Height="500" Width="360"
+        Title="" Height="500" Width="360"
         Closing="Window_Closing" Loaded="Window_Loaded">
     <Window.Resources>
         <Style x:Key="AppTitleBarStyle" TargetType="ui:TitleBarControl">
@@ -64,6 +64,12 @@
                                     <MenuItem Header="- Decrease" Click="MenuItem_DecOpacity" StaysOpenOnClick="True" />
                                     <MenuItem Header="Reset" Click="MenuItem_ResetOpacity" />
                                 </MenuItem>
+                                <MenuItem Name="menuItemCheckboxAllowInteraction"
+                                          Header="Allow Interaction" 
+                                          IsCheckable="True" 
+                                          Checked="MenuItemInteraction_Checked" 
+                                          Unchecked="MenuItemInteraction_Unchecked" />
+                                <MenuItem Header="Set Display Name" Click="MenuItem_SetDisplayName" />
                                 <MenuItem Header="Edit Custom CSS" Click="MenuItem_EditCSSClick" />
                                 <MenuItem Header="Show Dev Tools" Click="MenuItem_DevToolsClick" />
                                 <Separator />
@@ -91,6 +97,14 @@
                             <Line X1="1" Y1="1" X2="17" Y2="17" Stroke="White" StrokeThickness="2" />
                         </Grid>
                     </ui:TitleBarButton>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Left"
+                               Margin="10,0,0,0"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="White" />
                 </ui:SimpleStackPanel>
             </Grid>
 
@@ -100,11 +114,11 @@
             <Grid x:Name="PlaceholderOverlay" Background="#80000000" Visibility="Collapsed">
 
                 <Border HorizontalAlignment="Center" 
-            VerticalAlignment="Center"
-            Background="#FF2D2D30"
-            CornerRadius="8"
-            MaxWidth="400"
-            Padding="25">
+                        VerticalAlignment="Center"
+                        Background="#FF2D2D30"
+                        CornerRadius="8"
+                        MaxWidth="400"
+                        Padding="25">
                     <Border.Effect>
                         <DropShadowEffect ShadowDepth="0" BlurRadius="15" Opacity="0.5" Color="Black"/>
                     </Border.Effect>
