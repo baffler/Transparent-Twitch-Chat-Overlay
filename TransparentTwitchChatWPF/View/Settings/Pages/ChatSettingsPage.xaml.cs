@@ -15,6 +15,7 @@ namespace TransparentTwitchChatWPF.View.Settings;
 public partial class ChatSettingsPage : UserControl
 {
     public event Action TwitchConnectionPageRequested;
+    public event Action RestoreNativeChatDefaultsRequested;
 
     public ChatSettingsPage()
     {
@@ -450,5 +451,18 @@ public partial class ChatSettingsPage : UserControl
     {
         ShellHelper.OpenUrl(e.Uri.AbsoluteUri);
         e.Handled = true;
+    }
+
+    private void btRestoreNativeChatDefaults_Click(object sender, RoutedEventArgs e)
+    {
+        var result = MessageBox.Show(
+            "This will overwrite all NativeChat overlay files with the built-in defaults.\n\n" +
+            "Any direct edits you made to those files on disk will be lost.\n\nContinue?",
+            "Restore NativeChat Defaults",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (result == MessageBoxResult.Yes)
+            RestoreNativeChatDefaultsRequested?.Invoke();
     }
 }

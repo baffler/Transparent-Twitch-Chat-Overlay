@@ -30,7 +30,6 @@ module.exports = {
     ],
   },
   plugins: [
-    new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
       template: "./src/index.html",
       filename: "index.html",
@@ -48,7 +47,7 @@ module.exports = {
         { from: "src/styles", to: "styles" },
         { from: "src/v2/styles", to: "v2/styles" },
         { from: "src/fonts", to: "" },
-        { from: "src/media", to: "media" },
+        { from: "src/media", to: "media", noErrorOnMissing: true },
         { from: "src/embed", to: "" },
       ],
     }),

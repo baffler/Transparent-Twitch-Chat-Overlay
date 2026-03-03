@@ -123,6 +123,16 @@
                 </StackPanel>
                 <!--<Button Name="btOpenChatFilterSettings2" Margin="20,18,14,0" Content="Open Chat Filter Settings" Height="32" Click="btOpenChatFilterSettings_Click" />-->
                 <ComboBox Name="comboChatSound2" SelectedValuePath="Content" Margin="20,20,14,0" DropDownClosed="comboChatSound_DropDownClosed2" />
+                <Rectangle Height="1" Fill="Gray" Margin="20,15,14,0" />
+                <TextBlock Text="Restore all NativeChat overlay files to built-in defaults. Use this if the chat appears broken or files were accidentally deleted."
+                           TextWrapping="Wrap" FontStyle="Italic" FontSize="11"
+                           Margin="20,8,14,0" Foreground="Gray" />
+                <Button Name="btRestoreNativeChatDefaults"
+                        Content="Restore Default Chat Files"
+                        Margin="20,8,0,0"
+                        Width="200"
+                        HorizontalAlignment="Left"
+                        Click="btRestoreNativeChatDefaults_Click" />
             </StackPanel>
         </Grid>
     </Grid>

@@ -13,6 +13,7 @@ public partial class SettingsWindow : Window
 {
     public event Action<string, string> CreateWidgetRequested;
     public event Action CheckForUpdateRequested;
+    public event Action RestoreNativeChatDefaultsRequested;
 
     private readonly ChatSettingsPage _chatSettingsPage;
     private readonly AppearanceSettingsPage _appearanceSettingsPage;
@@ -80,6 +81,7 @@ public partial class SettingsWindow : Window
 
         _chatSettingsPage.SetupValues();
         _chatSettingsPage.TwitchConnectionPageRequested += ShowTwitchConnectionPage;
+        _chatSettingsPage.RestoreNativeChatDefaultsRequested += () => RestoreNativeChatDefaultsRequested?.Invoke();
 
         _connectionSettingsPage.SetupValues();
         _connectionSettingsPage.TwitchConnectionStatusChanged += _chatSettingsPage.OnTwitchConnectionStatusChanged;

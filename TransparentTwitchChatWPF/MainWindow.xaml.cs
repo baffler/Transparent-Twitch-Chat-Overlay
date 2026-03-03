@@ -122,6 +122,7 @@ using NHotkey.Wpf;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Windows.Controls;
@@ -143,6 +144,7 @@ public partial class MainWindow : Window, BrowserWindow
     private readonly ILogger<MainWindow> _logger;
     private readonly TwitchService _twitchService;
     private readonly WebViewConfigurator _webViewConfigurator;
+    private readonly NativeChatFileManager _nativeChatFileManager;
 
     private WebView2 webView;
     private bool hasWebView2Runtime = false;
@@ -166,11 +168,14 @@ public partial class MainWindow : Window, BrowserWindow
     private Chat _currentChat;
     private Button _closeButton;
 
+    private bool _isShowingRepairPrompt = false;
+
     public MainWindow(
         IServiceProvider serviceProvider, 
         ILogger<MainWindow> logger, 
         TwitchService twitchService,
-        WebViewConfigurator webViewConfigurator)
+        WebViewConfigurator webViewConfigurator,
+        NativeChatFileManager nativeChatFileManager)
     {
         InitializeComponent();
         DataContext = this;
@@ -180,6 +185,7 @@ public partial class MainWindow : Window, BrowserWindow
         _twitchService = twitchService ?? throw new ArgumentNullException(nameof(twitchService));
         _twitchService.ChannelPointsRewardRedeemed += OnChannelPointsRewardRedeemed;
         _webViewConfigurator = webViewConfigurator ?? throw new ArgumentNullException(nameof(webViewConfigurator));
+        _nativeChatFileManager = nativeChatFileManager ?? throw new ArgumentNullException(nameof(nativeChatFileManager));
 
         _currentChat = new CustomURLChat(ChatTypes.CustomURL); // TODO: initializing here needed?
 
@@ -410,6 +416,16 @@ public partial class MainWindow : Window, BrowserWindow
 
     private async Task SetupWebViewAsync()
     {
+        try
+        {
+            // TODO: Setting for checking and repairing files if using NativeChat
+            _nativeChatFileManager.EnsureFilesAreUpToDate();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to ensure NativeChat files are present.");
+        }
+
         // Create and configure.
         webView = new WebView2
         {
@@ -451,10 +467,18 @@ public partial class MainWindow : Window, BrowserWindow
 
     private void ApplyVirtualHostMappings(CoreWebView2 core)
     {
-        core.SetVirtualHostNameToFolderMapping(
-            OverlayPathHelper.GetNativeChatHostname(),
-            OverlayPathHelper.GetNativeChatPath(),
-            CoreWebView2HostResourceAccessKind.DenyCors);
+        try
+        {
+            core.SetVirtualHostNameToFolderMapping(
+                OverlayPathHelper.GetNativeChatHostname(),
+                OverlayPathHelper.GetNativeChatPath(),
+                CoreWebView2HostResourceAccessKind.DenyCors);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to set virtual host name to folder mapping for WebView2.");
+            MessageBox.Show(this, $"An error occurred while configuring the web environment:\n{ex.Message}", "Configuration Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private async void webView_CoreWebView2ProcessFailed(object sender, CoreWebView2ProcessFailedEventArgs e)
@@ -880,6 +904,40 @@ public partial class MainWindow : Window, BrowserWindow
         if (!e.IsSuccess)
         {
             Console.WriteLine("webView_NavigationCompleted: (Unsuccessful) " + e.WebErrorStatus.ToString());
+
+            var chatType = (ChatTypes)App.Settings.GeneralSettings.ChatType;
+
+            if (chatType == ChatTypes.NativeChat)
+            {
+                if (!_isShowingRepairPrompt)
+                {
+                    _isShowingRepairPrompt = true;
+
+                    string errorHtml = @"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { background-color: #18181b; color: #efeff1; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+                    h2 { margin-bottom: 5px; }
+                    p { color: #adadb8; margin-bottom: 25px; }
+                    button { background-color: #9146FF; color: white; border: none; padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
+                    button:hover { background-color: #772ce8; }
+                </style>
+            </head>
+            <body>
+                <h2>Chat Files Missing</h2>
+                <p>The local chat files appear to be missing or corrupted.</p>
+                <button onclick=""window.chrome.webview.postMessage('RepairRequested')"">Restore Default Files</button>
+            </body>
+            </html>";
+
+                    // Display the error message with the repair button
+                    this.webView.CoreWebView2.NavigateToString(errorHtml);
+                    return;
+                }
+            }
+
             return;
         }
 
@@ -889,6 +947,30 @@ public partial class MainWindow : Window, BrowserWindow
         this.webView.Dispatcher.Invoke(() => SetZoomFactor(App.Settings.GeneralSettings.ZoomLevel));
         // Configuration for the current chat type
         await _webViewConfigurator.ConfigureAsync(webView.CoreWebView2);
+    }
+
+    private void RestoreNativeChatFiles()
+    {
+        try
+        {
+            _nativeChatFileManager.ForceRestoreDefaults();
+            MessageBox.Show(this,
+                "NativeChat files have been restored to defaults.",
+                "Restore Complete",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            if (App.Settings.GeneralSettings.ChatType == (int)ChatTypes.NativeChat)
+                SetupChatProvider();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to restore NativeChat defaults.");
+            MessageBox.Show(this,
+                $"Failed to restore NativeChat files:\n{ex.Message}",
+                "Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
     }
 
     private void webView_WebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
@@ -907,20 +989,33 @@ public partial class MainWindow : Window, BrowserWindow
         }
         else if (App.Settings.GeneralSettings.ChatType == (int)ChatTypes.NativeChat)
         {
-            string json = e.WebMessageAsJson;
+            string message = e.TryGetWebMessageAsString();
 
-            // Deserialize the JSON string directly into your jChatConfig object!
-            jChatConfig config = JsonSerializer.Deserialize<jChatConfig>(json);
-
-            if (config != null)
+            if (message == "RepairRequested")
             {
-                // TODO: save the configuration to settings
-                // App.Current.SaveConfiguration(config);
+                RestoreNativeChatFiles();
 
-                Dispatcher.Invoke(() =>
+                // Reset the flag and navigate back to the normal chat URL
+                _isShowingRepairPrompt = false;
+                this.webView.CoreWebView2.Navigate(new NativeChatProvider().GetNavigationUri().ToString());
+            }
+            else
+            {
+                string json = e.WebMessageAsJson;
+
+                // Deserialize the JSON string directly into your jChatConfig object!
+                jChatConfig config = JsonSerializer.Deserialize<jChatConfig>(json);
+
+                if (config != null)
                 {
-                    this.Title = $"Chat Overlay for {config.Channel}";
-                });
+                    // TODO: save the configuration to settings
+                    // App.Current.SaveConfiguration(config);
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        this.Title = $"Chat Overlay for {config.Channel}";
+                    });
+                }
             }
         }
     }
@@ -1028,6 +1123,8 @@ public partial class MainWindow : Window, BrowserWindow
         settingsWindow.CheckForUpdateRequested += () => {
             _ = CheckForUpdateAsync(notifyIfNoUpdate: true, settingsWindow);
         };
+
+        settingsWindow.RestoreNativeChatDefaultsRequested += RestoreNativeChatFiles;
 
         // Settings were saved
         if (settingsWindow.ShowDialog() == true)

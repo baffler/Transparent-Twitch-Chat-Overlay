@@ -158,6 +158,7 @@ public class GeneralSettings
     public Hotkey ToggleInteractableHotkey { get; set; } = new Hotkey(Key.F7, ModifierKeys.Control | ModifierKeys.Alt);
     public Hotkey BringToTopHotkey { get; set; } = new Hotkey(Key.F8, ModifierKeys.Control | ModifierKeys.Alt);
     public bool AllowMultipleInstances { get; set; } = false;
+    public string NativeChatVersion { get; set; } = string.Empty;
 }
 
 public class jChatConfig

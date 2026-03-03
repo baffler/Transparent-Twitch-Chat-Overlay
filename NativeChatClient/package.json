@@ -5,8 +5,10 @@
   "main": "webpack.config.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack --mode production",
-    "build:dev": "webpack --mode development"
+    "generate-version": "node generate-version-json.js",
+    "build": "webpack --mode production && npm run generate-version",
+    "build:dev": "webpack --mode development && npm run generate-version",
+    "zip-to-wpf": "powershell Compress-Archive -Path dist\\* -DestinationPath ..\\TransparentTwitchChatWPF\\NativeChatMaster.zip -Force"
   },
   "keywords": [],
   "author": "",

@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Shell;
 using TransparentTwitchChatWPF.Twitch;
 using TransparentTwitchChatWPF.Utils;
+using TransparentTwitchChatWPF.Helpers;
 using TransparentTwitchChatWPF.View.Settings;
 using TwitchLib.EventSub.Websockets.Extensions;
 using Velopack;
@@ -91,6 +92,7 @@ namespace TransparentTwitchChatWPF
                         services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<TwitchService>());
                         services.AddSingleton<ITwitchAuthService, TwitchAuthService>();
                         services.AddSingleton<WebViewConfigurator>();
+                        services.AddSingleton<NativeChatFileManager>();
 
                         // Settings pages
                         services.AddTransient<ConnectionSettingsPage>();
