@@ -79,7 +79,7 @@ function TwitchOAuth(credentials) {
         headers: {'Authorization': 'Bearer ' + credentials.token},
         success : function(result) {
             //set your variable to the result
-            console.log('jChat: helix json aquired user_id');
+            console.log('NativeChat: helix json aquired user_id');
             // console.log(url)
             // console.log(result)
         },
@@ -91,105 +91,174 @@ function TwitchOAuth(credentials) {
     });
 }
 
+const TWITCH_API_FALLBACKS = {
+    "/users": function(url) {
+        const loginMatch = url.match(/[?&]login=([^&]+)/);
+        const idMatch = url.match(/[?&]id=([^&]+)/);
+        
+        let ivrUrl;
+        if (loginMatch) {
+            ivrUrl = "https://api.ivr.fi/v2/twitch/user?login=" + loginMatch[1];
+        } else if (idMatch) {
+            ivrUrl = "https://api.ivr.fi/v2/twitch/user?id=" + idMatch[1];
+        } else {
+            return null;
+        }
+        
+        return $.getJSON(ivrUrl).then(function(res) {
+            // IVR returns an array for bulk queries
+            const users = Array.isArray(res) ? res : [res];
+            return {
+                data: users.filter(u => u && u.id).map(u => ({
+                    id: u.id,
+                    login: u.login,
+                    display_name: u.displayName,
+                    profile_image_url: u.logo
+                }))
+            };
+        });
+    },
+
+    "/chat/badges/global": function(url) {
+        return $.getJSON("https://api.ivr.fi/v2/twitch/badges/global").then(function(res) {
+            // Normalize IVR response to match Twitch Helix structure
+            return {
+                data: res.map(function(badge) {
+                    return {
+                        set_id: badge.set_id,
+                        versions: badge.versions.map(function(v) {
+                            return {
+                                id: v.id,
+                                image_url_4x: v.image_url_4x
+                            };
+                        })
+                    };
+                })
+            };
+        });
+    },
+
+    "/chat/badges": function(url) {
+        const broadcasterIdMatch = url.match(/[?&]broadcaster_id=([^&]+)/);
+        if (!broadcasterIdMatch) return null;
+        
+        return $.getJSON("https://api.ivr.fi/v2/twitch/badges/channel?id=" + broadcasterIdMatch[1]).then(function(res) {
+            return {
+                data: res.map(function(badge) {
+                    return {
+                        set_id: badge.set_id,
+                        versions: badge.versions.map(function(v) {
+                            return {
+                                id: v.id,
+                                image_url_4x: v.image_url_4x
+                            };
+                        })
+                    };
+                })
+            };
+        });
+    }
+
+    // /chat/color and /bits/cheermotes have no IVR equivalent — will reject gracefully
+};
+
 function TwitchAPI(url, credentials) {
-    return $.ajax({
-        type: "GET",
-        url: "https://api.twitch.tv/helix" + url,
-        dataType: "json",
-        headers: {'Authorization': 'Bearer ' + credentials.token,
-                  'Client-Id': credentials.clientId},
-			success : function() {
-				console.log('jChat: GET ' + url);
-			},
-			error : function(result) {
-				var $chatLine = $('<div style="color: red;">Twitch API Error</div>');
-				console.log(result)
-				Chat.info.lines.push($chatLine.wrap('<div>').parent().html());
-			}
-    });
+    return $.Deferred(function(def) {
+        function tryFallback(url) {
+            // Find a matching fallback by checking if the url starts with any known key
+            const fallbackKey = Object.keys(TWITCH_API_FALLBACKS).find(key => url.includes(key));
+            if (fallbackKey) {
+                console.log("TwitchAPI failed, attempting fallback for: " + url);
+                const fallbackPromise = TWITCH_API_FALLBACKS[fallbackKey](url);
+                if (fallbackPromise) {
+                    fallbackPromise
+                        .done(function(res) { def.resolve(res); })
+                        .fail(function() { def.reject({ error: "Fallback failed" }); });
+                    return;
+                }
+            }
+            def.reject({ error: "No fallback available for: " + url });
+        }
+
+        if (credentials && credentials.token && credentials.token !== "") {
+            $.ajax({
+                type: "GET",
+                url: "https://api.twitch.tv/helix" + url,
+                dataType: "json",
+                headers: {
+                    'Authorization': 'Bearer ' + credentials.token,
+                    'Client-Id': credentials.clientId
+                },
+                success: function(res) {
+                    console.log('NativeChat: GET ' + url);
+                    def.resolve(res);
+                },
+                error: function(err) {
+                    var $chatLine = $('<div style="color: red;">Twitch API Error</div>');
+                    console.log(err);
+                    Chat.info.lines.push($chatLine.wrap('<div>').parent().html());
+                    tryFallback(url);
+                }
+            });
+        } else {
+            tryFallback(url);
+        }
+    }).promise();
 }
 
-function GetTwitchUserID(username, credentials) {
-  return $.ajax({
-    type: "GET",
-    // This is the correct Twitch API endpoint for getting user info
-    url: `https://api.twitch.tv/helix/users?login=${username}`,
-    dataType: "json",
-    headers: {'Authorization': 'Bearer ' + credentials.token,
-              'Client-Id': credentials.clientId},
-    success: function (result) {
-      console.log(`Successfully fetched user data for ${username}`);
-      // The user object is inside the 'data' array in the response
-      if (result.data && result.data.length > 0) {
-        let userId = result.data[0].id;
-        console.log(`User ID is: ${userId}`);
-      }
-    },
-    error: function (result) {
-      // This will trigger if the token is invalid or the user doesn't exist
-      var $chatLine = $('<div style="color: red;">Could not get Twitch User ID.</div>');
-      console.error("GetTwitchUserID failed:", result);
-      console.log("credentials.token = " + credentials.token + " ~ credentials.clientId = " + credentials.clientId);
-      Chat.info.lines.push($chatLine.wrap("<div>").parent().html());
-      return null;
-    },
-  });
-}
+function GetTwitchUserID(channel, credentials) {
+    return $.Deferred(function(def) {
+        // Helper function to handle the unauthenticated fallback
+        function fetchFromIVR() {
+			console.log("No valid Twitch credentials found. IVR fallback: fetching for channel:", JSON.stringify(channel));
+            $.getJSON("https://api.ivr.fi/v2/twitch/user?login=" + channel)
+                .done(function(res) {
+					console.log("IVR raw response:", JSON.stringify(res));
+                    const user = Array.isArray(res) ? res[0] : res;
+                    if (user && user.id) {
+                        def.resolve({
+                            data: [{
+                                id: user.id,
+                                login: user.login,
+                                display_name: user.displayName,
+                                profile_image_url: user.logo
+                            }],
+                            client_id: credentials ? credentials.clientId : null
+                        });
+                    } else {
+                        def.resolve({ error: "User not found via fallback API", data: [] });
+                    }
+                })
+                .fail(function(err) {
+                    def.resolve({ error: "Fallback API failed", data: [] });
+                });
+        }
 
-/*
-function TwitchOAuth() {
-  return $.ajax({
-    type: "GET",
-    url: "/twitch/oauth", // Relative URL
-    dataType: "json",
-    success: function (result) {
-      // Set your variable to the result
-      console.log("Cyan Chat: helix json acquired user_id");
-      // console.log(url)
-      // console.log(result)
-    },
-    error: function (result) {
-      // This should show up when the token expires
-      var $chatLine = $('<div style="color: red;">Twitch OAuth invalid</div>');
-      Chat.info.lines.push($chatLine.wrap("<div>").parent().html());
-    },
-  });
+        // Check if we actually have a token to use the official API
+        if (credentials && credentials.token && credentials.token !== "") {
+            $.ajax({
+                url: "https://api.twitch.tv/helix/users?login=" + channel,
+                type: "GET",
+                headers: {
+                    "Client-ID": credentials.clientId,
+                    "Authorization": "Bearer " + credentials.token
+                },
+                success: function(res) {
+                    // Inject the client_id into the response so script.js can use it
+                    res.client_id = credentials.clientId;
+                    def.resolve(res);
+                },
+                error: function(err) {
+                    // If the official API fails (e.g., the user's token expired), use the fallback
+                    fetchFromIVR();
+                }
+            });
+        } else {
+            // If no token was provided at all, skip straight to the fallback
+            fetchFromIVR();
+        }
+    }).promise();
 }
-
-function TwitchAPI(url) {
-  return $.ajax({
-    type: "GET",
-    url: `/twitch/api?url=${encodeURIComponent(url)}`, // Relative URL
-    dataType: "json",
-    success: function () {
-      console.log("Cyan Chat: GET " + url);
-    },
-    error: function (result) {
-      var $chatLine = $('<div style="color: red;">Twitch API Error</div>');
-      console.log(result);
-      Chat.info.lines.push($chatLine.wrap("<div>").parent().html());
-    },
-  });
-}
-
-function GetTwitchUserID(username) {
-  return $.ajax({
-    type: "GET",
-    url: "/twitch/get_id?username=" + username,
-    dataType: "json",
-    success: function () {
-      // Set your variable to the result
-      console.log("Cyan Chat: helix json acquired user_id");
-    },
-    error: function (result) {
-      // This should show up when the token expires
-      var $chatLine = $('<div style="color: red;">Twitch OAuth invalid</div>');
-      console.log(result);
-      Chat.info.lines.push($chatLine.wrap("<div>").parent().html());
-      return null;
-    },
-  });
-}*/
 
 let timeoutID;
 

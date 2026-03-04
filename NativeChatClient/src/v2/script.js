@@ -589,6 +589,7 @@ Chat = {
 
       // Load badges
       TwitchAPI("/chat/badges/global", credentials).done(function (res) {
+        console.log("Global badges received by caller:", res.data?.length);
         res?.data.forEach((badge) => {
           badge?.versions.forEach((version) => {
             Chat.info.badges[badge.set_id + ":" + version.id] =
@@ -598,6 +599,7 @@ Chat = {
 
         TwitchAPI("/chat/badges?broadcaster_id=" + Chat.info.channelID, credentials).done(
           function (res) {
+            console.log("Channel badges received by caller:", res.data?.length);
             res?.data.forEach((badge) => {
               badge?.versions.forEach((version) => {
                 Chat.info.badges[badge.set_id + ":" + version.id] =
@@ -1971,8 +1973,8 @@ Chat = {
     $(document).prop("title", title + Chat.info.channel);
 
     Chat.load(function () {
-      SendInfoText("Starting Cyan Chat");
-      console.log("Cyan Chat: Connecting to IRC server...");
+      SendInfoText("Starting Native Chat");
+      console.log("Native Chat: Connecting to IRC server...");
       var socket = new ReconnectingWebSocket(
         "wss://irc-ws.chat.twitch.tv",
         "irc",
@@ -1980,8 +1982,8 @@ Chat = {
       );
 
       socket.onopen = function () {
-        console.log("Cyan Chat: Connected");
-        socket.send("PASS blah\r\n");
+        console.log("Native Chat: Connected");
+        socket.send("PASS native\r\n");
         socket.send(
           "NICK justinfan" + Math.floor(Math.random() * 99999) + "\r\n"
         );
@@ -1990,7 +1992,7 @@ Chat = {
       };
 
       socket.onclose = function () {
-        console.log("Cyan Chat: Disconnected");
+        console.log("Native Chat: Disconnected");
       };
 
       socket.onmessage = function (data) {
@@ -2004,7 +2006,7 @@ Chat = {
               socket.send("PONG " + message.params[0]);
               return;
             case "JOIN":
-              console.log("Cyan Chat: Joined channel #" + Chat.info.channel);
+              console.log("Native Chat: Joined channel #" + Chat.info.channel);
               if (!Chat.info.connected) {
                 Chat.info.connected = true;
                 SendInfoText("Connected to " + Chat.info.channel);
@@ -2018,10 +2020,10 @@ Chat = {
               console.log(message);
               if (message.params[1]) {
                 Chat.clearChat(message.params[1]);
-                console.log("Cyan Chat: Clearing chat of " + message.params[1]);
+                console.log("Native Chat: Clearing chat of " + message.params[1]);
               } else {
                 Chat.clearWholeChat();
-                console.log("Cyan Chat: Clearing chat...");
+                console.log("Native Chat: Clearing chat...");
               }
               return;
             case "PRIVMSG":
@@ -2051,7 +2053,7 @@ Chat = {
                 if (flag) {
                   SendInfoText("Refreshing emotes...");
                   Chat.loadEmotes(Chat.info.channelID);
-                  console.log("Cyan Chat: Refreshing emotes...");
+                  console.log("Native Chat: Refreshing emotes...");
                   return;
                 }
               }
@@ -2096,7 +2098,7 @@ Chat = {
                 });
                 
                 if (flag) {
-                  console.log("Cyan Chat: Rickrolling...");
+                  console.log("Native Chat: Rickrolling...");
                   appendMedia("video", "../media/rickroll.webm")
                   return;
                 }
@@ -2122,7 +2124,7 @@ Chat = {
                   var fullCommand = message.params[1].slice(commandPrefix.length).trim();
                   findVideoFile(fullCommand).then(result => {
                     if (result) {
-                      console.log(`Cyan Chat: Playing ` + result);
+                      console.log(`Native Chat: Playing ` + result);
                       appendMedia("video", `../media/${result}`)
                     } else {
                       console.log("Video file not found");
@@ -2188,7 +2190,7 @@ Chat = {
 
                   // Use the queue system instead of direct playback
                   queueTTS(text, voice);
-                  console.log(`Cyan Chat: Queued TTS Audio ... [Voice: ${voice}]`);
+                  console.log(`Native Chat: Queued TTS Audio ... [Voice: ${voice}]`);
                   return;
                 }
               }
@@ -2217,7 +2219,7 @@ Chat = {
                   // Extract URL and parameters using regex
                   const urlMatch = commandArgs.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/[^\s]+/i);
                   if (!urlMatch) {
-                    console.log("Cyan Chat: No valid YouTube URL found in command");
+                    console.log("Native Chat: No valid YouTube URL found in command");
                     return;
                   }
                   
@@ -2244,13 +2246,13 @@ Chat = {
                   // Extract video ID and process timestamp
                   const videoId = extractYoutubeVideoId(youtubeUrl);
                   if (!videoId) {
-                    console.log("Cyan Chat: Could not extract YouTube video ID");
+                    console.log("Native Chat: Could not extract YouTube video ID");
                     return;
                   }
                   
                   const timestamp = extractYoutubeTimestamp(youtubeUrl, startTime);
                   
-                  console.log(`Cyan Chat: Playing YouTube video ${videoId} starting at ${timestamp}s for ${duration}s ${forceOnTop ? 'on top' : 'behind text'}`);
+                  console.log(`Native Chat: Playing YouTube video ${videoId} starting at ${timestamp}s for ${duration}s ${forceOnTop ? 'on top' : 'behind text'}`);
                   
                   embedYoutubeVideo(videoId, timestamp, duration, forceOnTop);
                   return;
@@ -2274,7 +2276,7 @@ Chat = {
                 });
                 
                 if (flag) {
-                  console.log("Cyan Chat: Stopping YouTube embed");
+                  console.log("Native Chat: Stopping YouTube embed");
                   // SendInfoText("Stopping YouTube embed");
                   removeCurrentMedia();
                   return;
@@ -2337,7 +2339,7 @@ Chat = {
                   
                   if (isURL) {
                     // It's a URL, display directly
-                    console.log(`Cyan Chat: Displaying image from URL for ${duration}s`);
+                    console.log(`Native Chat: Displaying image from URL for ${duration}s`);
                     const img = appendMedia("image", imageSource, forceOnTop, opacity);
                     
                     // Auto-remove after duration
@@ -2355,7 +2357,7 @@ Chat = {
                         }
                       });
                       if (personalEmote) {
-                        console.log(`Cyan Chat: Displaying personal emote "${personalEmote.name}" for ${duration}s`);
+                        console.log(`Native Chat: Displaying personal emote "${personalEmote.name}" for ${duration}s`);
                         const img = appendMedia("image", personalEmote.image, forceOnTop, opacity);
                         
                         // Auto-remove after duration
@@ -2417,7 +2419,7 @@ Chat = {
                         
                         // If found, display the Twitch emote
                         if (isTwitchEmote && twitchEmoteId) {
-                          console.log(`Cyan Chat: Displaying Twitch emote "${imageSource}" for ${duration}s`);
+                          console.log(`Native Chat: Displaying Twitch emote "${imageSource}" for ${duration}s`);
                           const emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${twitchEmoteId}/default/dark/3.0`;
                           const img = appendMedia("image", emoteUrl, forceOnTop, opacity);
                           
@@ -2439,7 +2441,7 @@ Chat = {
                     );
                     
                     if (emoteFound) {
-                      console.log(`Cyan Chat: Displaying emote "${emoteFound[0]}" for ${duration}s`);
+                      console.log(`Native Chat: Displaying emote "${emoteFound[0]}" for ${duration}s`);
                       const img = appendMedia("image", emoteFound[1].image, forceOnTop, opacity);
                       
                       // Auto-remove after duration
@@ -2448,7 +2450,7 @@ Chat = {
                       }, duration * 1000);
                       
                     } else {
-                      console.log(`Cyan Chat: Emote "${imageSource}" not found`);
+                      console.log(`Native Chat: Emote "${imageSource}" not found`);
                     }
                   }
                   return;
@@ -2484,7 +2486,7 @@ Chat = {
                     numMessages = numArg;
                   }
                   
-                  console.log(`Cyan Chat: Generating ${numMessages} test messages...`);
+                  console.log(`Native Chat: Generating ${numMessages} test messages...`);
                   
                   // Generate and display the test messages
                   generateTestMessages(numMessages);
@@ -2510,7 +2512,7 @@ Chat = {
 
               if (Chat.info.blockedUsers) {
                 if (Chat.info.blockedUsers.includes(nick)) {
-                  // console.log("Cyan Chat: Hiding blocked user message but getting color...'" + nick + "'");
+                  // console.log("Native Chat: Hiding blocked user message but getting color...'" + nick + "'");
                   Chat.info.colors[nick] = Chat.getUserColor(nick, message.tags);
                   Chat.loadUserPaints(nick, message.tags["user-id"]);
                   return;

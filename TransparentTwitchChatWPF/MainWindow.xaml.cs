@@ -1008,7 +1008,7 @@ public partial class MainWindow : Window, BrowserWindow
 
                 if (config != null)
                 {
-                    // TODO: save the configuration to settings
+                    // TODO: save the configuration to settings?
                     // App.Current.SaveConfiguration(config);
 
                     Dispatcher.Invoke(() =>
