@@ -298,3 +298,9 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+
+.claude/
+
+# NativeChat Resources
+TransparentTwitchChatWPF/Resources/native-chat.zip
+NativeChatClient/dist/
