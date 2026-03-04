@@ -138,10 +138,20 @@ public partial class SettingsWindow : Window
         if (Enum.IsDefined(typeof(ChatTypes), index))
         {
             _chatSettingsPage.ChatTypeChanged((ChatTypes)index);
+
+            listItemAppearance.IsEnabled = ((ChatTypes)index) == ChatTypes.NativeChat;
+
+            if (((ChatTypes)index) == ChatTypes.NativeChat)
+                textBlockAppearance.ClearValue(TextBlock.ForegroundProperty);
+            else
+                textBlockAppearance.Foreground = SystemColors.GrayTextBrush;
         }
         else
         {
             Debug.WriteLine("Invalid chat type selected. Index = " + index.ToString());
+            
+            listItemAppearance.IsEnabled = false;
+            textBlockAppearance.Foreground = SystemColors.GrayTextBrush;
         }
     }
 }

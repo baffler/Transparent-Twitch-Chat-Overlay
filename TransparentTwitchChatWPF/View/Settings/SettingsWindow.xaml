@@ -32,9 +32,9 @@
                         <TextBlock Text="Chat" VerticalAlignment="Center" />
                     </StackPanel>
                 </ListViewItem>
-                <ListViewItem>
+                <ListViewItem Name="listItemAppearance">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Appearance" VerticalAlignment="Center" />
+                        <TextBlock Name="textBlockAppearance" Text="Appearance" VerticalAlignment="Center" />
                     </StackPanel>
                 </ListViewItem>
                 <ListViewItem>

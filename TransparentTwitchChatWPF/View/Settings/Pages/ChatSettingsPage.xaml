@@ -94,7 +94,7 @@
         <Grid Name="jChatGrid" Visibility="Visible"  Grid.Column="1">
             <StackPanel HorizontalAlignment="Left" Orientation="Vertical" Width="127">
                 <Label Content="Username" HorizontalAlignment="Left" Margin="20,33,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                <Label Content="Redemptions" HorizontalAlignment="Left" Margin="20,35,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                <Label Content="Redemptions" HorizontalAlignment="Left" Margin="20,50,0,0" FontWeight="Bold"/>
                 <Label Content="Twitch" HorizontalAlignment="Left" Margin="20,20,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                 <Label Content="Filter Settings" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                 <Label Content="Chat Sound" HorizontalAlignment="Left" Margin="20,35,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
