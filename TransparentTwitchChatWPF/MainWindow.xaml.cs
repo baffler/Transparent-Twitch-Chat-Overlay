@@ -1003,7 +1003,7 @@ public partial class MainWindow : Window, BrowserWindow
             {
                 string json = e.WebMessageAsJson;
 
-                // Deserialize the JSON string directly into your jChatConfig object!
+                // Deserialize the JSON string directly into the jChatConfig object
                 jChatConfig config = JsonSerializer.Deserialize<jChatConfig>(json);
 
                 if (config != null)

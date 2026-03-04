@@ -111,6 +111,14 @@ Chat = {
     pronounSingleColor1: null,
     pronounSingleColor2: null,
     pronounCustomColors: null,
+    highlightUsers: false,
+    allowedUsersOnly: false,
+    playSound: false,
+    filterAllowAllVIPs: false,
+    filterAllowAllMods: false,
+    vips: [],
+    blockList: [],
+    customCSS: "",
     // --- The properties below are not configured from C# ---
     emotes: {},
     badges: {},
@@ -141,6 +149,21 @@ Chat = {
         this.info[key] = cfg[key];
         console.log(key + " = " + this.info[key]);
       }
+    }
+	
+    // Process lists if they come in as comma-separated strings
+    if (cfg.vips && typeof cfg.vips === 'string') this.info.vips = cfg.vips.split(',').map(v => v.trim().toLowerCase());
+    if (cfg.blockList && typeof cfg.blockList === 'string') this.info.blockList = cfg.blockList.split(',').map(v => v.trim().toLowerCase());
+    
+    // Apply the dynamic custom CSS generated from C#
+    if (this.info.customCSS) {
+        let styleElement = document.getElementById('jcyan-custom-css');
+        if (!styleElement) {
+            styleElement = document.createElement('style');
+            styleElement.id = 'jcyan-custom-css';
+            document.head.appendChild(styleElement);
+        }
+        styleElement.textContent = this.info.customCSS;
     }
     
     // Handle special cases that need parsing
@@ -1094,17 +1117,81 @@ Chat = {
 
   write: function (nick, info, message, service) {
     nick = Chat.sanitizeUsername(nick);
+    const lowerNick = nick.toLowerCase();
+	
+	// Blocklist check
+    if (Chat.info.blockList && Chat.info.blockList.includes(lowerNick)) return;
+	
     if (info) {
       if (Chat.info.regex) {
         if (doesStringMatchPattern(message, Chat.info)) {
           return;
         }
       }
+	  
+      // Identify Tags and Roles
+      let allowOtherBasedOnTags = false;
+      let highlightClass = '';
+      let isVip = false;
+      let isMod = false;
+      let isSharedChat = false;
+	  
+	  if (info["source-room-id"] && info["source-room-id"] == info["room-id"]) {
+          isSharedChat = true; // This is a message from your channel during shared chat
+      }
+
+      if (typeof info.badges === 'string' && info.badges !== "") {
+          info.badges.split(',').forEach(badgeStr => {
+              const badge = badgeStr.split('/')[0].toLowerCase();
+              if (badge === 'vip') isVip = true;
+              else if (badge === 'moderator') isMod = true;
+          });
+      }
+
+      // Highlighting Logic
+      if (Chat.info.filterAllowAllVIPs && isVip) {
+          highlightClass = 'highlightVIP';
+          allowOtherBasedOnTags = true;
+      }
+      if (Chat.info.filterAllowAllMods && isMod) {
+          highlightClass = 'highlightMod';
+          allowOtherBasedOnTags = true;
+      }
+
+      const isExplicitlyAllowed = Chat.info.vips && Chat.info.vips.includes(lowerNick);
+
+      if (Chat.info.allowedUsersOnly) {
+          if (!isExplicitlyAllowed && !allowOtherBasedOnTags) return;
+      }
+
+      const shouldHighlight = Chat.info.highlightUsers && (isExplicitlyAllowed || allowOtherBasedOnTags);
+
+      // Sound Notification Logic
+      if (Chat.info.playSound && window.chrome && window.chrome.webview && window.chrome.webview.hostObjects) {
+          let shouldPlaySound = (!Chat.info.highlightUsers && !Chat.info.allowedUsersOnly) ||
+                                (Chat.info.highlightUsers && shouldHighlight) ||
+                                (Chat.info.allowedUsersOnly && (isExplicitlyAllowed || allowOtherBasedOnTags));
+          
+          if (shouldPlaySound && typeof window.chrome.webview.hostObjects.jsCallbackFunctions?.playSound === 'function') {
+              window.chrome.webview.hostObjects.jsCallbackFunctions.playSound().catch(e => console.error("Sound error:", e));
+          }
+      }
+	  
+      // Construct the Chat Line
       var $chatLine = $("<div></div>");
       $chatLine.addClass("chat_line");
       if (Chat.info.animate) {
         $chatLine.addClass("animate");
       }
+	  
+      // Apply new classes natively
+      if (shouldHighlight) {
+          $chatLine.addClass(highlightClass || 'highlight');
+      }
+      if (isSharedChat) {
+          $chatLine.addClass('home-chatter');
+      }
+	  
       $chatLine.attr("data-nick", nick);
       $chatLine.attr("data-time", Date.now());
       $chatLine.attr("data-id", info.id);

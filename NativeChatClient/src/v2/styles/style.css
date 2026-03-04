@@ -255,3 +255,26 @@ body {
 .pronoun.ask {
   background: linear-gradient(135deg, #7883b2 0%, #9475b2 100%);
 }
+
+/* Custom highlight structures */
+.highlight, .highlightMod, .highlightVIP {
+  border-radius: 4px;
+  /* The dynamic background gradients will be injected by the app via Chat.applySettings */
+}
+
+/* Home Chatter Styles (Shared Chat) */
+.chat_line.home-chatter { 
+  border-left: 5px solid #a970ff; 
+  padding-left: 3px; 
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.home-chatter::before {
+  content: '★';
+  color: #a970ff;
+  margin-right: 5px;
+  font-size: 0.8em;
+  vertical-align: middle;
+  opacity: 0.9;
+}

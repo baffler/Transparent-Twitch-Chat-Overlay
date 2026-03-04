@@ -58,6 +58,9 @@ public partial class AppearanceSettingsPage : UserControl
         webView.WebMessageReceived += webView_WebMessageReceived;
         webView.CoreWebView2.ProcessFailed += webView_CoreWebView2ProcessFailed;
 
+        webView.CoreWebView2.NewWindowRequested += webView_NewWindowRequested;
+        webView.CoreWebView2.NavigationStarting += webView_NavigationStarting;
+
         webView.CoreWebView2.SetVirtualHostNameToFolderMapping("nativechat.overlay",
             OverlayPathHelper.GetNativeChatPath(), CoreWebView2HostResourceAccessKind.DenyCors);
 
@@ -74,7 +77,7 @@ public partial class AppearanceSettingsPage : UserControl
         {
             //await webView.CoreWebView2.CallDevToolsProtocolMethodAsync("Network.clearBrowserCache", "{}");
             await ClearWebViewCache();
-            webView.CoreWebView2.OpenDevToolsWindow();
+            //webView.CoreWebView2.OpenDevToolsWindow();
             webView.CoreWebView2.Navigate(url);
         }
         catch (Exception ex)
@@ -108,7 +111,8 @@ public partial class AppearanceSettingsPage : UserControl
                 try
                 {
                     App.Settings.UpdateJChatConfig(unescapedJson);
-                    MessageBox.Show("Settings saved successfully!");
+                    App.Settings.SyncJChatSettings();
+                    //MessageBox.Show("Settings saved successfully!");
                 }
                 catch (JsonException ex)
                 {
@@ -177,6 +181,8 @@ public partial class AppearanceSettingsPage : UserControl
                 // The CoreWebView2 might be null if it failed very early
                 if (webView.CoreWebView2 != null)
                 {
+                    webView.CoreWebView2.NewWindowRequested -= webView_NewWindowRequested;
+                    webView.CoreWebView2.NavigationStarting -= webView_NavigationStarting;
                     webView.CoreWebView2.ProcessFailed -= webView_CoreWebView2ProcessFailed;
                 }
 
@@ -196,5 +202,40 @@ public partial class AppearanceSettingsPage : UserControl
                 MessageBox.Show($"Fatal error: Could not recover the WebView2 component. {ex.Message}", "Recovery Failed", MessageBoxButton.OK, MessageBoxImage.Stop);
             }
         });
+    }
+
+    private void webView_NavigationStarting(object sender, CoreWebView2NavigationStartingEventArgs e)
+    {
+        // Allow the initial load of custom local scheme
+        if (e.Uri.StartsWith("https://nativechat.overlay/", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        // Cancel the internal navigation for external links
+        e.Cancel = true;
+        OpenInDefaultBrowser(e.Uri);
+    }
+
+    private void webView_NewWindowRequested(object sender, CoreWebView2NewWindowRequestedEventArgs e)
+    {
+        // Prevent WebView2 from trying to create a new window/popup
+        e.Handled = true;
+        OpenInDefaultBrowser(e.Uri);
+    }
+
+    private void OpenInDefaultBrowser(string url)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            });
+        }
+        catch// (Exception ex)
+        {
+            // Handle edge cases where the system might not have a default browser configured
+            //MessageBox.Show($"Could not open the link.\nError: {ex.Message}", "Navigation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 }

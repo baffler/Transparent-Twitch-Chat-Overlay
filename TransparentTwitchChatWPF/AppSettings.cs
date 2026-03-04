@@ -110,6 +110,93 @@ public class AppSettings
             Debug.WriteLine($"Error deserializing jChatConfig: {ex.Message}");
         }
     }
+
+    public void SyncJChatSettings()
+    {
+        this.jChatSettings.HighlightUsers   = this.GeneralSettings.HighlightUsersChat;
+        this.jChatSettings.AllowedUsersOnly = this.GeneralSettings.AllowedUsersOnlyChat;
+        this.jChatSettings.PlaySound = this.GeneralSettings.ChatNotificationSound?.ToLower() != "none";
+        this.jChatSettings.FilterAllowAllVIPs = this.GeneralSettings.FilterAllowAllVIPs;
+        this.jChatSettings.FilterAllowAllMods = this.GeneralSettings.FilterAllowAllMods;
+        this.jChatSettings.CustomCSS = GenerateHighlightCSS();
+
+        List<string> vipList = new List<string>();
+        if (this.GeneralSettings.AllowedUsersList != null)
+        {
+            foreach (string item in this.GeneralSettings.AllowedUsersList)
+                vipList.Add(item.ToLowerInvariant());
+        }
+
+        List<string> blockList = new List<string>();
+        if (this.GeneralSettings.BlockedUsersList != null)
+        {
+            foreach (string item in this.GeneralSettings.BlockedUsersList)
+                blockList.Add(item.ToLowerInvariant());
+        }
+
+        this.jChatSettings.Vips = vipList.ToArray();
+        this.jChatSettings.BlockList = blockList.ToArray();
+    }
+
+    private string GenerateHighlightCSS()
+    {
+        string css = string.Empty;
+
+        // If the user has provided their own manual CSS, we can prepend/append to it
+
+        // 1. Default Highlight
+        Color c = this.GeneralSettings.ChatHighlightColor;
+        float aL = 0.1f;
+        float aR = (c.A / 255f);
+        string rgbaL = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, aL);
+        string rgbaR = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, aR);
+
+        // Note: Added !important to ensure NativeChat doesn't override the backgrounds
+        css += $$"""
+        .highlight {
+            background: linear-gradient(to right, {{rgbaL}}, {{rgbaR}}) !important;
+            border-radius: 4px;
+        }
+        """;
+
+        // 2. Mods Highlight
+        c = this.GeneralSettings.ChatHighlightModsColor;
+        aL = 0.1f;
+        aR = (c.A / 255f);
+        rgbaL = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, aL);
+        rgbaR = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, aR);
+
+        css += $$"""
+        
+        .highlightMod { 
+            background: linear-gradient(to right, {{rgbaL}}, {{rgbaR}}) !important;
+            border-radius: 4px;
+        }
+        """;
+
+        // 3. VIPs Highlight
+        c = this.GeneralSettings.ChatHighlightVIPsColor;
+        aL = 0.1f;
+        aR = (c.A / 255f);
+        rgbaL = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, aL);
+        rgbaR = string.Format("rgba({0},{1},{2},{3:0.00})", c.R, c.G, c.B, aR);
+
+        css += $$"""
+        
+        .highlightVIP {
+            background: linear-gradient(to right, {{rgbaL}}, {{rgbaR}}) !important;
+            border-radius: 4px;
+        }
+        """;
+
+        // Append any user-defined custom CSS at the very end
+        if (!string.IsNullOrEmpty(this.GeneralSettings.CustomCSS))
+        {
+            css += "\n" + this.GeneralSettings.CustomCSS;
+        }
+
+        return css;
+    }
 }
 
 public class GeneralSettings
@@ -273,4 +360,21 @@ public class jChatConfig
 
     [JsonPropertyName("pronounCustomColors")]
     public string PronounCustomColors { get; set; } = "{}";
+
+    [JsonPropertyName("highlightUsers")]
+    public bool HighlightUsers { get; set; } = false;
+    [JsonPropertyName("allowedUsersOnly")]
+    public bool AllowedUsersOnly { get; set; } = false;
+    [JsonPropertyName("playSound")]
+    public bool PlaySound { get; set; } = false;
+    [JsonPropertyName("filterAllowAllVIPs")]
+    public bool FilterAllowAllVIPs { get; set; } = false;
+    [JsonPropertyName("filterAllowAllMods")]
+    public bool FilterAllowAllMods { get; set; } = false;
+    [JsonPropertyName("vips")]
+    public string[] Vips { get; set; }
+    [JsonPropertyName("blockList")]
+    public string[] BlockList { get; set; }
+    [JsonPropertyName("customCSS")]
+    public string CustomCSS { get; set; } = "";
 }

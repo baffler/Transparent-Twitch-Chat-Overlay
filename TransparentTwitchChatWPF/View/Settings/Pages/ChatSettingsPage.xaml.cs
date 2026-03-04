@@ -15,6 +15,7 @@ namespace TransparentTwitchChatWPF.View.Settings;
 public partial class ChatSettingsPage : UserControl
 {
     public event Action TwitchConnectionPageRequested;
+    public event Action AppearancePageRequested;
     public event Action RestoreNativeChatDefaultsRequested;
 
     public ChatSettingsPage()
@@ -464,5 +465,10 @@ public partial class ChatSettingsPage : UserControl
 
         if (result == MessageBoxResult.Yes)
             RestoreNativeChatDefaultsRequested?.Invoke();
+    }
+
+    private void HyperlinkButtonAppearanceSettings_Click(object sender, RoutedEventArgs e)
+    {
+        AppearancePageRequested?.Invoke();
     }
 }

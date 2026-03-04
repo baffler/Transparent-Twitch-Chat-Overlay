@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using TransparentTwitchChatWPF.Helpers;
+using TransparentTwitchChatWPF.Properties;
 
 namespace TransparentTwitchChatWPF.ChatProviders;
 
@@ -38,6 +40,8 @@ public class NativeChatProvider : IChatProvider
         {
             App.Settings.jChatSettings.Channel = !string.IsNullOrEmpty(App.Settings.GeneralSettings.Username) ? App.Settings.GeneralSettings.Username : "baffler";
         }
+
+        App.Settings.SyncJChatSettings();
     }
 
     private void PostWebMessage(CoreWebView2 coreWebView2, string type, object payload)

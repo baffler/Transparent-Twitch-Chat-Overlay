@@ -96,7 +96,7 @@
                 <Label Content="Username" HorizontalAlignment="Left" Margin="20,33,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                 <Label Content="Redemptions" HorizontalAlignment="Left" Margin="20,35,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                 <Label Content="Twitch" HorizontalAlignment="Left" Margin="20,20,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
-                <!--<Label Content="Filter Settings" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>-->
+                <Label Content="Filter Settings" HorizontalAlignment="Left" Margin="20,25,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
                 <Label Content="Chat Sound" HorizontalAlignment="Left" Margin="20,35,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
             </StackPanel>
 
@@ -109,10 +109,10 @@
                          ui:ControlHelper.PlaceholderText="Username"
                          VerticalAlignment="Top" 
                          Width="240"/>
-                <ui:HyperlinkButton NavigateUri="https://github.com/baffler/Transparent-Twitch-Chat-Overlay">
+                <ui:HyperlinkButton Click="HyperlinkButtonAppearanceSettings_Click">
                     <ui:SimpleStackPanel Orientation="Horizontal" Spacing="8">
                         <ui:SymbolIcon Symbol="Link"/>
-                        <TextBlock Text="Go to All Settings"/>
+                        <TextBlock Text="Go to Appearance Settings"/>
                     </ui:SimpleStackPanel>
                 </ui:HyperlinkButton>
                 <CheckBox Name="cbRedemptions2" Content="Community point redemptions" Margin="20,5,0,0" Checked="cbRedemptions_Checked" Unchecked="cbRedemptions_Unchecked" />
@@ -121,7 +121,7 @@
                     <Label Name="lblTwitchConnected2" Margin="20,10,0,0" Content="..." Foreground="Gray" FontWeight="Bold" />
                     <Button Visibility="Hidden" Name="btGetChannelID2" Margin="5,10,0,0" Content="Connect Twitch" Height="26" Width="100" FontSize="12" Click="btGetChannelID_Click" />
                 </StackPanel>
-                <!--<Button Name="btOpenChatFilterSettings2" Margin="20,18,14,0" Content="Open Chat Filter Settings" Height="32" Click="btOpenChatFilterSettings_Click" />-->
+                <Button Name="btOpenChatFilterSettings2" Margin="20,18,14,0" Content="Open Chat Filter Settings" Height="32" Click="btOpenChatFilterSettings_Click" />
                 <ComboBox Name="comboChatSound2" SelectedValuePath="Content" Margin="20,20,14,0" DropDownClosed="comboChatSound_DropDownClosed2" />
                 <Rectangle Height="1" Fill="Gray" Margin="20,15,14,0" />
                 <TextBlock Text="Restore all NativeChat overlay files to built-in defaults. Use this if the chat appears broken or files were accidentally deleted."

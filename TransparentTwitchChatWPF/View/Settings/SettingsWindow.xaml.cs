@@ -81,6 +81,7 @@ public partial class SettingsWindow : Window
 
         _chatSettingsPage.SetupValues();
         _chatSettingsPage.TwitchConnectionPageRequested += ShowTwitchConnectionPage;
+        _chatSettingsPage.AppearancePageRequested += ShowAppearancePage;
         _chatSettingsPage.RestoreNativeChatDefaultsRequested += () => RestoreNativeChatDefaultsRequested?.Invoke();
 
         _connectionSettingsPage.SetupValues();
@@ -91,6 +92,12 @@ public partial class SettingsWindow : Window
     {
         //SettingsContentControl.Content = _connectionSettingsPage;
         lvSettings.SelectedIndex = 2;
+    }
+
+    private void ShowAppearancePage()
+    {
+        //SettingsContentControl.Content = _appearanceSettingsPage;
+        lvSettings.SelectedIndex = 1;
     }
 
     private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
