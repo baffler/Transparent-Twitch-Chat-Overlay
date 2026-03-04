@@ -122,11 +122,14 @@ using NHotkey.Wpf;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Navigation;
 using System.Windows.Threading;
+using TransparentTwitchChatWPF.ChatProviders;
 using TransparentTwitchChatWPF.Twitch;
 using TransparentTwitchChatWPF.Utils;
 using TransparentTwitchChatWPF.View;
@@ -141,6 +144,8 @@ public partial class MainWindow : Window, BrowserWindow
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<MainWindow> _logger;
     private readonly TwitchService _twitchService;
+    private readonly WebViewConfigurator _webViewConfigurator;
+    private readonly NativeChatFileManager _nativeChatFileManager;
 
     private WebView2 webView;
     private bool hasWebView2Runtime = false;
@@ -164,7 +169,14 @@ public partial class MainWindow : Window, BrowserWindow
     private Chat _currentChat;
     private Button _closeButton;
 
-    public MainWindow(IServiceProvider serviceProvider, ILogger<MainWindow> logger, TwitchService twitchService)
+    private bool _isShowingRepairPrompt = false;
+
+    public MainWindow(
+        IServiceProvider serviceProvider, 
+        ILogger<MainWindow> logger, 
+        TwitchService twitchService,
+        WebViewConfigurator webViewConfigurator,
+        NativeChatFileManager nativeChatFileManager)
     {
         InitializeComponent();
         DataContext = this;
@@ -173,6 +185,8 @@ public partial class MainWindow : Window, BrowserWindow
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _twitchService = twitchService ?? throw new ArgumentNullException(nameof(twitchService));
         _twitchService.ChannelPointsRewardRedeemed += OnChannelPointsRewardRedeemed;
+        _webViewConfigurator = webViewConfigurator ?? throw new ArgumentNullException(nameof(webViewConfigurator));
+        _nativeChatFileManager = nativeChatFileManager ?? throw new ArgumentNullException(nameof(nativeChatFileManager));
 
         _currentChat = new CustomURLChat(ChatTypes.CustomURL); // TODO: initializing here needed?
 
@@ -418,6 +432,16 @@ public partial class MainWindow : Window, BrowserWindow
 
     private async Task SetupWebViewAsync()
     {
+        try
+        {
+            // TODO: Setting for checking and repairing files if using NativeChat
+            _nativeChatFileManager.EnsureFilesAreUpToDate();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to ensure NativeChat files are present.");
+        }
+
         // Create and configure.
         webView = new WebView2
         {
@@ -440,13 +464,33 @@ public partial class MainWindow : Window, BrowserWindow
         webView.WebMessageReceived += webView_WebMessageReceived;
         webView.CoreWebView2.ProcessFailed += webView_CoreWebView2ProcessFailed;
 
+        ApplyVirtualHostMappings(webView.CoreWebView2);
         webView.CoreWebView2.Profile.PreferredColorScheme = CoreWebView2PreferredColorScheme.Auto;
 
         // Finalize setup.
         this.jsCallbackFunctions = new JsCallbackFunctions();
         webView.CoreWebView2.AddHostObjectToScript("jsCallbackFunctions", this.jsCallbackFunctions);
 
-        SetupBrowser();
+        // Set Opacity, Zoom, sound, and load any custom windows.
+        InitializeWindowProperties();
+
+        SetupChatProvider();
+    }
+
+    private void ApplyVirtualHostMappings(CoreWebView2 core)
+    {
+        try
+        {
+            core.SetVirtualHostNameToFolderMapping(
+                OverlayPathHelper.GetNativeChatHostname(),
+                OverlayPathHelper.GetNativeChatPath(),
+                CoreWebView2HostResourceAccessKind.DenyCors);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to set virtual host name to folder mapping for WebView2.");
+            MessageBox.Show(this, $"An error occurred while configuring the web environment:\n{ex.Message}", "Configuration Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private async void webView_CoreWebView2ProcessFailed(object sender, CoreWebView2ProcessFailedEventArgs e)
@@ -688,10 +732,21 @@ public partial class MainWindow : Window, BrowserWindow
         this.Width = 320;
     }
 
-    private void NavigateToUrl(string url)
+    public async Task ClearWebViewCache()
+    {
+        // Ensure the CoreWebView2 has been initialized
+        if (this.webView != null && this.webView.CoreWebView2 != null)
+        {
+            // Clear the browser cache. You can add other data types to clear if needed.
+            await this.webView.CoreWebView2.Profile.ClearBrowsingDataAsync();
+        }
+    }
+
+    private async void NavigateToUrl(string url)
     {
         try
         {
+            await this.ClearWebViewCache();
             this.webView.CoreWebView2.Navigate(url);
         }
         catch (Exception ex)
@@ -853,162 +908,72 @@ public partial class MainWindow : Window, BrowserWindow
         if (!e.IsSuccess)
         {
             Console.WriteLine("webView_NavigationCompleted: (Unsuccessful) " + e.WebErrorStatus.ToString());
+
+            var chatType = (ChatTypes)App.Settings.GeneralSettings.ChatType;
+
+            if (chatType == ChatTypes.NativeChat)
+            {
+                if (!_isShowingRepairPrompt)
+                {
+                    _isShowingRepairPrompt = true;
+
+                    string errorHtml = @"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { background-color: #18181b; color: #efeff1; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+                    h2 { margin-bottom: 5px; }
+                    p { color: #adadb8; margin-bottom: 25px; }
+                    button { background-color: #9146FF; color: white; border: none; padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
+                    button:hover { background-color: #772ce8; }
+                </style>
+            </head>
+            <body>
+                <h2>Chat Files Missing</h2>
+                <p>The local chat files appear to be missing or corrupted.</p>
+                <button onclick=""window.chrome.webview.postMessage('RepairRequested')"">Restore Default Files</button>
+            </body>
+            </html>";
+
+                    // Display the error message with the repair button
+                    this.webView.CoreWebView2.NavigateToString(errorHtml);
+                    return;
+                }
+            }
+
             return;
         }
 
         Console.WriteLine("Navigation completed: " + e.HttpStatusCode);
 
-        this.webView.Dispatcher.Invoke(new Action(() =>
-        {
-            SetZoomFactor(App.Settings.GeneralSettings.ZoomLevel);
-        }));
-
-        if (App.Settings.GeneralSettings.ChatType == (int)ChatTypes.TwitchPopout)
-            TwitchPopoutSetup();
-
-        _logger.LogInformation("_currentChat.ChatType = " + _currentChat.ChatType.ToString());
-        if (_currentChat.ChatType == ChatTypes.KapChat)
-        {
-            _logger.LogInformation("Setting up KapChat emotes and scripts.");
-            string browserPath = Path.Combine(AppContext.BaseDirectory, "browser");
-            if (Directory.Exists(browserPath))
-            {
-                string emoteBundlePath = Path.Combine(browserPath, "emote-bundle.js");
-                if (File.Exists(emoteBundlePath))
-                {
-                    _logger.LogInformation("Loading emote bundle script from: " + emoteBundlePath);
-                    string emoteBundleScript = File.ReadAllText(emoteBundlePath);
-                    //_logger.LogInformation(emoteBundleScript);
-
-                    await this.webView.ExecuteScriptAsync(emoteBundleScript);
-
-                    //await this.webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(emoteBundleScript);
-                }
-                else
-                {
-                    _logger.LogWarning("Emote bundle script not found at: " + emoteBundlePath);
-                }
-            }
-            else
-            {
-                _logger.LogWarning("Browser path does not exist: " + browserPath);
-            }
-        }
-
-        string js = this._currentChat.SetupJavascript();
-        if (!string.IsNullOrEmpty(js))
-            await this.webView.ExecuteScriptAsync(js);
-        //await this.webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(js);
-
-        // Custom CSS
-        string script = string.Empty;
-        string css = this._currentChat.SetupCustomCSS();
-
-        if (!string.IsNullOrEmpty(css))
-            script = InsertCustomCSS2(css);
-
-        if (!string.IsNullOrEmpty(script))
-            await this.webView.ExecuteScriptAsync(script);
-
-        if (this._currentChat != null)
-            this.PushNewMessage(this._currentChat.ChatType.ToString() + " Loaded.");
-
-        // Pub Sub
-        if (App.Settings.GeneralSettings.RedemptionsEnabled)
-        {
-            _ = _twitchService.InitializeAsync();
-        }
+        // Set UI-specific properties
+        this.webView.Dispatcher.Invoke(() => SetZoomFactor(App.Settings.GeneralSettings.ZoomLevel));
+        // Configuration for the current chat type
+        await _webViewConfigurator.ConfigureAsync(webView.CoreWebView2);
     }
 
-    private async void TwitchPopoutSetup()
+    private void RestoreNativeChatFiles()
     {
-        if (App.Settings.GeneralSettings.BetterTtv)
+        try
         {
-            /*
-             * p = {
-                    BTTV_EMOTES: 1,
-                    ANIMATED_EMOTES: 2,
-                    FFZ_EMOTES: 4,
-                    ANIMATED_PERSONAL_EMOTES: 8,
-                    SEVENTV_EMOTES: 16,
-                    EMOTE_MODIFIERS: 32,
-                    SEVENTV_UNLISTED_EMOTES: 64
-                }
-            C = { // Defaults
-                // ... other settings ...
-                emotes: [p.BTTV_EMOTES | p.ANIMATED_EMOTES | p.FFZ_EMOTES | p.EMOTE_MODIFIERS, 0],
-                // ... other settings ...
-            }
-             */
-
-            // Define the JavaScript to update the emotes setting using a bitwise operation.
-            // The value '16' corresponds to the flag for enabling 7TV emotes.
-            if (App.Settings.GeneralSettings.BetterTtv_7tv || App.Settings.GeneralSettings.BetterTtv_AdvEmoteMenu)
-            {
-                // Perform a bitwise OR with 16 to enable the 7TV flag
-                // This adds the 7TV setting without disabling others.
-                string enable7tvFlag = @"settings.emotes[0] = settings.emotes[0] | 16;";
-                string disable7tvFlag = @"settings.emotes[0] = settings.emotes[0] & ~16;";
-                string enableAdvEmoteMenuFlag = "settings.emoteMenu = 2;";
-                string disableAdvEmoteMenuFlag = "settings.emoteMenu = 0;";
-
-                var bttvSettingsScript = $$"""
-                (function() {
-                    try {
-                        const settingsKey = 'bttv_settings';
-                        let settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
-
-                        // Enable 7TV Emotes (Bitwise Flag)
-                        if (settings.emotes && Array.isArray(settings.emotes)) {
-                        {{(App.Settings.GeneralSettings.BetterTtv_7tv ? enable7tvFlag : disable7tvFlag)}}
-                        }
-
-                        // --- Enable BTTV Emote Menu ---
-                        // 0 = Off, 1 = Legacy, 2 = Modern
-                        {{(App.Settings.GeneralSettings.BetterTtv_AdvEmoteMenu ? enableAdvEmoteMenuFlag : disableAdvEmoteMenuFlag)}}
-
-                        // --- Save all changes back to localStorage ---
-                        localStorage.setItem(settingsKey, JSON.stringify(settings));
-                        console.log('BTTV settings updated to enable 7TV and the BTTV Emote Menu.');
-                    } catch (e) {
-                        console.error('Failed to pre-configure BTTV settings', e);
-                    }
-                })();
-            """;
-
-                await webView.CoreWebView2.ExecuteScriptAsync(bttvSettingsScript);
-            }
-
-            // Inject the main BTTV script.
-            InsertCustomJavaScriptFromUrl("https://cdn.betterttv.net/betterttv.js");
+            _nativeChatFileManager.ForceRestoreDefaults();
+            MessageBox.Show(this,
+                "NativeChat files have been restored to defaults.",
+                "Restore Complete",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            if (App.Settings.GeneralSettings.ChatType == (int)ChatTypes.NativeChat)
+                SetupChatProvider();
         }
-        if (App.Settings.GeneralSettings.FrankerFaceZ)
+        catch (Exception ex)
         {
-            // Observe for FrankerFaceZ's reskin stylesheet
-            // that breaks the transparency and remove it
-            InsertCustomJavaScript(@"
-(function() {
-    const head = document.getElementsByTagName(""head"")[0];
-    const observer = new MutationObserver((mutations, observer) => {
-        for (const mut of mutations) {
-            if (mut.type === ""childList"") {
-                for (const node of mut.addedNodes) {
-                    if (node.tagName.toLowerCase() === ""link"" && node.href.includes(""color_normalizer"")) {
-                        node.remove();
-                    }
-                }
-            }
-        }
-    });
-    observer.observe(head, {
-        attributes: false,
-        childList: true,
-        subtree: false,
-    });
-})();
-                        ");
-
-            InsertCustomJavaScriptFromUrl("https://cdn.frankerfacez.com/static/script.min.js");
+            _logger.LogError(ex, "Failed to restore NativeChat defaults.");
+            MessageBox.Show(this,
+                $"Failed to restore NativeChat files:\n{ex.Message}",
+                "Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
         }
     }
 
@@ -1026,74 +991,37 @@ public partial class MainWindow : Window, BrowserWindow
                 Debug.WriteLine(ex.Message);
             }
         }
-        if (App.Settings.GeneralSettings.ChatType == (int)ChatTypes.jCyan)
+        else if (App.Settings.GeneralSettings.ChatType == (int)ChatTypes.NativeChat)
         {
-            try
+            string message = e.TryGetWebMessageAsString();
+
+            if (message == "RepairRequested")
             {
-                var message = e.TryGetWebMessageAsString();
-                PushNewMessage(message);
+                RestoreNativeChatFiles();
+
+                // Reset the flag and navigate back to the normal chat URL
+                _isShowingRepairPrompt = false;
+                this.webView.CoreWebView2.Navigate(new NativeChatProvider().GetNavigationUri().ToString());
             }
-            catch (Exception ex)
+            else
             {
-                Debug.WriteLine(ex.Message);
+                string json = e.WebMessageAsJson;
+
+                // Deserialize the JSON string directly into the jChatConfig object
+                jChatConfig config = JsonSerializer.Deserialize<jChatConfig>(json);
+
+                if (config != null)
+                {
+                    // TODO: save the configuration to settings?
+                    // App.Current.SaveConfiguration(config);
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        this.Title = $"Chat Overlay for {config.Channel}";
+                    });
+                }
             }
         }
-    }
-
-    //private void InsertCustomCSS_old(string CSS)
-    //{
-    //    string base64CSS = Utilities.Base64Encode(CSS.Replace("\r\n", "").Replace("\t", ""));
-
-    //    string href = "data:text/css;charset=utf-8;base64," + base64CSS;
-
-    //    string script = "var link = document.createElement('link');";
-    //    script += "link.setAttribute('rel', 'stylesheet');";
-    //    script += "link.setAttribute('type', 'text/css');";
-    //    script += "link.setAttribute('href', '" + href + "');";
-    //    script += "document.getElementsByTagName('head')[0].appendChild(link);";
-
-    //    this.Browser1.ExecuteScriptAsync(script);
-    //}
-
-    private string InsertCustomCSS2(string CSS)
-    {
-        string uriEncodedCSS = Uri.EscapeDataString(CSS);
-        string script = "const ttcCSS = document.createElement('style');";
-        script += "ttcCSS.innerHTML = decodeURIComponent(\"" + uriEncodedCSS + "\");";
-        script += "document.querySelector('head').appendChild(ttcCSS);";
-        return script;
-    }
-
-    private string InsertCustomJS2(string js)
-    {
-        string uriEncodedJS = Uri.EscapeDataString(js);
-        string script = "const ttcJS = document.createElement('script');";
-        script += "ttcJS.innerHTML = decodeURIComponent(\"" + uriEncodedJS + "\");";
-        script += "document.querySelector('head').appendChild(ttcJS);";
-        return script;
-    }
-
-    private async void InsertCustomJavaScript(string JS)
-    {
-        try
-        {
-            await this.webView.ExecuteScriptAsync(JS);
-        }
-        catch (Exception e)
-        {
-            MessageBox.Show(e.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    private void InsertCustomJavaScriptFromUrl(string scriptUrl)
-    {
-        InsertCustomJavaScript(@"
-(function() {
-    const script = document.createElement(""script"");
-    script.src = """ + scriptUrl + @""";
-    document.getElementsByTagName(""head"")[0].appendChild(script);
-})();
-            ");
     }
 
     public void OpenSettingsFolder()
@@ -1202,6 +1130,8 @@ public partial class MainWindow : Window, BrowserWindow
             _ = CheckForUpdateAsync(notifyIfNoUpdate: true, settingsWindow);
         };
 
+        settingsWindow.RestoreNativeChatDefaultsRequested += RestoreNativeChatFiles;
+
         // Settings were saved
         if (settingsWindow.ShowDialog() == true)
         {
@@ -1209,98 +1139,29 @@ public partial class MainWindow : Window, BrowserWindow
             {
                 var chatType = (ChatTypes)App.Settings.GeneralSettings.ChatType;
 
-                if (chatType == ChatTypes.CustomURL)
-                {
-                    this._currentChat = new CustomURLChat(ChatTypes.CustomURL);
+                SetupChatProvider();
 
-                    if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.CustomURL))
-                        NavigateToUrl(App.Settings.GeneralSettings.CustomURL);
-                }
-                else if (chatType == ChatTypes.TwitchPopout)
+                /*
+                if (!App.Settings.GeneralSettings.RedemptionsEnabled)
+                                _twitchService.DisableEventSub(); 
+                if (App.Settings.GeneralSettings.ChatNotificationSound.ToLower() == "none")
+                    this.jsCallbackFunctions.MediaFile = string.Empty;
+                else
                 {
-                    this._currentChat = new CustomURLChat(ChatTypes.TwitchPopout);
-
-                    if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.Username))
-                        NavigateToUrl("https://www.twitch.tv/popout/" + App.Settings.GeneralSettings.Username + "/chat?popout=");
-                }
-                else if (chatType == ChatTypes.KapChat)
-                {
-                    this._currentChat = new Chats.KapChat();
-
-                    if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.Username))
+                    string file = Path.Combine(GetSoundClipsFolder(), App.Settings.GeneralSettings.ChatNotificationSound);
+                    if (File.Exists(file))
                     {
-                        if (!App.Settings.GeneralSettings.RedemptionsEnabled)
-                            _twitchService.DisableEventSub();
-
-                        SetChatAddress(App.Settings.GeneralSettings.Username);
+                        this.jsCallbackFunctions.OnAudioDeviceChanged();
+                        this.jsCallbackFunctions.MediaFile = file;
                     }
-
-
-                    if (App.Settings.GeneralSettings.ChatNotificationSound.ToLower() == "none")
+                    else
+                    {
                         this.jsCallbackFunctions.MediaFile = string.Empty;
-                    else
-                    {
-                        string file = Path.Combine(GetSoundClipsFolder(), App.Settings.GeneralSettings.ChatNotificationSound);
-                        if (File.Exists(file))
-                        {
-                            this.jsCallbackFunctions.OnAudioDeviceChanged();
-                            this.jsCallbackFunctions.MediaFile = file;
-                        }
-                        else
-                        {
-                            this.jsCallbackFunctions.MediaFile = string.Empty;
-                        }
                     }
-                }
-
-                else if (chatType == ChatTypes.jCyan)
-                {
-                    this._currentChat = new jCyan();
-
-                    if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.Username))
-                    {
-                        if (!App.Settings.GeneralSettings.RedemptionsEnabled)
-                            _twitchService.DisableEventSub();
-
-                        if (string.IsNullOrEmpty(App.Settings.GeneralSettings.jChatURL))
-                        {
-                            string localIndex = LocalHtmlHelper.GetIndexHtmlPath();
-                            NavigateToUrl(new Uri(localIndex).AbsoluteUri);
-                        }
-                        else
-                            NavigateToUrl(App.Settings.GeneralSettings.jChatURL);
-                    }
-                    else
-                    {
-                        if (string.IsNullOrEmpty(App.Settings.GeneralSettings.jChatURL))
-                        {
-                            string localIndex = LocalHtmlHelper.GetIndexHtmlPath();
-                            NavigateToUrl(new Uri(localIndex).AbsoluteUri);
-                        }
-                        else
-                            NavigateToUrl(App.Settings.GeneralSettings.jChatURL);
-                    }
-
-
-                    if (App.Settings.GeneralSettings.ChatNotificationSound.ToLower() == "none")
-                        this.jsCallbackFunctions.MediaFile = string.Empty;
-                    else
-                    {
-                        string file = Path.Combine(GetSoundClipsFolder(), App.Settings.GeneralSettings.ChatNotificationSound);
-                        if (File.Exists(file))
-                        {
-                            this.jsCallbackFunctions.OnAudioDeviceChanged();
-                            this.jsCallbackFunctions.MediaFile = file;
-                        }
-                        else
-                        {
-                            this.jsCallbackFunctions.MediaFile = string.Empty;
-                        }
-                    }
-                }
+                }*/
             }
 
-            this.taskbarControl.Visibility = Visibility.Visible; //config.EnableTrayIcon ? Visibility.Visible : Visibility.Hidden;
+            this.taskbarControl.Visibility = Visibility.Visible;
             this.ShowInTaskbar = !App.Settings.GeneralSettings.HideTaskbarIcon;
 
             if (!this._hiddenBorders)
@@ -1490,35 +1351,23 @@ public partial class MainWindow : Window, BrowserWindow
 
     }
 
-    private void SetupBrowser()
+    private void InitializeWindowProperties()
     {
+        // Set Opacity, Zoom, etc.
         if (App.Settings.GeneralSettings.ZoomLevel <= 0)
             App.Settings.GeneralSettings.ZoomLevel = 1;
 
         webView.DefaultBackgroundColor = System.Drawing.Color.Transparent;
-        //this.bgColor = new SolidColorBrush(Color.FromArgb(App.Settings.GeneralSettings.OpacityLevel, 0, 0, 0));
-        this.cOpacity = App.Settings.GeneralSettings.OpacityLevel;
-        SetBackgroundOpacity(this.cOpacity);
+        SetBackgroundOpacity(App.Settings.GeneralSettings.OpacityLevel);
 
-        if (App.Settings.GeneralSettings.AutoHideBorders)
-            hideBorders();
-        else
-            drawBorders();
-
+        // Setup Notification Sound
         if (App.Settings.GeneralSettings.ChatNotificationSound.ToLower() != "none")
         {
             string file = Path.Combine(GetSoundClipsFolder(), App.Settings.GeneralSettings.ChatNotificationSound);
-            if (File.Exists(file))
-            {
-                this.jsCallbackFunctions.OnAudioDeviceChanged();
-                this.jsCallbackFunctions.MediaFile = file;
-            }
-            else
-            {
-                this.jsCallbackFunctions.MediaFile = string.Empty;
-            }
+            this.jsCallbackFunctions.MediaFile = File.Exists(file) ? file : string.Empty;
         }
 
+        // Open any custom windows
         if (App.Settings.GeneralSettings.CustomWindows != null)
         {
             // Using default values for CustomWindows, but it will load them from the settings once opened
@@ -1526,67 +1375,52 @@ public partial class MainWindow : Window, BrowserWindow
                 OpenNewCustomWindow(url, "", "", false);
         }
 
+        // TODO: Temporary, remove this later on
         if (App.Settings.GeneralSettings.jChatURL.ToLower().Contains("giambaj.it"))
         {
             App.Settings.GeneralSettings.jChatURL = string.Empty;
         }
+    }
 
-        if ((App.Settings.GeneralSettings.ChatType == (int)ChatTypes.CustomURL) && (!string.IsNullOrWhiteSpace(App.Settings.GeneralSettings.CustomURL)))
+    private void SetupChatProvider()
+    {
+        string localIndex = LocalHtmlHelper.GetIndexHtmlPath();
+        bool success = false;
+        try
         {
-            this._currentChat = new CustomURLChat(ChatTypes.CustomURL);
-            NavigateToUrl(App.Settings.GeneralSettings.CustomURL);
+            // Use the factory to create the correct provider
+            var chatProvider = ChatProviderFactory.Create(
+                (ChatTypes)App.Settings.GeneralSettings.ChatType
+            );
+
+            // Get the navigation URI from the provider
+            Uri navigationUri = chatProvider.GetNavigationUri();
+            webView.CoreWebView2.Navigate(navigationUri.AbsoluteUri);
+            success = true;
         }
-        else if ((App.Settings.GeneralSettings.ChatType == (int)ChatTypes.TwitchPopout) && (!string.IsNullOrEmpty(App.Settings.GeneralSettings.Username)))
+        catch (NotSupportedException ex)
         {
-            this._currentChat = new CustomURLChat(ChatTypes.TwitchPopout);
-            NavigateToUrl("https://www.twitch.tv/popout/" + App.Settings.GeneralSettings.Username + "/chat?popout=");
+            // Handle the case where the chat type isn't supported
+            _logger.LogError(ex, "The selected chat type is not supported.");
+            MessageBox.Show("The selected chat type is not supported.", "Error");
         }
-        else if (!string.IsNullOrWhiteSpace(App.Settings.GeneralSettings.Username))
-        { // TODO: need to clean this up to determine which type of chat to load better
-            if (App.Settings.GeneralSettings.ChatType == (int)ChatTypes.KapChat)
-            {
-                this._currentChat = new Chats.KapChat();
-                SetChatAddress(App.Settings.GeneralSettings.Username);
-            }
-            else if (App.Settings.GeneralSettings.ChatType == (int)ChatTypes.jCyan)
-            {
-                if (string.IsNullOrEmpty(App.Settings.GeneralSettings.jChatURL))
-                {
-                    string localIndex = LocalHtmlHelper.GetJChatIndexPath();
-                    NavigateToUrl(new Uri(localIndex).AbsoluteUri);
-                }
-                else
-                {
-                    this._currentChat = new jCyan();
-                    NavigateToUrl(App.Settings.GeneralSettings.jChatURL);
-                }
-            }
-            else
-            {
-                string localIndex = LocalHtmlHelper.GetIndexHtmlPath();
-                NavigateToUrl(new Uri(localIndex).AbsoluteUri);
-            }
-        }
-        else if (App.Settings.GeneralSettings.ChatType == (int)ChatTypes.jCyan)
-        { // TODO: need to clean this up to determine which type of chat to load better
-            if (string.IsNullOrEmpty(App.Settings.GeneralSettings.jChatURL))
-            {
-                string localIndex = LocalHtmlHelper.GetJChatIndexPath();
-                NavigateToUrl(new Uri(localIndex).AbsoluteUri);
-            }
-            else
-            {
-                this._currentChat = new jCyan();
-                NavigateToUrl(App.Settings.GeneralSettings.jChatURL);
-            }
-        }
-        else
+        catch (UriFormatException ex)
         {
-            string localIndex = LocalHtmlHelper.GetIndexHtmlPath();
+            // Handle invalid URLs, e.g., from the CustomURL setting
+            _logger.LogError(ex, "Invalid URL format.");
+            MessageBox.Show("The custom URL is invalid. Please check the settings.", "Error");
+        }
+        catch (Exception ex)
+        {
+            // Handle any other exceptions that may occur
+            _logger.LogError(ex, "An unexpected error occurred while setting up the browser.");
+            MessageBox.Show("An unexpected error occurred: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        if (!success)
+        {
+            // If we failed to navigate, load the local index file
             NavigateToUrl(new Uri(localIndex).AbsoluteUri);
-
-            //CefSharp.WebBrowserExtensions.LoadHtml(Browser1,
-            //"<html><body style=\"font-size: x-large; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; \">Load a channel to connect to by right-clicking the tray icon.<br /><br />You can move and resize the window, then press the [o] button to hide borders, or use the tray icon menu.</body></html>");
         }
     }
 

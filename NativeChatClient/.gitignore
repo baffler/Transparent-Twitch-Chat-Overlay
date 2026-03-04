@@ -1,0 +1,17 @@
+credentials.js
+backups/
+t/
+.vscode
+*.exe
+tokens.json
+active.json
+dist/
+node_modules/
+compile.bat
+pack.bat
+run.bat
+chat
+src/media/
+backup/
+youtube-websocket/
+*.bak

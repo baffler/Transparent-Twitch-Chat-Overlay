@@ -1,35 +1,80 @@
 ﻿using System;
 using System.IO;
+using System.Text.RegularExpressions;
+using TwitchLib.Api.Helix;
 
 namespace TransparentTwitchChatWPF.Helpers
 {
-    /// <summary>
-    /// Copies the bundled “browser” folder to the user’s AppData once,
-    /// then returns the full path to index.html ready for WebView2.
-    /// </summary>
     internal static class LocalHtmlHelper
     {   
-        private static readonly string SourceBrowserPath = Path.Combine(
+        private static readonly string BrowserBasePath = Path.Combine(
             AppContext.BaseDirectory, "browser");
         
-        /// <summary>
-        /// Gets the full path to the local "index.html" file in AppData.
-        /// Assumes EnsureLocalBrowserFiles() has been called (e.g., at application startup).
-        /// </summary>
-        /// <returns>The full path to index.html.</returns>
         public static string GetIndexHtmlPath()
         {
-            return Path.Combine(SourceBrowserPath, "index.html");
+            return Path.Combine(BrowserBasePath, "index.html");
         }
         
-        /// <summary>
-        /// Gets the full path to the local "jchat.html" file in AppData.
-        /// Assumes EnsureLocalBrowserFiles() has been called (e.g., at application startup).
-        /// </summary>
-        /// <returns>The full path to jchat.html.</returns>
         public static string GetJChatIndexPath()
         {
-            return Path.Combine(SourceBrowserPath, "jchat.html");
+            return Path.Combine(BrowserBasePath, "jchat.html");
+        }
+    }
+
+    /// <summary>
+    /// Provides direct paths to overlay HTML files located within the application's "browser" directory.
+    /// This helper assumes the application has read access to its installation folder.
+    /// </summary>
+    internal static class OverlayPathHelper
+    {
+        /// <summary>
+        /// The base path to the "browser" directory within the application's folder.
+        /// </summary>
+        private static readonly string BrowserBasePath = Path.Combine(AppContext.BaseDirectory, "browser");
+
+        /// <summary>
+        /// Gets the full, absolute path to the settings page for the Native Chat overlay.
+        /// </summary>
+        /// <returns>The full path to native-chat\index.html.</returns>
+        public static string GetNativeChatSettingsIndexFilePath()
+        {
+            return Path.Combine(BrowserBasePath, "overlays", "native-chat", "index.html");
+        }
+
+        /// <summary>
+        /// Gets the full, absolute path to the Native Chat overlay.
+        /// </summary>
+        /// <returns>The full path to native-chat.</returns>
+        public static string GetNativeChatPath()
+        {
+            return Path.Combine(BrowserBasePath, "overlays", "native-chat");
+        }
+
+        /// <summary>
+        /// Gets the full, absolute path to the actual chat overlay for the Native Chat overlay.
+        /// </summary>
+        /// <returns>The full path to native-chat\v2\index.html.</returns>
+        public static string GetNativeChatOverlayPath()
+        {
+            return Path.Combine(BrowserBasePath, "overlays", "native-chat", "v2", "index.html");
+        }
+
+        public static string GetNativeChatHostname()
+        {
+            return "nativechat.overlay";
+        }
+
+        /// <summary>
+        /// Checks if a given overlay's base directory exists.
+        /// </summary>
+        /// <param name="overlayId">The ID (folder name) of the overlay.</param>
+        /// <returns>True if the directory exists, otherwise false.</returns>
+        public static bool DoesOverlayExist(string overlayId)
+        {
+            if (string.IsNullOrEmpty(overlayId)) return false;
+
+            string overlayPath = Path.Combine(BrowserBasePath, "overlays", overlayId);
+            return Directory.Exists(overlayPath);
         }
     }
 }

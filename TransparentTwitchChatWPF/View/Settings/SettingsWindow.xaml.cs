@@ -13,8 +13,10 @@ public partial class SettingsWindow : Window
 {
     public event Action<Window> CreateWidgetRequested;
     public event Action CheckForUpdateRequested;
+    public event Action RestoreNativeChatDefaultsRequested;
 
     private readonly ChatSettingsPage _chatSettingsPage;
+    private readonly AppearanceSettingsPage _appearanceSettingsPage;
     private readonly GeneralSettingsPage _generalSettingsPage;
     private readonly ConnectionSettingsPage _connectionSettingsPage;
     private readonly WidgetSettingsPage _widgetSettingsPage;
@@ -23,6 +25,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow(
         ConnectionSettingsPage connectionPage,
         ChatSettingsPage chatPage,
+        AppearanceSettingsPage appearancePage,
         GeneralSettingsPage generalPage,
         WidgetSettingsPage widgetPage,
         AboutSettingsPage aboutPage)
@@ -31,6 +34,7 @@ public partial class SettingsWindow : Window
 
         _connectionSettingsPage = connectionPage;
         _chatSettingsPage = chatPage;
+        _appearanceSettingsPage = appearancePage;
         _generalSettingsPage = generalPage;
         _widgetSettingsPage = widgetPage;
         _aboutSettingsPage = aboutPage;
@@ -50,12 +54,14 @@ public partial class SettingsWindow : Window
         SettingsContentControl.Content = _chatSettingsPage;
     }
 
-    private void OKButton_Click(object sender, RoutedEventArgs e)
+    private async void OKButton_Click(object sender, RoutedEventArgs e)
     {
+        App.Settings.GeneralSettings.ChatType = this.comboChatType.SelectedIndex;
+
         _generalSettingsPage.SaveValues();
         _chatSettingsPage.SaveValues();
+        await _appearanceSettingsPage.SaveValues();
 
-        App.Settings.GeneralSettings.ChatType = this.comboChatType.SelectedIndex;
         App.Settings.Persist();
 
         DialogResult = true;
@@ -75,6 +81,8 @@ public partial class SettingsWindow : Window
 
         _chatSettingsPage.SetupValues();
         _chatSettingsPage.TwitchConnectionPageRequested += ShowTwitchConnectionPage;
+        _chatSettingsPage.AppearancePageRequested += ShowAppearancePage;
+        _chatSettingsPage.RestoreNativeChatDefaultsRequested += () => RestoreNativeChatDefaultsRequested?.Invoke();
 
         _connectionSettingsPage.SetupValues();
         _connectionSettingsPage.TwitchConnectionStatusChanged += _chatSettingsPage.OnTwitchConnectionStatusChanged;
@@ -84,6 +92,12 @@ public partial class SettingsWindow : Window
     {
         //SettingsContentControl.Content = _connectionSettingsPage;
         lvSettings.SelectedIndex = 2;
+    }
+
+    private void ShowAppearancePage()
+    {
+        //SettingsContentControl.Content = _appearanceSettingsPage;
+        lvSettings.SelectedIndex = 1;
     }
 
     private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -97,6 +111,9 @@ public partial class SettingsWindow : Window
             {
                 case "Chat":
                     SettingsContentControl.Content = _chatSettingsPage;
+                    break;
+                case "Appearance":
+                    SettingsContentControl.Content = _appearanceSettingsPage;
                     break;
                 case "General":
                     SettingsContentControl.Content = _generalSettingsPage;
@@ -121,10 +138,20 @@ public partial class SettingsWindow : Window
         if (Enum.IsDefined(typeof(ChatTypes), index))
         {
             _chatSettingsPage.ChatTypeChanged((ChatTypes)index);
+
+            listItemAppearance.IsEnabled = ((ChatTypes)index) == ChatTypes.NativeChat;
+
+            if (((ChatTypes)index) == ChatTypes.NativeChat)
+                textBlockAppearance.ClearValue(TextBlock.ForegroundProperty);
+            else
+                textBlockAppearance.Foreground = SystemColors.GrayTextBrush;
         }
         else
         {
             Debug.WriteLine("Invalid chat type selected. Index = " + index.ToString());
+            
+            listItemAppearance.IsEnabled = false;
+            textBlockAppearance.Foreground = SystemColors.GrayTextBrush;
         }
     }
 }

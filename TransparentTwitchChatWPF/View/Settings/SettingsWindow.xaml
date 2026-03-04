@@ -12,7 +12,7 @@
         ui:TitleBar.ExtendViewIntoTitleBar="False"
         Title="Settings"
         WindowStyle="ToolWindow"
-        Height="500" Width="550" Topmost="True" WindowStartupLocation="CenterScreen" SourceInitialized="Window_SourceInitialized">
+        Height="550" Width="600" Topmost="True" WindowStartupLocation="CenterScreen" SourceInitialized="Window_SourceInitialized">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="110"/>
@@ -30,6 +30,11 @@
                 <ListViewItem>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Chat" VerticalAlignment="Center" />
+                    </StackPanel>
+                </ListViewItem>
+                <ListViewItem Name="listItemAppearance">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Name="textBlockAppearance" Text="Appearance" VerticalAlignment="Center" />
                     </StackPanel>
                 </ListViewItem>
                 <ListViewItem>
@@ -79,10 +84,10 @@
                             VerticalAlignment="Bottom" 
                             Width="170"
                             Margin="0,0,0,5">
-                        <ComboBoxItem Content="KapChat (Default)" />
+                        <ComboBoxItem Content="NativeChat (Default)" />
                         <ComboBoxItem Content="Twitch Popout" />
+                        <ComboBoxItem Content="KapChat (Deprecated)" />
                         <ComboBoxItem Content="Custom URL" />
-                        <ComboBoxItem Content="jCyan (Beta)" />
                     </ComboBox>
             
                     <Button
