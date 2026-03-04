@@ -24,7 +24,9 @@ namespace TransparentTwitchChatWPF.Chats
 
             if (this.ChatType == ChatTypes.TwitchPopout)
             {
-                if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.TwitchPopoutCSS))
+                if (App.Settings.GeneralSettings.UseDefaultTwitchPopoutCSS)
+                    css = CustomCSS_Defaults.TwitchPopoutChat;
+                else if (!string.IsNullOrEmpty(App.Settings.GeneralSettings.TwitchPopoutCSS))
                     css = App.Settings.GeneralSettings.TwitchPopoutCSS;
             }
             else

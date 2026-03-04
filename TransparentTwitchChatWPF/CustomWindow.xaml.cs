@@ -1,16 +1,21 @@
 ﻿using Jot;
-using System.Diagnostics;
-using System.Windows;
-using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Controls;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
-using Application = System.Windows.Application;
-using MessageBox = System.Windows.MessageBox;
-using Brushes = System.Windows.Media.Brushes;
-using Point = System.Windows.Point;
+using Newtonsoft.Json;
+using System.Diagnostics;
+using System.Security.Policy;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Interop;
+using System.Windows.Media;
 using TransparentTwitchChatWPF.Utils;
+using TransparentTwitchChatWPF.View.Settings;
+using Application = System.Windows.Application;
+using Brushes = System.Windows.Media.Brushes;
+using File = System.IO.File;
+using MessageBox = System.Windows.MessageBox;
+using Path = System.IO.Path;
+using Point = System.Windows.Point;
 
 namespace TransparentTwitchChatWPF
 {
@@ -25,47 +30,76 @@ namespace TransparentTwitchChatWPF
         private readonly Thickness _borderThickness = new Thickness(4);
         private readonly Color _borderColor = (Color)ColorConverter.ConvertFromString("#5D077F");
 
-        private bool _hiddenBorders = false;
-        private readonly string _customUrl = "";
-        private readonly string _hashCode = "";
+        private WindowDisplayMode _currentMode;
+        private bool _isOverlayInteractable = false;
+        //private readonly string _customUrl = "";
+        //private readonly string _hashCode = "";
+
+        Thickness noBorderThickness = new Thickness(0);
+        Thickness borderThickness = new Thickness(4);
 
         private Button _closeButton;
         private WebView2 webView;
         private bool hasWebView2Runtime = false;
+        private bool webViewProcessFailed = false;
 
         // Tracked properties
+        public string Url { get; set; }
+        public string HashCode { get; set; }
+        public string DisplayName { get; set; }
         public double ZoomLevel { get; set; }
         public byte OpacityLevel { get; set; }
         public string customCSS { get; set; }
         public string customJS { get; set; }
+        public bool AllowInteraction { get; set; }
 
-        public CustomWindow(MainWindow main, string Url, string CustomCSS)
+        public CustomWindow(MainWindow main, string URL, string displayName, string CustomCSS, bool allowInteraction)
         {
             this._mainWindow = main;
-            this._customUrl = Url;
+
+            Url = URL;
             ZoomLevel = 1;
             OpacityLevel = 0;
             customCSS = CustomCSS;
             customJS = "";
+            AllowInteraction = allowInteraction;
 
             InitializeComponent();
 
-            _hashCode = Hasher.Create64BitHash(this._customUrl);
+            HashCode = Hasher.Create64BitHash(URL);
+            
+            if (string.IsNullOrEmpty(displayName))
+                DisplayName = HashCode;
+            else
+                DisplayName = displayName;
+
             App.Settings.Tracker.Configure<CustomWindow>()
-                .Id(w => w._hashCode, null, false)
+                .Id(w => w.HashCode, null, false)
                 .Properties(cw => new
                 {
+                    cw.Url,
+                    cw.HashCode,
+                    cw.DisplayName,
                     cw.ZoomLevel,
                     cw.OpacityLevel,
                     cw.customCSS,
                     cw.customJS,
+                    cw.AllowInteraction,
                     cw.Top, cw.Width, cw.Height, cw.Left, cw.WindowState
                 })
                 .PersistOn(nameof(Window.Closing))
                 .StopTrackingOn(nameof(Window.Closing));
             App.Settings.Tracker.Track(this);
 
+            this.Title = DisplayName;
+
+            // TODO: Setting this here to make sure we use the URL passed in the constructor
+            // otherwise it could load a value that is invalid possibly?
+            Url = URL;
+
             if (ZoomLevel <= 0) ZoomLevel = 1;
+
+            menuItemCheckboxAllowInteraction.IsChecked = AllowInteraction;
 
             InitializeWebViewAsync();
         }
@@ -75,6 +109,7 @@ namespace TransparentTwitchChatWPF
             App.Settings.Tracker.Persist(this);
         }
 
+        #region Setup And Initialization
         private async void InitializeWebViewAsync()
         {
             try
@@ -110,12 +145,7 @@ namespace TransparentTwitchChatWPF
                 DefaultBackgroundColor = System.Drawing.Color.Transparent
             };
 
-            var options = new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required")
-            {
-                AdditionalBrowserArguments = "--disable-background-timer-throttling"
-            };
-            string userDataFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF");
-            CoreWebView2Environment cwv2Environment = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
+            CoreWebView2Environment cwv2Environment = await WebView2EnvironmentManager.GetEnvironmentAsync();
 
             // Add to visual tree.
             Grid.SetRow(webView, 1);
@@ -130,50 +160,105 @@ namespace TransparentTwitchChatWPF
             webView.NavigationCompleted += webView_NavigationCompleted;
             webView.CoreWebView2.ProcessFailed += webView_CoreWebView2ProcessFailed;
 
+            webView.CoreWebView2.Profile.PreferredColorScheme = CoreWebView2PreferredColorScheme.Auto;
+
             // Finalize setup.
             //this.jsCallbackFunctions = new JsCallbackFunctions();
             //webView.CoreWebView2.AddHostObjectToScript("jsCallbackFunctions", this.jsCallbackFunctions);
 
             SetupBrowser();
+
+            // This ensures the display mode is set only after the browser is fully initialized.
+            SetDisplayMode(WindowDisplayMode.Setup);
         }
 
-        private async void webView_CoreWebView2ProcessFailed(object sender, CoreWebView2ProcessFailedEventArgs e)
+        private void SetupBrowser()
         {
-            // It's safest to perform UI updates and re-initialization on the UI thread.
-            await Dispatcher.InvokeAsync(async () =>
+            webView.DefaultBackgroundColor = System.Drawing.Color.Transparent;
+            SetBackgroundOpacity(OpacityLevel);
+            //SetInteractable(AllowInteraction);
+
+            if (!string.IsNullOrWhiteSpace(this.Url))
             {
-                MessageBox.Show("The web component crashed and will be reloaded.", "WebView2 Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                NavigateToUrl(this.Url);
+            }
+        }
+        #endregion
 
-                // --- Clean up old instance ---
-                if (webView != null)
-                {
-                    // Unsubscribe from every event to prevent memory leaks
-                    //webView.CoreWebView2InitializationCompleted -= webView_CoreWebView2InitializationCompleted;
-                    webView.NavigationCompleted -= webView_NavigationCompleted;
+        #region Window/UI State Management
+        public async Task RefreshState()
+        {
+            // Immediately apply native UI changes
+            SetDisplayMode(_currentMode);
 
-                    // The CoreWebView2 might be null if it failed very early
-                    if (webView.CoreWebView2 != null)
+            // Then, apply the web content changes
+            await ApplyWebPageStyles();
+        }
+
+        public void SetDisplayMode(WindowDisplayMode mode)
+        {
+            _currentMode = mode;
+            var hwnd = new WindowInteropHelper(this).Handle;
+            if (hwnd == IntPtr.Zero) return; // Exit if window isn't ready
+
+            switch (mode)
+            {
+                case WindowDisplayMode.Setup:
+                    // STATE: Borders are visible for configuration.
+                    WindowHelper.SetWindowInteractable(hwnd); // Make frame interactable
+                    if (webView != null)
                     {
-                        webView.CoreWebView2.ProcessFailed -= webView_CoreWebView2ProcessFailed;
+                        this.Dispatcher.Invoke(() =>
+                        {
+                            webView.IsHitTestVisible = AllowInteraction;
+                            webView.Focusable = AllowInteraction;
+                        });
                     }
 
-                    // Remove the failed control from the UI and dispose it
-                    this.mainWindowGrid.Children.Remove(webView);
-                    webView.Dispose();
-                    webView = null;
-                }
+                    this.WindowStyle = WindowStyle.None;
+                    this.BorderThickness = this.borderThickness;
 
-                // --- Re-create using the helper function ---
-                try
-                {
-                    await SetupWebViewAsync();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Fatal error: Could not recover the WebView2 component. {ex.Message} The window will now close.", "Recovery Failed", MessageBoxButton.OK, MessageBoxImage.Stop);
-                    this.Close();
-                }
-            });
+                    this.AppTitleBar.Visibility = Visibility.Visible;
+                    this.FooterBar.Visibility = Visibility.Visible;
+                    this.ResizeMode = ResizeMode.CanResizeWithGrip;
+                    this.webView.SetValue(Grid.RowSpanProperty, 1);
+                    this.ShowInTaskbar = true;
+
+                    SetCloseButtonVisibility(true);
+                    UpdateTitle();
+                    SetBackgroundOpacity(OpacityLevel);
+
+                    break;
+
+                case WindowDisplayMode.Overlay:
+                    // STATE: Borders are hidden for overlay/in-game use.
+                    WindowHelper.SetWindowClickThrough(hwnd); // Make EVERYTHING click-through
+                    _isOverlayInteractable = false; // Always reset toggle when entering overlay mode
+                    if (webView != null)
+                    {
+                        this.Dispatcher.Invoke(() =>
+                        {
+                            webView.IsHitTestVisible = AllowInteraction;
+                            webView.Focusable = AllowInteraction;
+                        });
+                    }
+
+                    this.WindowStyle = WindowStyle.None;
+                    this.Background = Brushes.Transparent;
+                    this.BorderThickness = this.noBorderThickness;
+
+                    this.AppTitleBar.Visibility = Visibility.Collapsed;
+                    this.FooterBar.Visibility = Visibility.Collapsed;
+                    this.ResizeMode = ResizeMode.NoResize;
+                    this.webView.SetValue(Grid.RowSpanProperty, 2);
+                    this.ShowInTaskbar = false;
+                    
+                    SetCloseButtonVisibility(false);
+                    UpdateTitle();
+                    SetBackgroundOpacity(OpacityLevel);
+
+                    break;
+            }
         }
 
         private void btnHide_Click(object sender, RoutedEventArgs e)
@@ -181,63 +266,64 @@ namespace TransparentTwitchChatWPF
             hideBorders();
         }
 
-        public void drawBorders()
-        {
-            var hwnd = new WindowInteropHelper(this).Handle;
-            WindowHelper.SetWindowExDefault(hwnd);
-
-            // TODO: check if setting for interactable is enabled?
-            this.overlay.Opacity = 0.01;
-
-            SetCloseButtonVisibility(true);
-
-            this.AppTitleBar.Visibility = Visibility.Visible;
-            this.FooterBar.Visibility = Visibility.Visible;
-            this.webView.SetValue(Grid.RowSpanProperty, 1);
-            this.BorderBrush = new SolidColorBrush(_borderColor);
-            this.BorderThickness = this._borderThickness;
-            this.ResizeMode = System.Windows.ResizeMode.CanResizeWithGrip;
-
-            _hiddenBorders = false;
-
-            this.Topmost = false;
-            this.Activate();
-            this.Topmost = true;
-
-            this.webView.Focusable = true;
-        }
-
-        public void hideBorders()
-        {
-            var hwnd = new WindowInteropHelper(this).Handle;
-            WindowHelper.SetWindowExTransparent(hwnd);
-
-            this.overlay.Opacity = 0;
-
-            SetCloseButtonVisibility(false);
-
-            this.AppTitleBar.Visibility = Visibility.Collapsed;
-            this.FooterBar.Visibility = Visibility.Collapsed;
-            this.webView.SetValue(Grid.RowSpanProperty, 2);
-            this.BorderBrush = Brushes.Transparent;
-            this.BorderThickness = this._noBorderThickness;
-            this.ResizeMode = System.Windows.ResizeMode.NoResize;
-
-            _hiddenBorders = true;
-
-            this.Topmost = false;
-            this.Activate();
-            this.Topmost = true;
-
-            this.webView.Focusable = false;
-        }
-
         public void ToggleBorderVisibility()
         {
-            if (_hiddenBorders)
-                drawBorders();
+            if (_currentMode == WindowDisplayMode.Overlay)
+            {
+                SetDisplayMode(WindowDisplayMode.Setup);
+            }
             else
-                hideBorders();
+            {
+                SetDisplayMode(WindowDisplayMode.Overlay);
+            }
+        }
+
+        public async void drawBorders()
+        {
+            SetDisplayMode(WindowDisplayMode.Setup);
+            await ApplyWebPageStyles();
+        }
+
+        public async void hideBorders()
+        {
+            SetDisplayMode(WindowDisplayMode.Overlay);
+            await ApplyWebPageStyles();
+        }
+
+        public void SetInteractable(bool interactable)
+        {
+            // --- Guard Clauses: Do nothing if conditions aren't met ---
+            if (!AllowInteraction) return; // Rule 1: setting must allow interaction.
+            if (_currentMode != WindowDisplayMode.Overlay) return; // Rule 2: Only works in Overlay mode.
+
+            // Toggle the state
+            _isOverlayInteractable = interactable;
+
+            // Apply the change
+            if (webView != null)
+            {
+                this.Dispatcher.Invoke(() =>
+                {
+                    webView.IsHitTestVisible = _isOverlayInteractable;
+                    webView.Focusable = _isOverlayInteractable;
+                });
+            }
+
+            var hwnd = new WindowInteropHelper(this).Handle;
+            if (_isOverlayInteractable)
+            {
+                WindowHelper.SetWindowInteractable(hwnd);
+                this.AppTitleBar.Visibility = Visibility.Visible;
+                UpdateTitle();
+                SetBackgroundOpacity(OpacityLevel);
+            }
+            else
+            {
+                WindowHelper.SetWindowClickThrough(hwnd);
+                this.AppTitleBar.Visibility = Visibility.Collapsed;
+                UpdateTitle();
+                SetBackgroundOpacity(OpacityLevel);
+            }
         }
 
         public void ResetWindowState()
@@ -261,14 +347,99 @@ namespace TransparentTwitchChatWPF
             }
         }
 
-        private void SetupBrowser()
+
+        private void SetBackgroundOpacity(byte opacity)
         {
-            webView.DefaultBackgroundColor = System.Drawing.Color.Transparent;
-            SetBackgroundOpacity(OpacityLevel);
-            
-            if (!string.IsNullOrWhiteSpace(this._customUrl))
+            // Convert the 0-255 byte to a 0.0-1.0 double.
+            double remappedOpacity = opacity / 255.0;
+
+            // If interactable, ensure the minimum opacity is 0.01.
+            // Otherwise, the value is already valid.
+            bool isInteractable = (AllowInteraction && _isOverlayInteractable) ||
+                                  (AllowInteraction && _currentMode == WindowDisplayMode.Setup);
+
+            double finalOpacity = isInteractable
+                ? Math.Max(0.01, remappedOpacity)
+                : remappedOpacity;
+
+            Debug.WriteLine($"Setting background opacity to: {finalOpacity}");
+
+            this.overlay.Opacity = finalOpacity;
+            this.FooterBar.Opacity = finalOpacity;
+        }
+        #endregion
+
+        #region Browser Events
+        private async void webView_NavigationCompleted(object sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs e)
+        {
+            this.webView.Dispatcher.Invoke(new Action(() => { SetZoomFactor(ZoomLevel); }));
+
+            // Insert some custom CSS for webcaptioner.com domain
+            if (this.Url.ToLower().Contains("webcaptioner.com"))
             {
-                NavigateToUrl(this._customUrl);
+                await this.webView.ExecuteScriptAsync(InsertCustomCSS(CustomCSS_Defaults.WebCaptioner));
+            }
+
+            if (!string.IsNullOrEmpty(this.customCSS))
+            {
+                await this.webView.ExecuteScriptAsync(InsertCustomCSS(this.customCSS));
+            }
+
+            // Apply the initial overflow style after the page has loaded
+            await ApplyWebPageStyles();
+        }
+
+        private void webView_CoreWebView2ProcessFailed(object sender, CoreWebView2ProcessFailedEventArgs e)
+        {
+            webViewProcessFailed = true;
+            this.Close();
+        }
+        #endregion
+
+        #region Browser Methods
+        private async Task ApplyWebPageStyles()
+        {
+            // Check if we are in Overlay mode and apply the correct overflow style
+            bool shouldHideOverflow = (_currentMode == WindowDisplayMode.Overlay);
+
+            // In your code, you had a method called SetBodyOverflow - we'll assume it's InjectOverflowStyle now
+            await InjectOverflowStyle(shouldHideOverflow);
+        }
+
+        private async Task InjectOverflowStyle(bool inject)
+        {
+            // Ensure the webView is ready
+            if (webView == null || webView.CoreWebView2 == null)
+            {
+                return;
+            }
+
+            try
+            {
+                string script;
+                if (inject)
+                {
+                    // Use !important to override the site's CSS. Apply to both html and body.
+                    script = @"
+                        document.documentElement.style.setProperty('overflow', 'hidden', 'important');
+                        document.body.style.setProperty('overflow', 'hidden', 'important');
+                    ";
+                }
+                else
+                {
+                    // Cleanly remove our override and let the page's own CSS take back control.
+                    script = @"
+                        document.documentElement.style.removeProperty('overflow');
+                        document.body.style.removeProperty('overflow');
+                    ";
+                }
+
+                // Execute the script to directly set the style on the body element
+                await webView.CoreWebView2.ExecuteScriptAsync(script);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to set body overflow: {ex.Message}");
             }
         }
 
@@ -283,27 +454,82 @@ namespace TransparentTwitchChatWPF
                 string urlStatus = string.IsNullOrEmpty(url) ? "<Empty>" : url;
                 Debug.WriteLine($"Failed to navigate to custom chat URL: {urlStatus}\n{ex.Message}\n{ex.StackTrace}");
                 MessageBox.Show($"Failed to navigate to the custom chat URL. Please check the URL and try again.\n\nUrl: '{urlStatus}'", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                try
+                {
+                    webView.CoreWebView2.NavigateToString($"""
+                        <html>
+                            <head><title>Error</title></head>
+                            <body style='color: #D3D3D3; background-color: #2B2B2B; font-family: sans-serif; text-align: center; padding-top: 50px;'>
+                                <h1>Something went wrong</h1>
+                                <p>Could not load the requested page @: '{url}'</p>
+                            </body>
+                        </html>
+                    """);
+                    SetBackgroundOpacity(255);
+                }
+                catch (Exception fallbackEx)
+                {
+                    Debug.WriteLine($"Failed to navigate to the fallback error page: {fallbackEx.Message}");
+                }
             }
         }
 
-        private void SetBackgroundOpacity(int opacity)
+        private string InsertCustomCSS(string CSS)
         {
-            double Remap(int inputValue)
-            {
-                double outputValue = (inputValue - 0) * (1.0 - 0.0) / (255 - 0) + 0.0;
-                return outputValue;
-            }
+            string uriEncodedCSS = Uri.EscapeDataString(CSS);
+            string script = "const ttcCSS = document.createElement('style');";
+            script += "ttcCSS.innerHTML = decodeURIComponent(\"" + uriEncodedCSS + "\");";
+            script += "document.querySelector('head').appendChild(ttcCSS);";
+            return script;
+        }
 
-            double remapped = Remap(opacity);
-            if (remapped <= 0)
+        private void SetZoomFactor(double zoom)
+        {
+            if (zoom <= 0.1) zoom = 0.1;
+            if (zoom > 4) zoom = 4;
+
+            this.webView.ZoomFactor = zoom;
+            ZoomLevel = zoom;
+        }
+        #endregion
+
+        #region Menu Items
+        private void MenuItem_CopyUrl(object sender, RoutedEventArgs e)
+        {
+            Clipboard.SetText(this.Url);
+        }
+
+        private void MenuItem_SetDisplayName(object sender, RoutedEventArgs e)
+        {
+            var inputWindow = new InputWindow("Window Display Name");
+            inputWindow.Owner = this; // Set the owner to center the dialog over the main window
+
+            // ShowDialog() returns a nullable boolean
+            if (inputWindow.ShowDialog() == true)
             {
-                //if (_interactable)  remapped = 0.01;
-                //else
-                    remapped = 0;
+                string name = inputWindow.ResponseText.Trim();
+                if (string.IsNullOrEmpty(name))
+                {
+                    MessageBox.Show("Display name cannot be empty.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                DisplayName = name;
+                UpdateTitle();
             }
-            else if (remapped >= 1) remapped = 1;
-            this.overlay.Opacity = remapped;
-            this.FooterBar.Opacity = remapped;
+        }
+
+        private async void MenuItemInteraction_Checked(object sender, RoutedEventArgs e)
+        {
+            AllowInteraction = true;
+            await RefreshState();
+        }
+
+        private async void MenuItemInteraction_Unchecked(object sender, RoutedEventArgs e)
+        {
+            AllowInteraction = false;
+            await RefreshState();
         }
 
         private void btnSettings_Click(object sender, RoutedEventArgs e)
@@ -319,7 +545,6 @@ namespace TransparentTwitchChatWPF
             settingsBtnContextMenu.VerticalOffset = screenPos.Y;
             settingsBtnContextMenu.IsOpen = true;
         }
-        
         private void MenuItem_IncOpacity(object sender, RoutedEventArgs e)
         {
             OpacityLevel = (byte)Math.Clamp(OpacityLevel + 15, 0, 255);
@@ -368,43 +593,14 @@ namespace TransparentTwitchChatWPF
             ZoomLevel = 1;
         }
 
-        private void SetZoomFactor(double zoom)
-        {
-            if (zoom <= 0.1) zoom = 0.1;
-            if (zoom > 4) zoom = 4;
-
-            this.webView.ZoomFactor = zoom;
-            ZoomLevel = zoom;
-        }
-
-        private async void webView_NavigationCompleted(object sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs e)
-        {
-            this.webView.Dispatcher.Invoke(new Action(() => { SetZoomFactor(ZoomLevel); }));
-
-            // Insert some custom CSS for webcaptioner.com domain
-            if (this._customUrl.ToLower().Contains("webcaptioner.com"))
-            {
-                await this.webView.ExecuteScriptAsync(InsertCustomCSS(CustomCSS_Defaults.WebCaptioner));
-            }
-
-            if (!string.IsNullOrEmpty(this.customCSS))
-            {
-                await this.webView.ExecuteScriptAsync(InsertCustomCSS(this.customCSS));
-            }
-        }
-
-        private string InsertCustomCSS(string CSS)
-        {
-            string uriEncodedCSS = Uri.EscapeDataString(CSS);
-            string script = "const ttcCSS = document.createElement('style');";
-            script += "ttcCSS.innerHTML = decodeURIComponent(\"" + uriEncodedCSS + "\");";
-            script += "document.querySelector('head').appendChild(ttcCSS);";
-            return script;
-        }
-
         private void MenuItem_DevToolsClick(object sender, RoutedEventArgs e)
         {
             this.webView.CoreWebView2.OpenDevToolsWindow();
+        }
+
+        private void MenuItem_ReloadClick(object sender, RoutedEventArgs e)
+        {
+            NavigateToUrl(this.Url);
         }
 
         private void MenuItem_EditCSSClick(object sender, RoutedEventArgs e)
@@ -427,13 +623,28 @@ namespace TransparentTwitchChatWPF
             Application.Current.Shutdown();
         }
 
+        private void MenuItem_MigrateSettings(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show("This will migrate settings from an older version. It will overwrite the current settings for this window.", "Migrate Settings", MessageBoxButton.OKCancel, MessageBoxImage.Information)
+               == MessageBoxResult.OK)
+            {
+                MigrateSettings();
+            }
+        }
+        #endregion
+
+        #region Window Events
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (App.IsShuttingDown) return;
+            if (App.IsShuttingDown || webViewProcessFailed)
+            {
+                e.Cancel = false; // Allow the window to close normally
+                return;
+            }
 
             if (MessageBox.Show("This will delete the settings for this window. Are you sure?", "Remove Window", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
             {
-                this._mainWindow.RemoveCustomWindow(this._customUrl);
+                this._mainWindow.RemoveCustomWindow(this.Url);
 
                 // TODO: Remove the tracking configuration for this window
                 /*string path = (Services.Tracker.StoreFactory as Jot.Storage.JsonFileStoreFactory).StoreFolderPath;
@@ -476,6 +687,7 @@ namespace TransparentTwitchChatWPF
             }
             catch {}
         }
+        #endregion
 
         public void SetTopMost(bool topMost)
         {
@@ -487,5 +699,139 @@ namespace TransparentTwitchChatWPF
             var hwnd = new WindowInteropHelper(this).Handle;
             WindowHelper.SetWindowPosTopMost(hwnd);
         }
+
+        #region Helpers
+        private void UpdateTitle()
+        {
+            var isInteractable = AllowInteraction && (_currentMode == WindowDisplayMode.Setup || _isOverlayInteractable);
+            if (isInteractable)
+            {
+                this.Title = $"{DisplayName} [Interactable]";
+                this.InteractableIcon.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                this.Title = DisplayName;
+                this.InteractableIcon.Visibility = Visibility.Collapsed;
+            }
+        }
+        private void MigrateSettings()
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = Path.Combine(AppContext.BaseDirectory, "LegacyHasher.exe"),
+                UseShellExecute = false,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                CreateNoWindow = true
+            };
+
+            string DataFolder = (App.Settings.Tracker.Store as Jot.Storage.JsonFileStore).FolderPath;
+
+            using (var process = Process.Start(startInfo))
+            {
+                // Send the single URL to the legacy hasher
+                process.StandardInput.WriteLine(this.Url);
+                process.StandardInput.Close(); // Signal that we're done writing
+
+                // Read the single line of output, which is the old hash code
+                string oldHashCode = process.StandardOutput.ReadToEnd().Trim();
+                process.WaitForExit();
+
+                if (!string.IsNullOrEmpty(oldHashCode))
+                {
+                    // Construct the old and new filenames
+                    string oldFileName = $"CustomWindow_{oldHashCode}.json";
+                    string oldFileNameMigrated = $"CustomWindow_{oldHashCode}.json.migrated";
+                    string newFileName = $"{this.HashCode}.json";
+
+                    // Construct the full paths
+                    string oldSettingsPath = Path.Combine(DataFolder, oldFileName);
+                    string oldSettingsMigratedPath = Path.Combine(DataFolder, oldFileNameMigrated);
+                    string newSettingsPath = Path.Combine(DataFolder, newFileName);
+
+                    if (File.Exists(oldSettingsPath))
+                    {
+                        try
+                        {
+                            string json = File.ReadAllText(oldSettingsPath);
+
+                            // Deserialize into a list of the generic properties
+                            var oldProperties = JsonConvert.DeserializeObject<List<OldSettingProperty>>(json);
+
+                            if (oldProperties != null)
+                            {
+                                // Helper function to find a value by name and convert it
+                                T GetValue<T>(string name)
+                                {
+                                    var prop = oldProperties.FirstOrDefault(p => p.Name == name);
+                                    // Check if the property was found and its value is not null
+                                    if (prop != null && prop.Value != null)
+                                    {
+                                        // Use Convert for safe type conversion from object
+                                        return (T)Convert.ChangeType(prop.Value, typeof(T));
+                                    }
+                                    return default(T); // Return the default value (0, null, etc.) if not found
+                                }
+
+                                // Manually assign each value from the parsed list
+                                this.Height = GetValue<double>("Height");
+                                this.Width = GetValue<double>("Width");
+                                this.Top = GetValue<double>("Top");
+                                this.Left = GetValue<double>("Left");
+                                this.ZoomLevel = GetValue<double>("ZoomLevel");
+                                this.customCSS = GetValue<string>("customCSS");
+                                this.customJS = GetValue<string>("customJS");
+
+                                // Handle the WindowState enum separately
+                                var windowStateProp = oldProperties.FirstOrDefault(p => p.Name == "WindowState");
+                                if (windowStateProp != null && windowStateProp.Value != null)
+                                {
+                                    // First, convert the object (containing an Int64) to an int.
+                                    int stateValue = Convert.ToInt32(windowStateProp.Value);
+                                    // Then, cast the int to the WindowState enum.
+                                    this.WindowState = (System.Windows.WindowState)stateValue;
+                                }
+
+                                this.Persist(); // Save the migrated settings
+
+                                // Rename the old file to indicate it has been migrated
+                                File.Move(oldSettingsPath, oldSettingsPath + ".migrated");
+                                // Show a success message to the user
+                                MessageBox.Show("Settings migrated successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                            }
+                            else
+                            {
+                                MessageBox.Show("Old settings file was empty or invalid.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Show an error message if the migration fails
+                            MessageBox.Show($"Failed to migrate settings: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
+                    else if (File.Exists(oldSettingsMigratedPath))
+                    {
+                        // Show a warning message if already migrated
+                        MessageBox.Show($"Already migrated settings. File = '{oldFileNameMigrated}'", "Already migrated", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                    else
+                    {
+                        // Show an error message if the old file wasn't found
+                        MessageBox.Show("Could not find the old settings file to migrate.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
+        }
+        #endregion
+
+    }
+
+    // Class for serializing/deserializing older settings for migration
+    public class OldSettingProperty
+    {
+        public string Name { get; set; }
+        public object Value { get; set; }
     }
 }

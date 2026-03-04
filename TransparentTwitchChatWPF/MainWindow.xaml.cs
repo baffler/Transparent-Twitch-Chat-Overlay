@@ -134,6 +134,7 @@ using TransparentTwitchChatWPF.Twitch;
 using TransparentTwitchChatWPF.Utils;
 using TransparentTwitchChatWPF.View;
 using Velopack;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 /// <summary>
 /// Interaction logic for MainWindow.xaml
@@ -161,7 +162,7 @@ public partial class MainWindow : Window, BrowserWindow
     int cOpacity = 0;
 
     private bool _hiddenBorders = false;
-    private bool _interactable = true;
+    public WindowDisplayMode CurrentDisplayMode = WindowDisplayMode.Setup;
 
     JsCallbackFunctions jsCallbackFunctions;
     List<BrowserWindow> windows = new List<BrowserWindow>();
@@ -298,8 +299,23 @@ public partial class MainWindow : Window, BrowserWindow
 
     private void OnHotKeyToggleInteraction(object sender, HotkeyEventArgs e)
     {
-        SetInteractable(!this.webView.Focusable);
+        CurrentDisplayMode = CurrentDisplayMode == WindowDisplayMode.Setup
+            ? WindowDisplayMode.Overlay
+            : WindowDisplayMode.Setup;
+
+        bool isInteractable = CurrentDisplayMode == WindowDisplayMode.Setup;
+        SetInteractable(isInteractable);
+        SetInteractableAllWindows(isInteractable);
+
         e.Handled = true;
+    }
+
+    private void SetInteractableAllWindows(bool isInteractable)
+    {
+        foreach (var window in this.windows)
+        {
+            window.SetInteractable(isInteractable);
+        }
     }
 
     private void OnHotKeyBringToTopTimer(object sender, HotkeyEventArgs e)
@@ -432,12 +448,7 @@ public partial class MainWindow : Window, BrowserWindow
             DefaultBackgroundColor = System.Drawing.Color.Transparent
         };
 
-        var options = new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required")
-        {
-            AdditionalBrowserArguments = "--disable-background-timer-throttling"
-        };
-        string userDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF");
-        CoreWebView2Environment cwv2Environment = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
+        CoreWebView2Environment cwv2Environment = await WebView2EnvironmentManager.GetEnvironmentAsync();
 
         // Add to visual tree.
         Grid.SetRow(webView, 1);
@@ -454,6 +465,7 @@ public partial class MainWindow : Window, BrowserWindow
         webView.CoreWebView2.ProcessFailed += webView_CoreWebView2ProcessFailed;
 
         ApplyVirtualHostMappings(webView.CoreWebView2);
+        webView.CoreWebView2.Profile.PreferredColorScheme = CoreWebView2PreferredColorScheme.Auto;
 
         // Finalize setup.
         this.jsCallbackFunctions = new JsCallbackFunctions();
@@ -483,34 +495,26 @@ public partial class MainWindow : Window, BrowserWindow
 
     private async void webView_CoreWebView2ProcessFailed(object sender, CoreWebView2ProcessFailedEventArgs e)
     {
+        Debug.WriteLine($"WebView2 process failed: {e.ProcessFailedKind}, Reason: {e.Reason}");
+
         // It's safest to perform UI updates and re-initialization on the UI thread.
         await Dispatcher.InvokeAsync(async () =>
         {
-            MessageBox.Show("The web component crashed and will be reloaded.", "WebView2 Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"The web component crashed and will now be reloaded.\n'{e.ProcessFailedKind}' Reason: '{e.Reason}'", "WebView2 Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
-            // --- Clean up old instance ---
-            if (webView != null)
-            {
-                // Unsubscribe from every event to prevent memory leaks
-                webView.CoreWebView2InitializationCompleted -= webView_CoreWebView2InitializationCompleted;
-                webView.NavigationCompleted -= webView_NavigationCompleted;
-                webView.WebMessageReceived -= webView_WebMessageReceived;
+            // --- Clean up the FAILED instance ---
+            // Remove the control from the visual tree.
+            this.mainWindowGrid.Children.Remove(webView);
 
-                // The CoreWebView2 might be null if it failed very early
-                if (webView.CoreWebView2 != null)
-                {
-                    webView.CoreWebView2.ProcessFailed -= webView_CoreWebView2ProcessFailed;
-                }
+            // Dispose of it to release resources.
+            webView.Dispose();
+            webView = null;
 
-                // Remove the failed control from the UI and dispose it
-                this.mainWindowGrid.Children.Remove(webView);
-                webView.Dispose();
-                webView = null;
-            }
-
-            // --- Re-create using the helper function ---
+            // --- Re-create a NEW instance ---
             try
             {
+                // This method should now create a new WebView2, subscribe its events,
+                // and add it to the grid. And re-open the widgets.
                 await SetupWebViewAsync();
             }
             catch (Exception ex)
@@ -598,7 +602,7 @@ public partial class MainWindow : Window, BrowserWindow
             this.webView.Focusable = interactable;
         });
 
-        _interactable = interactable;
+        CurrentDisplayMode = interactable ? WindowDisplayMode.Setup : WindowDisplayMode.Overlay;
         var hwnd = new WindowInteropHelper(this).Handle;
 
         if (interactable)
@@ -1026,7 +1030,7 @@ public partial class MainWindow : Window, BrowserWindow
         ShellHelper.OpenFolder(folderPath);
     }
 
-    public void CreateNewWindow(string URL, string CustomCSS)
+    public void CreateNewWindow(string URL, string displayName, string CustomCSS, bool allowInteraction)
     {
         if (string.IsNullOrEmpty(URL))
         {
@@ -1043,17 +1047,19 @@ public partial class MainWindow : Window, BrowserWindow
             App.Settings.GeneralSettings.CustomWindows.Add(URL);
             Debug.WriteLine("Creating new window with URL: " + URL);
             Debug.WriteLine("Custom CSS: " + CustomCSS);
-            OpenNewCustomWindow(URL, CustomCSS);
+            OpenNewCustomWindow(URL, displayName, CustomCSS, allowInteraction);
         }
     }
 
-    private void CreateNewWindowDialog()
+    private void CreateNewWindowDialog(Window? owner = null)
     {
         if (!hasWebView2Runtime) return;
         Input_Custom inputDialog = new Input_Custom();
+        inputDialog.Owner = owner;
+
         if (inputDialog.ShowDialog() == true)
         {
-            CreateNewWindow(inputDialog.Url, inputDialog.CustomCSS);
+            CreateNewWindow(inputDialog.Url, inputDialog.DisplayName, inputDialog.CustomCSS, inputDialog.AllowInteraction);
         }
     }
 
@@ -1116,8 +1122,8 @@ public partial class MainWindow : Window, BrowserWindow
 
         var settingsWindow = _serviceProvider.GetRequiredService<SettingsWindow>();
 
-        settingsWindow.CreateWidgetRequested += (url, css) => {
-            this.CreateNewWindow(url, css);
+        settingsWindow.CreateWidgetRequested += (window) => {
+            CreateNewWindowDialog(window);
         };
 
         settingsWindow.CheckForUpdateRequested += () => {
@@ -1175,14 +1181,11 @@ public partial class MainWindow : Window, BrowserWindow
         }
     }
 
-    private void OpenNewCustomWindow(string url, string CustomCSS, bool hideBorder = false)
+    private void OpenNewCustomWindow(string URL, string displayName, string CustomCSS, bool allowInteraction)
     {
-        CustomWindow newWindow = new CustomWindow(this, url, CustomCSS);
+        CustomWindow newWindow = new CustomWindow(this, URL, displayName, CustomCSS, allowInteraction);
         windows.Add(newWindow);
         newWindow.Show();
-
-        if (hideBorder)
-            newWindow.hideBorders();
     }
 
     public void RemoveCustomWindow(string url)
@@ -1270,9 +1273,10 @@ public partial class MainWindow : Window, BrowserWindow
     private async Task CheckForUpdateAsync(bool notifyIfNoUpdate = false, Window? owner = null)
     {
 #if DEBUG
-        //var dialog = new UpdateDialog("1.1.0", "1.1.5");
-        //dialog.Owner = owner;
-        //dialog.ShowDialog();
+        var dialog = new UpdateDialog("1.1.0", "1.1.5");
+        dialog.Owner = owner;
+        dialog.ShowDialog();
+        App.Settings.GeneralSettings.LastUpdateCheck = DateTime.Now;
 #else
         _logger.LogInformation("Checking for updates...");
 
@@ -1319,9 +1323,6 @@ public partial class MainWindow : Window, BrowserWindow
                     App.Settings.GeneralSettings.CheckForUpdates = false;
                 }
             }
-
-            // Persist settings if they have changed
-            App.Settings.Persist();
         }
         catch (Exception ex)
         {
@@ -1369,8 +1370,9 @@ public partial class MainWindow : Window, BrowserWindow
         // Open any custom windows
         if (App.Settings.GeneralSettings.CustomWindows != null)
         {
+            // Using default values for CustomWindows, but it will load them from the settings once opened
             foreach (string url in App.Settings.GeneralSettings.CustomWindows)
-                OpenNewCustomWindow(url, "", App.Settings.GeneralSettings.AutoHideBorders);
+                OpenNewCustomWindow(url, "", "", false);
         }
 
         // TODO: Temporary, remove this later on
@@ -1454,7 +1456,7 @@ public partial class MainWindow : Window, BrowserWindow
         double remapped = Remap(Opacity);
         if (remapped <= 0)
         {
-            if (_interactable)
+            if (this.CurrentDisplayMode == WindowDisplayMode.Setup)
                 remapped = 0.01;
             else
                 remapped = 0;
@@ -1614,7 +1616,10 @@ public partial class MainWindow : Window, BrowserWindow
     private void MenuItem_ToggleInteractable(object sender, RoutedEventArgs e)
     {
         if (!hasWebView2Runtime) return;
-        SetInteractable(!this.webView.Focusable);
+
+        var isInteractable = !this.webView.Focusable;
+        SetInteractable(isInteractable);
+        SetInteractableAllWindows(isInteractable);
     }
 
     private void Window_Closed(object sender, EventArgs e)

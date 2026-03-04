@@ -10,6 +10,7 @@
         ui:WindowHelper.UseModernWindowStyle="True"
         ui:ThemeManager.RequestedTheme="Dark"
         WindowStartupLocation="CenterScreen"
+        Topmost="True"
         Title="TextEditorWindow" Height="450" Width="800">
     <Grid Background="#222">
         <Grid.RowDefinitions>
@@ -26,15 +27,15 @@
         </Menu>
         
         <avalonedit:TextEditor Name="textEditor" 
-        Grid.Row="1"
-        BorderBrush="LightSlateGray"
-        BorderThickness="1"
-        Background="#AAA"
-        Padding="5,5,0,0"
-         HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-         Width="Auto" Height="Auto"
-         HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" 
-         Margin="0" WordWrap="False"
-         Text="" />
+                               Grid.Row="1"
+                               BorderBrush="LightSlateGray"
+                               BorderThickness="1"
+                               Background="#AAA"
+                               Padding="5,5,0,0"
+                               HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                               Width="Auto" Height="Auto"
+                               HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" 
+                               Margin="0" WordWrap="False"
+                               Text="" />
     </Grid>
 </Window>

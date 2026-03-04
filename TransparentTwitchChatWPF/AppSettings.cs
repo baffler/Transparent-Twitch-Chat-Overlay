@@ -210,6 +210,7 @@ public class GeneralSettings
     public int ThemeIndex { get; set; } = 1;
     public string CustomCSS { get; set; } = string.Empty;
     public string TwitchPopoutCSS { get; set; } = string.Empty;
+    public bool UseDefaultTwitchPopoutCSS { get; set; } = true;
     public int ChatType { get; set; } = 0;
     public string CustomURL { get; set; } = string.Empty;
     public double ZoomLevel { get; set; } = 1;
@@ -229,8 +230,10 @@ public class GeneralSettings
     public bool RedemptionsEnabled { get; set; } = false;
     public string ChannelID { get; set; } = string.Empty;
     public string OAuthToken { get; set; } = string.Empty;
-    public bool BetterTtv { get; set; } = false;
-    public bool FrankerFaceZ { get; set; } = false;
+    public bool BetterTtv { get; set; } = true;
+    public bool BetterTtv_7tv { get; set; } = true;
+    public bool BetterTtv_AdvEmoteMenu { get; set; } = true;
+    public bool FrankerFaceZ { get; set; } = true;
     public string jChatURL { get; set; } = string.Empty;
     public bool CheckForUpdates { get; set; } = true;
     public DateTime LastUpdateCheck { get; set; } = DateTime.MinValue;
