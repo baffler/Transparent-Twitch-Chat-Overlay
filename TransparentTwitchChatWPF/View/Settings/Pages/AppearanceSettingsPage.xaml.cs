@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -32,18 +33,20 @@ public partial class AppearanceSettingsPage : UserControl
     public AppearanceSettingsPage()
     {
         InitializeComponent();
-        _ = SetupWebViewAsync();
+        
+        this.Loaded += AppearanceSettingsPage_Loaded;
+    }
+
+    private async void AppearanceSettingsPage_Loaded(object sender, RoutedEventArgs e)
+    {
+        this.Loaded -= AppearanceSettingsPage_Loaded; // only run once
+        await SetupWebViewAsync();
     }
 
     private async Task SetupWebViewAsync()
     {
         webView = new WebView2();
-        var options = new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required")
-        {
-            AdditionalBrowserArguments = "--disable-background-timer-throttling"
-        };
-        string userDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TransparentTwitchChatWPF");
-        CoreWebView2Environment cwv2Environment = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
+        CoreWebView2Environment cwv2Environment = await WebView2EnvironmentManager.GetEnvironmentAsync();
 
         // Add to visual tree.
         Grid.SetRow(webView, 1);
@@ -76,9 +79,11 @@ public partial class AppearanceSettingsPage : UserControl
         try
         {
             //await webView.CoreWebView2.CallDevToolsProtocolMethodAsync("Network.clearBrowserCache", "{}");
-            await ClearWebViewCache();
             //webView.CoreWebView2.OpenDevToolsWindow();
-            webView.CoreWebView2.Navigate(url);
+            //await ClearWebViewCache();
+
+            // cache-busts via query string
+            webView.CoreWebView2.Navigate(url + "?v=" + DateTimeOffset.UtcNow.ToUnixTimeSeconds());
         }
         catch (Exception ex)
         {
@@ -93,8 +98,9 @@ public partial class AppearanceSettingsPage : UserControl
         // Ensure the CoreWebView2 has been initialized
         if (this.webView != null && this.webView.CoreWebView2 != null)
         {
-            // Clear the browser cache. You can add other data types to clear if needed.
-            await this.webView.CoreWebView2.Profile.ClearBrowsingDataAsync();
+            await this.webView.CoreWebView2.Profile.ClearBrowsingDataAsync(
+                CoreWebView2BrowsingDataKinds.DiskCache |
+                CoreWebView2BrowsingDataKinds.CacheStorage);
         }
     }
 
