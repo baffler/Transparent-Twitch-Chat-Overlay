@@ -26,10 +26,10 @@ Some commonly requested features can usually be added with widgets. Please check
 
 ## Star History
 
-<a href="https://star-history.com/#baffler/Transparent-Twitch-Chat-Overlay&Date">
+<a href="https://star-history.dera.page/#baffler/Transparent-Twitch-Chat-Overlay&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=baffler/Transparent-Twitch-Chat-Overlay&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=baffler/Transparent-Twitch-Chat-Overlay&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=baffler/Transparent-Twitch-Chat-Overlay&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=baffler/Transparent-Twitch-Chat-Overlay&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=baffler/Transparent-Twitch-Chat-Overlay&type=Date" />
+   <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=baffler/Transparent-Twitch-Chat-Overlay&type=Date" />
  </picture>
 </a>
