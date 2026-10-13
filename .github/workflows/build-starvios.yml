@@ -1,0 +1,86 @@
+name: Build Starvios App
+
+# Compiles the NativeChat web client and the WPF app (Starvios Live version).
+# Runs on every branch push, on pull requests and manually.
+# It does NOT create releases; the release workflow (main.yml) still runs on v* tags.
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # 1. Build the NativeChat web client (webpack). The WPF project requires its dist output.
+  build-native-chat:
+    name: Build NativeChatClient
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: NativeChatClient
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: NativeChatClient/package-lock.json
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build NativeChatClient
+        run: npm run build
+
+      - name: Upload NativeChatClient dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-chat-dist
+          path: NativeChatClient/dist
+          if-no-files-found: error
+          retention-days: 7
+
+  # 2. Build the WPF application for Windows (needs the NativeChatClient dist).
+  build-wpf:
+    name: Build WPF app
+    needs: build-native-chat
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download NativeChatClient dist
+        uses: actions/download-artifact@v4
+        with:
+          name: native-chat-dist
+          path: NativeChatClient/dist
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore TransparentTwitchChatWPF/TransparentTwitchChatWPF.csproj
+
+      - name: Build (Release)
+        run: dotnet build TransparentTwitchChatWPF/TransparentTwitchChatWPF.csproj -c Release --no-restore
+
+      - name: Publish (win-x64, self-contained)
+        run: dotnet publish TransparentTwitchChatWPF/TransparentTwitchChatWPF.csproj -c Release -r win-x64 --self-contained true -o publish --no-restore
+
+      - name: Upload compiled app
+        uses: actions/upload-artifact@v4
+        with:
+          name: starvios-app-win-x64
+          path: publish
+          if-no-files-found: error
+          retention-days: 7

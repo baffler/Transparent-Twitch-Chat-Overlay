@@ -15,7 +15,7 @@
 * Download the latest release from https://github.com/baffler/Transparent-Twitch-Chat-Overlay/releases
 * You can download the Installer now to make it easier to install the program and it will automatically install the required dependencies ([WebView2 runtimes](https://go.microsoft.com/fwlink/p/?LinkId=2124703)).
 * "Windows protected your PC" message may appear which is the Windows Defender Smart Screen. You'll need to click "More info" and then "Run anyway". You'll only have to do this the first time you launch it.
-* After launching the program for the first time, you'll need to set your twitch channel in the settings. You can click the button at the top-left to open settings, right-click the black border at top, or right-click the icon in the taskbar
+* After launching the program for the first time, you'll need to set your Starvios channel in the settings (chat type: "Starvios Live"). You can click the button at the top-left to open settings, right-click the black border at top, or right-click the icon in the taskbar
 * You can move the application by clicking and dragging the thin black border at top, and you can resize it by clicking and dragging the grip at the bottom-right
 * To hide the borders, just click the [o] button in the top-right, or right-click the icon in your taskbar
 

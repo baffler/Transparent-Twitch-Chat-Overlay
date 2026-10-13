@@ -85,7 +85,7 @@
                             Width="170"
                             Margin="0,0,0,5">
                         <ComboBoxItem Content="NativeChat (Default)" />
-                        <ComboBoxItem Content="Twitch Popout" />
+                        <ComboBoxItem Content="Starvios Live" />
                         <ComboBoxItem Content="KapChat (Deprecated)" />
                         <ComboBoxItem Content="Custom URL" />
                     </ComboBox>
